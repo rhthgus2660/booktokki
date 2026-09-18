@@ -639,6 +639,81 @@
     .spine{ transition:transform .15s ease; }
     .spine:hover, .spine:focus-visible{ transform:translateY(-3px); }
   }
+
+  /* Visual System v0.3: home-only prototype. Other screens keep v0.2. */
+  body.home-prototype{ background:#fff; color:#171717; padding-top:28px; }
+  body.home-prototype .app{ padding-inline:24px; gap:24px; }
+  body.home-prototype .topbar h1{ color:#171717; font-size:.95rem; font-weight:900; letter-spacing:.045em; }
+  body.home-prototype .topbar-actions{ gap:6px; }
+  body.home-prototype .icon-nav-btn{
+    width:36px; height:36px; border:0; border-radius:3px; background:transparent; color:#171717;
+  }
+  body.home-prototype .icon-nav-btn:hover{ background:#f5f5f5; }
+  body.home-prototype #offlineNotice:empty{ display:none; }
+  #view-home{
+    --ink:#171717; --ink-soft:#737373; --ink-faint:#909090;
+    --surface:#fff; --surface-muted:#f7f7f7; --border:#e9e9e9;
+    --track:#eeeeee; --fill:#171717; --bg:#fff;
+    --cover-1:#eed0d4; --cover-2:#dbe6d5; --cover-3:#d7e4ee;
+    --cover-4:#f1e7b9; --cover-5:#e4dbea;
+    display:flex; flex-direction:column;
+  }
+  #view-home .bunny-hero{ background:none; border:0; border-radius:0; padding:28px 0 24px; }
+  #view-home .speech-bubble{
+    background:#fff; border:1px solid #e9e9e9; border-radius:7px;
+    padding:10px 14px; font-size:.84rem; font-weight:500; line-height:1.5;
+  }
+  #view-home .speech-bubble::before{
+    width:10px; height:10px; bottom:-6px; margin-left:-5px;
+    background:#fff; border-width:1px;
+  }
+  #view-home .rabbit-scene{ display:flex; flex-direction:column; align-items:center; padding-block:29px; }
+  #view-home .bunny-figure{ height:132px; margin-top:12px; }
+  #view-home .bunny-img{ max-width:65%; max-height:80%; }
+  #view-home .bunny-status{ font-size:.72rem; font-weight:400; line-height:1.6; }
+  #view-home .bunny-hero.is-recorded .bunny-status{ visibility:hidden; }
+  #view-home .stat-line{
+    width:100%; margin:0; padding:20px 0; border-block:1px solid #e9e9e9;
+    display:flex; justify-content:space-between; gap:16px; text-align:left;
+  }
+  #view-home .monthly-label{ color:#737373; font-size:.8rem; font-weight:400; }
+  #view-home .monthly-value{ display:flex; align-items:baseline; gap:5px; color:#171717; }
+  #view-home .monthly-value b{ color:#171717; font-size:2.25rem; font-weight:500; line-height:1; letter-spacing:-.04em; }
+  #view-home .monthly-unit{ font-size:.8rem; font-weight:400; }
+  #view-home .monthly-arrow{ margin-left:9px; color:#909090; font-size:1rem; font-weight:400; }
+  #view-home .stat-line:hover .monthly-label{ color:#171717; }
+  #view-home > div:not(.bunny-hero){ margin-top:28px; }
+  #view-home .section-title{ padding:0; font-size:.95rem; font-weight:600; }
+  #view-home .book-card{
+    border:0; border-radius:0; padding:0; gap:18px; margin-top:20px !important; background:none;
+  }
+  #view-home .book-row{ gap:16px; }
+  #view-home .cover{ border:0; border-radius:3px; font-weight:600; }
+  #view-home .book-meta{ gap:4px; }
+  #view-home .book-title{ font-size:1.1rem; font-weight:600; }
+  #view-home .book-author, #view-home .book-pages{ font-size:.76rem; font-weight:400; }
+  #view-home .progress-track{ height:3px; border-radius:0; }
+  #view-home .progress-fill{ border-radius:0; }
+  #view-home .progress-pct{ font-size:.72rem; font-weight:500; }
+  #view-home .btn{ border-radius:4px; font-size:.84rem; font-weight:500; padding:13px 16px; min-height:44px; }
+  #view-home .btn-dashed{
+    margin-top:16px; border:0; border-radius:0; padding:14px 0;
+    background:none; text-align:left; font-size:.8rem; font-weight:400; color:#737373;
+  }
+  #view-home .btn-dashed:hover{ color:#171717; }
+  #view-home .empty-state{
+    background:none; border:0; border-radius:0; padding:20px 0 0; gap:16px; align-items:flex-start; text-align:left;
+  }
+  #view-home .empty-state p{ color:#737373; font-size:.8rem; font-weight:400; }
+  body.home-prototype .rabbit-event .speech-bubble{
+    background:#fff; color:#171717; border:1px solid #e9e9e9;
+    border-radius:7px; font-weight:500; line-height:1.5;
+  }
+  body.home-prototype .rabbit-event .speech-bubble::before{ background:#fff; border-color:#e9e9e9; border-width:1px; }
+  body.home-prototype .rabbit-event{
+    width:calc(100% - 48px); top:auto;
+    bottom:calc(8px + env(safe-area-inset-bottom, 0px));
+  }
 </style>
 
 <div class="app" id="app">
@@ -1196,6 +1271,8 @@
   }
 
   function renderAll(){
+    document.body.classList.toggle("home-prototype", state.view === "home");
+    document.querySelector(".topbar h1").textContent = state.view === "home" ? "BOOKTOKKI" : "내 독서 기록";
     // Keep unsaved inputs only when the same book/input survives the render.
     var detail = document.getElementById("view-detail");
     var oldPage = detail.querySelector("[data-pageinput]");
@@ -1431,9 +1508,11 @@
       status = "오늘 기록 없음";
     }
     return '' +
-      '<div class="card bunny-hero">' +
-        '<div class="speech-bubble">' + bubble + '</div>' +
-        '<div class="bunny-figure">' + zzz + img + '</div>' +
+      '<div class="card bunny-hero' + (logged ? ' is-recorded' : '') + '">' +
+        '<div class="rabbit-scene">' +
+          '<div class="speech-bubble">' + bubble + '</div>' +
+          '<div class="bunny-figure">' + zzz + img + '</div>' +
+        '</div>' +
         (caption ? '<div class="bunny-caption">' + caption + '</div>' : '') +
         '<div class="bunny-status">' + status + '</div>' +
       '</div>';
@@ -1448,7 +1527,9 @@
         return log.delta > 0 && typeof log.date === "string" && log.date.indexOf(prefix) === 0;
       });
     }).length;
-    return '<button class="stat-line" data-nav="stats">' + (now.getMonth()+1) + '월에 펼친 책 <b>' + n + '권</b> ›</button>';
+    return '<button class="stat-line" data-nav="stats">' +
+      '<span class="monthly-label">' + (now.getMonth()+1) + '월에 읽은 책</span>' +
+      '<span class="monthly-value"><b>' + n + '</b><span class="monthly-unit">권</span><span class="monthly-arrow" aria-hidden="true">›</span></span></button>';
   }
 
   function coverEl(book){
