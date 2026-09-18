@@ -375,6 +375,37 @@
     font-variant-numeric:tabular-nums;
   }
   .page-inline-input:focus{ outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+  .page-record-label{ display:block; font-size:.88rem; font-weight:800; margin-top:16px; }
+  .page-pages-edit .page-inline-input{ width:76px; font-size:1.15rem; padding:8px; }
+
+  /* A passing character, without a notification panel or interaction. */
+  .rabbit-event{
+    position:fixed;
+    top:calc(72px + env(safe-area-inset-top, 0px));
+    left:50%;
+    width:calc(100% - 32px);
+    max-width:340px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:flex-end;
+    gap:8px;
+    transform:translateX(-50%);
+    pointer-events:none;
+    z-index:40;
+  }
+  .rabbit-event img{ width:56px; height:56px; object-fit:contain; flex:none; }
+  .rabbit-event .speech-bubble{ font-size:.84rem; padding:10px 13px; margin-bottom:12px; }
+  .rabbit-event .speech-bubble::before{ left:18px; }
+  .rabbit-event.is-reacting{ animation:rabbit-visit 4s ease both; }
+  @keyframes rabbit-visit{
+    0%{ opacity:0; }
+    6%,90%{ opacity:1; }
+    100%{ opacity:0; }
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .rabbit-event img{ animation:rabbit-peek .25s ease-out both; }
+    @keyframes rabbit-peek{ from{ transform:translateY(8px); } to{ transform:translateY(0); } }
+  }
 
   .progress-row{ display:flex; align-items:center; gap:10px; }
   .progress-track{
@@ -642,6 +673,7 @@
 </div>
 
 <div class="modal-overlay" id="modalOverlay" hidden></div>
+<div class="rabbit-event" id="rabbitEvent" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
 <script>
 (function(){
@@ -970,11 +1002,71 @@
     var b = state.books[bookId];
     if (!b) return;
     var patch = buildPageLogPatch(b, page);
+    var reaction = readingReaction(b, patch.currentPage);
     Object.assign(b, patch);
     var pageInput = document.querySelector('[data-pageinput="' + bookId + '"]');
     if (pageInput){ pageInput.value = patch.currentPage; pageInput.defaultValue = patch.currentPage; }
     renderAll();
     writePatch(bookId, patch);
+    if (reaction) showReadingReaction(reaction);
+  }
+
+  // Read existing page history before the new record is applied.
+  function readingReaction(book, nextPage){
+    var delta = nextPage - book.currentPage;
+    if (!(delta > 0)) return null;
+    if (book.totalPages > 0 && nextPage >= book.totalPages) return "E";
+    var previous = null;
+    var latestTime = -Infinity;
+    var latestBookIds = {};
+    getBooks().forEach(function(b){
+      (b.pageLogs || []).forEach(function(log){
+        var time = Date.parse(log.at);
+        if (!(log.delta > 0) || !Number.isFinite(time)) return;
+        if (b.id === book.id && (!previous || time > Date.parse(previous.at))) previous = log;
+        if (time > latestTime){ latestTime = time; latestBookIds = {}; }
+        if (time === latestTime) latestBookIds[b.id] = true;
+      });
+    });
+    if (previous){
+      // Compare calendar dates, avoiding timezone/DST hour differences.
+      var parts = previous.date && previous.date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      var now = new Date();
+      if (parts && (Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) -
+          Date.UTC(+parts[1], +parts[2]-1, +parts[3])) / 86400000 >= 3) return "B";
+    }
+    var latestIds = Object.keys(latestBookIds);
+    if (latestIds.length === 1 && latestIds[0] !== book.id) return "C";
+    // Integer cross-multiplication keeps the 15% boundary exact.
+    if (delta >= 50 || (book.totalPages > 0 && delta * 100 >= book.totalPages * 15)) return "D";
+    return "A";
+  }
+
+  var rabbitEventTimer = null;
+  var READING_REACTIONS = {
+    A: { img:"assets/bunny-sleep.png", text:"인간이 또 읽음.<br>방해 실패." },
+    B: { img:"assets/bunny-sleep.png", text:"다시 나타남.<br>독서 의지 말살 실패." },
+    C: { img:"assets/bunny-kick.png", text:"인간 또 딴 책 폄.<br>또 시작됨." },
+    D: { img:"assets/bunny-sleep.png", text:"이건 좀 많이 읽는데.<br>작전 수정 필요." },
+    E: { img:"assets/bunny-done.png", text:"인간이 책 한 권을 끝냄<br>제법인데." }
+  };
+  function hideReadingReaction(){
+    clearTimeout(rabbitEventTimer);
+    var el = document.getElementById("rabbitEvent");
+    el.hidden = true;
+    el.classList.remove("is-reacting");
+    el.innerHTML = "";
+  }
+  function showReadingReaction(mode){
+    hideReadingReaction();
+    var el = document.getElementById("rabbitEvent");
+    var reaction = READING_REACTIONS[mode];
+    el.innerHTML = '<img src="' + reaction.img + '" alt="북토끼"><div class="speech-bubble">' + reaction.text + '</div>';
+    el.dataset.reaction = mode;
+    el.hidden = false;
+    void el.offsetWidth; // Restart the visit when a newer record replaces it.
+    el.classList.add("is-reacting");
+    rabbitEventTimer = setTimeout(hideReadingReaction, 4000);
   }
 
   function addNote(bookId, text, page){
@@ -1047,6 +1139,7 @@
      one dry, unimpressed reaction from the same home bunny - not a
      reward screen, just a beat before the detail view updates. */
   function handleMarkDone(bookId){
+    hideReadingReaction();
     markDone(bookId);
     showDoneCelebration();
   }
@@ -1346,11 +1439,16 @@
       '</div>';
   }
 
-  /* 올해 완독 — now a small secondary line, not the home's headline. */
+  /* This month's distinct books with at least one positive page record. */
   function statLine(){
-    var n = countCompletedThisYear();
-    var y = new Date().getFullYear();
-    return '<button class="stat-line" data-nav="library">' + y + '년 완독 <b>' + n + '권</b> ›</button>';
+    var now = new Date();
+    var prefix = dateKey(now).slice(0, 7) + "-";
+    var n = getBooks().filter(function(b){
+      return (b.pageLogs || []).some(function(log){
+        return log.delta > 0 && typeof log.date === "string" && log.date.indexOf(prefix) === 0;
+      });
+    }).length;
+    return '<button class="stat-line" data-nav="stats">' + (now.getMonth()+1) + '월에 펼친 책 <b>' + n + '권</b> ›</button>';
   }
 
   function coverEl(book){
@@ -1569,14 +1667,15 @@
           '<div class="progress-track"><div class="progress-fill" style="width:' + p + '%"></div></div>' +
           '<div class="progress-pct">' + p + '%</div>' +
         '</div>' +
+        '<label class="page-record-label" for="currentPageInput">페이지 기록</label>' +
         '<div class="page-pages-edit" style="margin-top:6px;">' +
-          '<input type="number" class="page-inline-input" data-pageinput="' + b.id + '" inputmode="numeric" min="0" max="' + b.totalPages + '" value="' + b.currentPage + '" aria-label="현재 읽은 페이지">' +
+          '<input id="currentPageInput" type="number" class="page-inline-input" data-pageinput="' + b.id + '" inputmode="numeric" min="0" max="' + b.totalPages + '" value="' + b.currentPage + '" aria-label="현재 읽은 페이지">' +
           '<span>/ ' + b.totalPages + ' p</span>' +
         '</div>' +
         '<div class="btn-row" style="margin-top:14px;">' +
           (b.status === "done"
             ? '<button class="btn btn-outline" data-undo="' + b.id + '" style="width:100%;">완독 취소</button>'
-            : '<button class="btn btn-dark" data-done="' + b.id + '" style="width:100%;">다 읽었어!</button>') +
+            : '<button class="btn btn-outline" data-done="' + b.id + '" style="width:100%;">다 읽었어!</button>') +
         '</div>' +
       '</div>' +
       '<div>' +
