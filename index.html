@@ -1,0 +1,1877 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>북토끼</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;900&display=swap">
+<style>
+  :root{
+    --bg:#F3EEE1;
+    --surface:#FFFFFF;
+    --surface-muted:#FAF5E8;
+    --ink:#221E17;
+    --ink-soft:#756B5A;
+    --ink-faint:#A79C86;
+    --border:#E6DFC8;
+    --accent:#D97D74;
+    --accent-soft:#F6DCDA;
+    --track:#ECE4D0;
+    --fill:#221E17;
+    --success:#3E7A52;
+    --success-soft:#DEEBE1;
+    --danger:#B8483A;
+    --danger-soft:#F5DEDA;
+    --cover-1:#E7B8AE; --cover-2:#AFC3A0; --cover-3:#A6BED2; --cover-4:#D9C093; --cover-5:#C1AAC5;
+    --shelf-plank:#D8C7A0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#17140F;
+      --surface:#221D16;
+      --surface-muted:#2A241B;
+      --ink:#F2ECDD;
+      --ink-soft:#B7AC96;
+      --ink-faint:#7C7362;
+      --border:#3A3324;
+      --accent:#E2938A;
+      --accent-soft:#3C2723;
+      --track:#3A3324;
+      --fill:#F2ECDD;
+      --success:#7FBE95;
+      --success-soft:#223A2B;
+      --danger:#E1786A;
+      --danger-soft:#3E2621;
+      --cover-1:#6B4B41; --cover-2:#43503C; --cover-3:#37495A; --cover-4:#584A34; --cover-5:#4C3A4F;
+      --shelf-plank:#4A3B25;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#17140F;
+    --surface:#221D16;
+    --surface-muted:#2A241B;
+    --ink:#F2ECDD;
+    --ink-soft:#B7AC96;
+    --ink-faint:#7C7362;
+    --border:#3A3324;
+    --accent:#E2938A;
+    --accent-soft:#3C2723;
+    --track:#3A3324;
+    --fill:#F2ECDD;
+    --success:#7FBE95;
+    --success-soft:#223A2B;
+    --danger:#E1786A;
+    --danger-soft:#3E2621;
+    --cover-1:#6B4B41; --cover-2:#43503C; --cover-3:#37495A; --cover-4:#584A34; --cover-5:#4C3A4F;
+    --shelf-plank:#4A3B25;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Gothic A1','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    margin:0;
+    padding-block:28px 64px;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  button, input, textarea{ font-family:inherit; }
+  h1,h2,h3,p{ margin:0; text-wrap:balance; }
+
+  .app{
+    max-width:428px;
+    margin:0 auto;
+    padding-inline:16px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  /* 통계 화면의 실제 제목(.stats-title)이 가장 뚜렷한 hierarchy를 가지려면
+     이 앱 전역 헤더부터 한 단계 낮춰야 함 - 모든 화면에 공통으로 걸리는
+     라벨이라 원래도 톤을 낮춰 두는 편이 화면별 제목과의 위계에 맞음. */
+  .topbar h1{ font-size:.92rem; font-weight:700; letter-spacing:.01em; color:var(--ink-faint); }
+  .topbar-actions{ display:flex; align-items:center; gap:8px; flex:none; }
+  .icon-nav-btn{
+    flex:none;
+    width:38px; height:38px;
+    border-radius:12px;
+    border:1.5px solid var(--border);
+    background:var(--surface);
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .icon-nav-btn:hover{ border-color:var(--ink-faint); }
+  .icon-nav-btn svg{ width:19px; height:19px; }
+  .back-btn{
+    flex:none;
+    width:34px; height:34px;
+    border-radius:11px;
+    border:1.5px solid var(--border);
+    background:var(--surface);
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .back-btn:hover{ border-color:var(--ink-faint); }
+  .sub-topbar{ display:flex; align-items:center; gap:10px; }
+  .sub-topbar h2{ font-size:1.05rem; font-weight:900; }
+
+  .offline-pill{
+    font-size:.72rem;
+    color:var(--ink-soft);
+    background:var(--surface-muted);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:4px 10px;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    width:fit-content;
+  }
+
+  /* ---------- cards ---------- */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:18px;
+  }
+
+  /* bunny hero — the home screen's centerpiece: the burrow the rabbit
+     lives in, not a status card about it */
+  .bunny-hero{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding:22px 18px 18px;
+    background:radial-gradient(ellipse 90% 70% at 50% 100%, var(--surface-muted) 0%, var(--surface) 72%);
+  }
+  .speech-bubble{
+    position:relative;
+    background:var(--surface-muted);
+    border:1.5px solid var(--border);
+    border-radius:18px;
+    padding:13px 16px;
+    font-size:1rem;
+    font-weight:800;
+    line-height:1.35;
+    max-width:260px;
+  }
+  .speech-bubble::before{
+    content:"";
+    position:absolute;
+    left:50%;
+    bottom:-8px;
+    width:14px;
+    height:14px;
+    margin-left:-7px;
+    background:var(--surface-muted);
+    border-right:1.5px solid var(--border);
+    border-bottom:1.5px solid var(--border);
+    transform:rotate(45deg);
+  }
+  .bunny-figure{
+    position:relative;
+    margin-top:10px;
+    width:230px;
+    height:190px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  /* Character Master 이미지 에셋 - 원본 비율 그대로, .bunny-figure 박스
+     안에 맞춰 표시(contain)만 하고 늘리거나 자르지 않음. 다운스케일이라
+     image-rendering은 기본값(부드러운 스케일)을 그대로 둠. */
+  /* 카드/박스 크기는 그대로 두고 이미지 표시 크기만 최초 대비 약 47%로 줄여서
+     넓은 여백 안에 작은 캐릭터가 혼자 있는 듯한 존재감을 냄
+     (1차 68% → 2차로 그 70% 수준까지 추가 축소, 목표 범위 최초의 45~50%) */
+  .bunny-img{ max-width:47%; max-height:47%; width:auto; height:auto; display:block; }
+  .bunny-svg{ width:184px; height:226px; display:block; }
+  /* 완독 축하 팝업 전용 이미지(Character Master 완독 포즈). 홈 토끼처럼
+     박스 안을 꽉 채우지 않고 여백 안에 작게 행동하는 느낌을 유지하되,
+     한 번성 축하 모먼트라 홈(47%)보다는 조금 더 뚜렷하게 보이도록 함.
+     박스 크기(184x226)는 기존 SVG와 동일하게 유지해 팝업 레이아웃은 그대로. */
+  .bunny-done-img{ max-width:60%; max-height:60%; width:auto; height:auto; display:block; }
+  .pixel-bunny rect, .pixel-bunny path{ stroke:#2A2018; stroke-width:1; stroke-linejoin:miter; }
+  .pixel-bunny .fur{ fill:#FFFBF3; }
+  .pixel-bunny .ear-inner{ fill:#F0B7B2; }
+  .pixel-bunny .cheek{ fill:#F3C6C1; }
+  .pixel-bunny .ink{ fill:#2A2018; }
+  .pixel-bunny .book{ fill:#AD8358; }
+  .pixel-bunny .book-alt{ fill:#C79B6C; }
+  .pixel-bunny .book-page{ fill:#F3E6CE; }
+  .pixel-bunny .notch{ fill:var(--surface); stroke:none; }
+  .bunny-caption{
+    font-size:.78rem;
+    color:var(--ink-faint);
+    font-weight:700;
+    margin-top:-4px;
+  }
+  .zzz{
+    position:absolute;
+    top:34px;
+    left:100px;
+    font-weight:900;
+    color:var(--ink-faint);
+    pointer-events:none;
+  }
+  .zzz span{ position:absolute; }
+  .zzz .z1{ font-size:1.2rem; top:0; left:0; }
+  .zzz .z2{ font-size:.92rem; top:14px; left:11px; opacity:.8; }
+  .zzz .z3{ font-size:.7rem; top:25px; left:19px; opacity:.6; }
+
+  .bunny-status{ font-size:.86rem; color:var(--ink-soft); font-weight:700; line-height:1.6; margin-top:8px; }
+
+  /* small secondary stat line — no longer the home's headline number */
+  .stat-line{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    font-size:.78rem;
+    color:var(--ink-faint);
+    font-weight:700;
+    background:none;
+    border:none;
+    padding:2px 4px;
+    cursor:pointer;
+    font-variant-numeric:tabular-nums;
+    margin:0 auto;
+  }
+  .stat-line:hover{ color:var(--ink-soft); }
+  .stat-line b{ color:var(--ink-soft); font-weight:800; }
+
+  /* section title */
+  .section-title{ font-size:1rem; font-weight:900; padding-inline:2px; }
+
+  /* ---------- stats screen ---------- */
+  /* 기능 배치가 아니라 제품의 한 화면처럼 보이도록 이 화면만의 타입 스케일을
+     둠: 화면 제목(.stats-title) > 소제목(.stats-heading, "9월"/날짜 라벨용,
+     둘이 동일한 스타일) > 본문. 전역 h2(.sub-topbar h2)보다 명확히 크게 잡아
+     이 화면의 실제 제목이라는 게 한눈에 드러나게 함. */
+  .sub-topbar h2.stats-title{ font-size:1.4rem; font-weight:800; letter-spacing:-0.01em; color:var(--ink); }
+  .stats-heading{ font-size:.84rem; font-weight:700; color:var(--ink-soft); padding-inline:2px; }
+
+  /* 큰 KPI 카드 대신, 얇은 구분선으로만 나뉘는 배경 위 요약 스트립.
+     라벨(작고 옅은 색)과 값(크고 진한 색·굵게)의 대비를 분명히 줘서
+     숫자와 설명이 붙어 보이던 문제를 해결함. */
+  .stats-summary{ display:grid; grid-template-columns:repeat(4, 1fr); }
+  .stats-summary-item{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    padding:0 12px;
+    border-right:1px solid var(--border);
+  }
+  .stats-summary-item:first-child{ padding-left:2px; }
+  .stats-summary-item:last-child{ padding-right:0; border-right:none; }
+  .stats-summary-label{ font-size:.7rem; font-weight:600; color:var(--ink-faint); letter-spacing:.01em; }
+  .stats-summary-value{ font-size:1.05rem; font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums; }
+
+  .stats-day-card{ padding:2px 14px; border-radius:14px; }
+  .stats-day-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 4px;
+    margin-inline:-4px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:background-color .12s ease;
+  }
+  .stats-day-row:hover{ background:var(--surface-muted); }
+  .stats-day-label{ font-size:.86rem; color:var(--ink); font-weight:600; }
+  .stats-day-pages{ font-size:.8rem; color:var(--ink-faint); font-variant-numeric:tabular-nums; font-weight:600; }
+
+  .cal-grid{ display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; }
+  /* 달력 카드가 무겁게 느껴진다는 피드백 → radius를 카드 기본값(20px)보다
+     한 단계 낮추고 padding도 더 줄임. 날짜 숫자 크기·선택 로직은 그대로. */
+  .cal-card{ padding:12px 14px; border-radius:14px; }
+  .cal-grid.cal-days-grid{ row-gap:2px; column-gap:3px; }
+  .cal-weekdays-row{ margin-bottom:4px; }
+  .cal-weekday{ text-align:center; font-size:.7rem; font-weight:700; color:var(--ink-faint); padding-bottom:2px; }
+  .cal-day{
+    position:relative;
+    aspect-ratio:1/1;
+    display:flex; align-items:center; justify-content:center;
+    background:none;
+    border:1.5px solid transparent;
+    border-radius:9px;
+    font-size:.82rem;
+    font-weight:700;
+    color:var(--ink-soft);
+    cursor:pointer;
+    font-variant-numeric:tabular-nums;
+  }
+  .cal-day:hover{ border-color:var(--border); }
+  .cal-day.cal-empty{ cursor:default; pointer-events:none; }
+  .cal-day.cal-today{ border-color:var(--accent); color:var(--accent); }
+  /* 선택 표시를 셀 전체를 채우던 방식에서 margin으로 살짝 인셋된, 더 작고
+     정제된 사각형으로 조정(터치 영역은 여전히 40px대 유지). */
+  .cal-day.cal-selected{ background:var(--ink); color:var(--surface); border-color:var(--ink); margin:2px; border-radius:6px; }
+  .cal-dot{
+    position:absolute;
+    bottom:5px;
+    left:50%;
+    width:4px; height:4px;
+    margin-left:-2px;
+    border-radius:50%;
+    background:var(--accent);
+  }
+  .cal-day.cal-selected .cal-dot{ background:var(--surface); }
+
+  /* current book card */
+  .book-card{ display:flex; flex-direction:column; gap:12px; }
+  .book-row{ display:flex; gap:12px; }
+  .cover{
+    flex:none;
+    width:56px;
+    height:78px;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    font-size:1.3rem;
+    color:rgba(0,0,0,.55);
+    border:1px solid var(--border);
+    overflow:hidden;
+  }
+  .cover.empty{ background:var(--surface-muted); color:var(--ink-faint); font-size:.72rem; font-weight:700; }
+  .cover.cover-img{ background:var(--surface-muted); }
+  .cover img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .cover-link-btn{
+    background:none;
+    border:none;
+    color:var(--ink-faint);
+    font-size:.68rem;
+    font-weight:700;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
+  .cover-link-btn:hover{ color:var(--ink); }
+  .book-meta{ min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:2px; }
+  .book-title{ font-size:1.02rem; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .book-author{ font-size:.82rem; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .book-pages{ font-size:.78rem; color:var(--ink-faint); font-variant-numeric:tabular-nums; margin-top:2px; }
+  .page-pages-edit{ display:flex; align-items:center; gap:5px; font-size:.78rem; color:var(--ink-faint); font-variant-numeric:tabular-nums; }
+  .page-inline-input{
+    width:56px;
+    font-size:.9rem;
+    font-weight:800;
+    color:var(--ink);
+    background:var(--surface-muted);
+    border:1.5px solid var(--border);
+    border-radius:9px;
+    padding:4px 6px;
+    text-align:center;
+    font-variant-numeric:tabular-nums;
+  }
+  .page-inline-input:focus{ outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+
+  .progress-row{ display:flex; align-items:center; gap:10px; }
+  .progress-track{
+    flex:1;
+    height:9px;
+    border-radius:999px;
+    background:var(--track);
+    overflow:hidden;
+  }
+  .progress-fill{ height:100%; background:var(--fill); border-radius:999px; }
+  .progress-pct{ font-size:.78rem; font-weight:800; font-variant-numeric:tabular-nums; width:36px; text-align:right; }
+
+  .book-foot{ display:flex; align-items:center; justify-content:space-between; font-size:.78rem; color:var(--ink-faint); }
+
+  .btn-row{ display:flex; gap:8px; }
+  .btn{
+    border-radius:12px;
+    border:1.5px solid transparent;
+    font-weight:800;
+    font-size:.88rem;
+    padding:11px 14px;
+    cursor:pointer;
+    flex:1;
+    text-align:center;
+  }
+  .btn-dark{ background:var(--fill); color:var(--bg); }
+  .btn-dark:hover{ opacity:.9; }
+  .btn-outline{ background:var(--surface); border-color:var(--border); color:var(--ink); }
+  .btn-outline:hover{ border-color:var(--ink-faint); }
+  .btn-danger-outline{ background:var(--surface); border-color:var(--danger-soft); color:var(--danger); }
+  .btn-dashed{
+    border:1.5px dashed var(--ink-faint);
+    background:transparent;
+    color:var(--ink-soft);
+    border-radius:16px;
+    padding:14px;
+    font-weight:800;
+    font-size:.92rem;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn-dashed:hover{ color:var(--ink); border-color:var(--ink-soft); }
+  .btn-small{ flex:none; padding:7px 12px; font-size:.78rem; border-radius:10px; }
+
+  .empty-state{
+    text-align:center;
+    padding:22px 10px 8px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:center;
+  }
+  .empty-state p{ font-size:.88rem; color:var(--ink-soft); font-weight:600; }
+
+  /* bookshelf — books stand on shelves in the order they were added,
+     each new one taking its place at the end, so filling the shelf
+     row by row IS the reading history. */
+  .shelf-row{
+    display:flex;
+    align-items:flex-end;
+    gap:9px;
+    padding:10px 4px 12px;
+    border-bottom:6px solid var(--shelf-plank);
+    border-radius:2px;
+    box-shadow:0 6px 7px -6px rgba(0,0,0,.22);
+  }
+  .spine-wrap{ position:relative; flex:none; }
+  .spine{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    height:104px;
+    padding:0;
+    margin:0;
+    border-radius:6px 6px 3px 3px;
+    border:1px solid var(--border);
+    background:var(--surface-muted);
+    overflow:hidden;
+    cursor:pointer;
+    position:relative;
+    font:inherit;
+  }
+  .spine img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .spine-label{
+    writing-mode:vertical-rl;
+    text-orientation:mixed;
+    font-size:.72rem;
+    font-weight:800;
+    color:var(--ink);
+    opacity:.8;
+    padding:8px 0;
+    max-height:86px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .spine-progress{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:4px;
+    background:rgba(0,0,0,.14);
+  }
+  .spine-progress-fill{ height:100%; background:var(--accent); }
+  /* '귀만 둥둥 떠 있어 장식처럼 보인다'는 피드백 → 귀 두 개만 노출하던 방식을
+     버리고, 표지 한쪽 위에 작은 책갈피 탭이 꽂혀 있고 그 위로 귀가 살짝
+     올라온 형태로 바꿈. 가운데 정렬 대신 표지 왼쪽으로 치우친 위치라 제목/
+     표지 아트를 가리지 않고, 탭이 표지에 파고드는 깊이도 5px로 작게 유지. */
+  .ear-marker{
+    position:absolute;
+    top:-17px;
+    left:10px;
+    width:18px;
+    height:22px;
+    pointer-events:none;
+    filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.32));
+  }
+  .marker-tab{ fill:var(--surface-muted); }
+  .badge{
+    font-size:.68rem;
+    font-weight:800;
+    padding:3px 8px;
+    border-radius:999px;
+    flex:none;
+  }
+  .badge-reading{ background:var(--accent-soft); color:var(--accent); }
+  .badge-done{ background:var(--success-soft); color:var(--success); }
+  .badge-toread{ background:var(--surface-muted); color:var(--ink-faint); border:1px solid var(--border); }
+
+  /* detail view */
+  .detail-header{ display:flex; align-items:flex-start; gap:14px; }
+  .detail-header .cover{ width:64px; height:88px; font-size:1.5rem; border-radius:9px; }
+  .detail-title-block{ flex:1; min-width:0; }
+  .detail-title{ font-size:1.15rem; font-weight:900; }
+  .detail-author{ font-size:.88rem; color:var(--ink-soft); margin-top:2px; }
+  .detail-status{ margin-top:8px; }
+  .icon-btn{
+    flex:none;
+    width:34px; height:34px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--ink-faint);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .icon-btn:hover{ color:var(--danger); border-color:var(--danger-soft); }
+
+  .notes-list{ display:flex; flex-direction:column; gap:10px; }
+  .note-item{
+    background:var(--surface-muted);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:12px 14px;
+  }
+  .note-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; }
+  .note-page{ font-size:.72rem; font-weight:800; color:var(--accent); background:var(--accent-soft); padding:2px 8px; border-radius:999px; }
+  .note-date{ font-size:.72rem; color:var(--ink-faint); }
+  .note-text{ font-size:.9rem; line-height:1.5; white-space:pre-wrap; }
+  .note-actions{ display:flex; align-items:center; gap:10px; flex:none; }
+  .note-action-btn{ background:none; border:none; color:var(--ink-faint); font-size:.72rem; cursor:pointer; padding:0; }
+  .note-action-btn:hover{ color:var(--ink); }
+  .note-del{ background:none; border:none; color:var(--ink-faint); font-size:.72rem; cursor:pointer; padding:0; margin-top:6px; }
+  .note-del:hover{ color:var(--danger); }
+
+  .note-compose textarea, .note-edit-input{
+    width:100%;
+    border:1.5px solid var(--border);
+    background:var(--surface-muted);
+    color:var(--ink);
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:.88rem;
+    font-family:inherit;
+    min-height:56px;
+    resize:vertical;
+  }
+  .note-compose textarea:focus, .note-edit-input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .note-compose-actions{ display:flex; justify-content:flex-end; margin-top:8px; }
+  .note-edit-actions{ display:flex; justify-content:flex-end; gap:14px; margin-top:8px; }
+
+  /* modal */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(20,17,12,.45);
+    display:flex; align-items:flex-end; justify-content:center;
+    padding:0;
+    z-index:50;
+  }
+  @media (min-width:480px){
+    .modal-overlay{ align-items:center; padding:20px; }
+  }
+  .modal{
+    background:var(--surface);
+    width:100%;
+    max-width:428px;
+    border-radius:22px 22px 0 0;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  @media (min-width:480px){
+    .modal{ border-radius:22px; }
+  }
+  .modal h2{ font-size:1.1rem; font-weight:900; }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field label{ font-size:.8rem; font-weight:800; color:var(--ink-soft); }
+  .field input, .field textarea{
+    border:1.5px solid var(--border);
+    background:var(--surface-muted);
+    color:var(--ink);
+    border-radius:12px;
+    padding:11px 12px;
+    font-size:.95rem;
+  }
+  .field input:focus, .field textarea:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .field textarea{ resize:vertical; min-height:78px; }
+  .field-hint{ font-size:.76rem; color:var(--ink-faint); }
+  .modal-actions{ display:flex; gap:8px; margin-top:4px; }
+  .modal-error{ font-size:.8rem; color:var(--danger); font-weight:700; }
+
+  [hidden]{ display:none !important; }
+
+  button:focus-visible, .spine:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  @media (prefers-reduced-motion:no-preference){
+    .card{ transition:border-color .15s ease; }
+    .spine{ transition:transform .15s ease; }
+    .spine:hover, .spine:focus-visible{ transform:translateY(-3px); }
+  }
+</style>
+
+<div class="app" id="app">
+  <div class="topbar">
+    <h1>내 독서 기록</h1>
+    <div class="topbar-actions">
+      <button class="icon-nav-btn" id="statsNavBtn" data-nav="stats" title="독서 통계" aria-label="독서 통계로 이동">
+        <svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
+          <rect x="4" y="14" width="4" height="7"/>
+          <rect x="10" y="9" width="4" height="12"/>
+          <rect x="16" y="4" width="4" height="17"/>
+        </svg>
+      </button>
+      <button class="icon-nav-btn" id="libraryNavBtn" data-nav="library" title="내 책장" aria-label="내 책장으로 이동">
+        <svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
+          <rect x="3" y="6" width="4" height="14"/>
+          <rect x="9" y="3" width="4" height="17"/>
+          <rect x="15" y="8" width="4" height="12"/>
+          <rect x="3" y="20" width="18" height="1.6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div id="offlineNotice"></div>
+
+  <main>
+    <section id="view-home" class="view"></section>
+    <section id="view-library" class="view" hidden></section>
+    <section id="view-detail" class="view" hidden></section>
+    <section id="view-stats" class="view" hidden></section>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" hidden></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- state ---------------- */
+  var state = {
+    books: {},
+    view: "home",
+    selectedBookId: null,
+    detailFrom: "library", /* which screen "back" from the detail view returns to */
+    editingNoteId: null, /* which 북로그 is currently in its inline edit mode, if any */
+    statsSelectedDate: null, /* selected day (YYYY-MM-DD) on the 통계 calendar; null = today */
+    dbMode: null /* 'db' | 'local' */
+  };
+  var db = null;
+  var localImages = null;
+  var storageReady = null;
+  var localSeq = 0;
+
+  function uid(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    localSeq += 1;
+    return "id_" + Date.now() + "_" + localSeq;
+  }
+
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function nowIso(){ return new Date().toISOString(); }
+  function fmtShort(iso){
+    if(!iso) return "";
+    var d = new Date(iso);
+    return (d.getMonth()+1) + "월 " + d.getDate() + "일";
+  }
+  function fmtDot(iso){
+    if(!iso) return "";
+    var d = new Date(iso);
+    return d.getFullYear() + "." + String(d.getMonth()+1).padStart(2,"0") + "." + String(d.getDate()).padStart(2,"0");
+  }
+  function pct(cur, total){
+    if(!total || total<=0) return 0;
+    return Math.max(0, Math.min(100, Math.round((cur/total)*100)));
+  }
+  var COVER_COLORS = ["var(--cover-1)","var(--cover-2)","var(--cover-3)","var(--cover-4)","var(--cover-5)"];
+  function coverColor(id){
+    var h = 0;
+    for (var i=0;i<id.length;i++){ h = (h*31 + id.charCodeAt(i)) >>> 0; }
+    return COVER_COLORS[h % COVER_COLORS.length];
+  }
+
+  function getBooks(){
+    return Object.keys(state.books).map(function(k){ return state.books[k]; });
+  }
+  function getCurrentReadingBook(){
+    var reading = getBooks().filter(function(b){ return b.status === "reading"; });
+    reading.sort(function(a,b){ return new Date(b.updatedAt) - new Date(a.updatedAt); });
+    return reading[0] || null;
+  }
+  /* "오늘 기록"은 오직 페이지 기록(logPage/완독 처리) 여부로만 판단한다.
+     책 등록이나 메모 작성은 이 값을 건드리지 않는다. */
+  function hasLoggedToday(){
+    var t = todayStr();
+    return getBooks().some(function(b){ return b.lastPageLogDate === t; });
+  }
+  function todayPagesRead(){
+    var t = todayStr();
+    var total = 0;
+    getBooks().forEach(function(b){
+      if (b.lastPageLogDate === t && typeof b.dayStartPage === "number"){
+        var delta = b.currentPage - b.dayStartPage;
+        if (delta > 0) total += delta;
+      }
+    });
+    return total;
+  }
+  function countCompletedThisYear(){
+    var y = new Date().getFullYear();
+    return getBooks().filter(function(b){
+      return b.status === "done" && b.completedAt && new Date(b.completedAt).getFullYear() === y;
+    }).length;
+  }
+  function countCompletedThisMonth(){
+    var now = new Date();
+    var y = now.getFullYear(), m = now.getMonth();
+    return getBooks().filter(function(b){
+      if (b.status !== "done" || !b.completedAt) return false;
+      var d = new Date(b.completedAt);
+      return d.getFullYear() === y && d.getMonth() === m;
+    }).length;
+  }
+
+  /* ---------------- stats (read-only derived values) ----------------
+     Every function below only READS b.pageLogs (already written by
+     buildPageLogPatch for every real page change, completion included)
+     and never touches state.books or triggers a write. Nothing here can
+     affect page-record/completion/bunny logic. */
+  function dateKey(d){
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  /* Per-book net page movement for one calendar day, clamped at 0 per
+     book - matches todayPagesRead()'s existing rule exactly (it only
+     adds currentPage-dayStartPage when positive). A page correction
+     (negative net for that book that day) must never surface to the
+     user as "읽은 페이지" - it isn't reading, so it's dropped here
+     rather than netted into a total that could go negative. */
+  function bookRecordsOnDate(dateStr){
+    var out = [];
+    getBooks().forEach(function(b){
+      var net = 0;
+      (b.pageLogs || []).forEach(function(log){
+        if (log.date === dateStr) net += log.delta;
+      });
+      if (net > 0) out.push({ bookId: b.id, title: b.title, pages: net });
+    });
+    return out;
+  }
+  function pagesReadOnDate(dateStr){
+    return bookRecordsOnDate(dateStr).reduce(function(sum, r){ return sum + r.pages; }, 0);
+  }
+  /* This month's days as calendar cells, Monday-start (leadBlanks =
+     empty cells before the 1st so the grid lines up under 월~일). Only
+     the real current month - no prev/next navigation in this version. */
+  function monthCalendarDays(){
+    var now = new Date();
+    var year = now.getFullYear(), month = now.getMonth();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var firstWeekday = new Date(year, month, 1).getDay(); // 0=일..6=토
+    var leadBlanks = firstWeekday === 0 ? 6 : firstWeekday - 1;
+    var todayKey = dateKey(now);
+    var cells = [];
+    for (var d = 1; d <= daysInMonth; d++){
+      var ds = dateKey(new Date(year, month, d));
+      cells.push({ date: ds, day: d, isToday: ds === todayKey, hasRead: pagesReadOnDate(ds) > 0 });
+    }
+    return { label: (month + 1) + "월", leadBlanks: leadBlanks, cells: cells };
+  }
+  function fmtDayLabel(dateStr){
+    var parts = dateStr.split("-").map(Number);
+    var d = new Date(parts[0], parts[1]-1, parts[2]);
+    var days = ["일","월","화","수","목","금","토"];
+    return parts[1] + "." + parts[2] + " (" + days[d.getDay()] + ")";
+  }
+  /* 월요일 시작. 오늘이 주 중간이면 그 시점까지만 합산. */
+  function pagesReadThisWeek(){
+    var now = new Date();
+    var day = now.getDay();
+    var mondayOffset = (day === 0 ? -6 : 1) - day;
+    var monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + mondayOffset);
+    var total = 0;
+    for (var i = 0; i < 7; i++){
+      var d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      if (d > now) break;
+      total += pagesReadOnDate(dateKey(d));
+    }
+    return total;
+  }
+
+  /* ---------------- persistence ---------------- */
+  /* Applies an incoming doc snapshot to local state. Guarded by
+     `updatedAt`: an optimistic local write always sets `updatedAt` to
+     "now" before this can run, so a snapshot that is still catching up
+     (older `updatedAt`) is ignored instead of clobbering the fresher
+     local state — this is what previously let a delayed "book just
+     created" snapshot silently undo a page-log that happened right
+     after, reverting the bunny back to "기록 없음". */
+  function applyDoc(id, data){
+    if (!data){ delete state.books[id]; return; }
+    var existing = state.books[id];
+    if (existing && existing.updatedAt && data.updatedAt && data.updatedAt < existing.updatedAt){
+      return;
+    }
+    state.books[id] = Object.assign({ id: id }, data);
+  }
+
+  // Book documents and original image Blobs are persisted in this origin.
+  function storageTransaction(storeName, mode, action){
+    return storageReady.then(function(){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(storeName, mode);
+        var result;
+        try { result = action(tx.objectStore(storeName)); }
+        catch (err){ tx.abort(); reject(err); return; }
+        tx.oncomplete = function(){ resolve(result && result.result); };
+        tx.onerror = function(){ reject(tx.error); };
+        tx.onabort = function(){ reject(tx.error || new Error("저장 작업이 취소됐어요.")); };
+      });
+    });
+  }
+
+  function storageFailed(err){
+    console.error("북토끼 로컬 저장 실패", err);
+    state.dbMode = "local";
+    renderOffline();
+  }
+
+  function initDb(){
+    // Do not let edits race with the initial restoration.
+    document.getElementById("app").inert = true;
+    storageReady = new Promise(function(resolve, reject){
+      var request = indexedDB.open("booktokki", 1);
+      request.onupgradeneeded = function(){
+        var database = request.result;
+        database.createObjectStore("books", { keyPath: "id" });
+        database.createObjectStore("images", { keyPath: "id" });
+      };
+      request.onsuccess = function(){
+        db = request.result;
+        db.onversionchange = function(){ db.close(); storageFailed(new Error("저장소가 변경됐어요. 새로고침해 주세요.")); };
+        resolve();
+      };
+      request.onerror = function(){ reject(request.error); };
+      request.onblocked = function(){ storageFailed(new Error("다른 북토끼 탭을 닫고 새로고침해 주세요.")); };
+    });
+    Promise.all([
+      storageTransaction("books", "readonly", function(store){ return store.getAll(); }),
+      storageTransaction("images", "readonly", function(store){ return store.getAll(); })
+    ]).then(function(results){
+      var urls = {};
+      results[1].forEach(function(image){ urls[image.id] = URL.createObjectURL(image.blob); });
+      results[0].forEach(function(book){
+        if (book.coverId && urls[book.coverId]) book.coverUrl = urls[book.coverId];
+        applyDoc(book.id, book);
+      });
+      state.dbMode = "db";
+      renderAll();
+    }).catch(storageFailed).then(function(){
+      document.getElementById("app").inert = false;
+    });
+  }
+
+  function initAssets(){
+    localImages = {
+      upload: function(file){
+        var id = uid();
+        return storageTransaction("images", "readwrite", function(store){
+          store.put({ id: id, blob: file });
+        }).then(function(){
+          return { id: id, url: URL.createObjectURL(file) };
+        });
+      }
+    };
+  }
+
+  // Capture each optimistic change before the next mutation changes state.
+  function persistBook(id){
+    var data = JSON.parse(JSON.stringify(state.books[id]));
+    storageTransaction("books", "readwrite", function(store){ store.put(data); }).catch(storageFailed);
+  }
+  function writeBook(id, data){ persistBook(id); }
+  function writePatch(id, patch){ persistBook(id); }
+  function writeDelete(id){
+    storageTransaction("books", "readwrite", function(store){ store.delete(id); }).catch(storageFailed);
+  }
+
+  /* ---------------- mutations ---------------- */
+  /* Every mutation updates state.books and calls renderAll() FIRST (so
+     the screen reflects the change immediately, with no wait on any
+     round trip), then syncs the same change to the store. */
+  function addBook(title, author, totalPages, cover){
+    var id = uid();
+    var data = {
+      title: title,
+      author: author || "저자 미상",
+      totalPages: totalPages,
+      currentPage: 0,
+      status: "toread",
+      notes: [],
+      pageLogs: [],
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      completedAt: null,
+      lastPageLogDate: null,
+      dayStartPage: null,
+      coverId: (cover && cover.id) || null,
+      coverUrl: (cover && cover.url) || null
+    };
+    applyDoc(id, data);
+    renderAll();
+    writeBook(id, data);
+    return id;
+  }
+
+  /* Shared by logPage() and markDone() — both are "a page count was
+     recorded for this book today", so both must flip the home bunny.
+     `dayStartPage` is captured once, on the first page-log of a new
+     day, so todayPagesRead() can report how many pages moved today. */
+  function buildPageLogPatch(b, newPage){
+    var total = b.totalPages;
+    var p = Math.max(0, Math.min(total, newPage));
+    var today = todayStr();
+    var isNewLogDay = b.lastPageLogDate !== today;
+    var patch = {
+      currentPage: p,
+      updatedAt: nowIso(),
+      lastPageLogDate: today,
+      dayStartPage: isNewLogDay ? b.currentPage : (typeof b.dayStartPage === "number" ? b.dayStartPage : b.currentPage)
+    };
+    /* History-only for now (no calendar/stats screen yet) - every actual
+       page change is kept with its date so those can be built later
+       without a data migration. */
+    if (p !== b.currentPage){
+      var logs = (b.pageLogs || []).slice();
+      logs.push({
+        id: uid(),
+        date: today,
+        prevPage: b.currentPage,
+        currentPage: p,
+        delta: p - b.currentPage,
+        at: nowIso()
+      });
+      patch.pageLogs = logs;
+    }
+    if (p >= total && total > 0){
+      patch.status = "done";
+      patch.completedAt = b.completedAt || nowIso();
+    } else if (p > 0){
+      patch.status = "reading";
+    }
+    return patch;
+  }
+
+  function logPage(bookId, page){
+    var b = state.books[bookId];
+    if (!b) return;
+    var patch = buildPageLogPatch(b, page);
+    Object.assign(b, patch);
+    renderAll();
+    writePatch(bookId, patch);
+  }
+
+  function addNote(bookId, text, page){
+    var b = state.books[bookId];
+    if (!b) return;
+    var notes = (b.notes || []).slice();
+    notes.push({ id: uid(), bookId: bookId, text: text, page: page || null, createdAt: nowIso() });
+    /* Notes never touch lastPageLogDate/dayStartPage/pageLogs — the
+       home bunny and the page-history trail only react to an actual
+       page record, never to a 북로그. */
+    var patch = { notes: notes, updatedAt: nowIso() };
+    Object.assign(b, patch);
+    renderAll();
+    writePatch(bookId, patch);
+  }
+
+  /* Editing a 북로그 only ever touches its text - the page/date it was
+     written at is a record of that moment and stays put even if the
+     wording gets cleaned up later. */
+  function updateNote(bookId, noteId, text){
+    var b = state.books[bookId];
+    if (!b) return;
+    var notes = (b.notes || []).map(function(n){
+      return n.id === noteId ? Object.assign({}, n, { text: text }) : n;
+    });
+    var patch = { notes: notes, updatedAt: nowIso() };
+    Object.assign(b, patch);
+    state.editingNoteId = null;
+    renderAll();
+    writePatch(bookId, patch);
+  }
+
+  function deleteNote(bookId, noteId){
+    var b = state.books[bookId];
+    if (!b) return;
+    var notes = (b.notes || []).filter(function(n){ return n.id !== noteId; });
+    var patch = { notes: notes, updatedAt: nowIso() };
+    Object.assign(b, patch);
+    if (state.editingNoteId === noteId) state.editingNoteId = null;
+    renderAll();
+    writePatch(bookId, patch);
+  }
+
+  function markDone(bookId){
+    var b = state.books[bookId];
+    if (!b) return;
+    var patch = buildPageLogPatch(b, b.totalPages);
+    patch.status = "done";
+    patch.completedAt = b.completedAt || nowIso();
+    Object.assign(b, patch);
+    renderAll();
+    writePatch(bookId, patch);
+  }
+  function undoDone(bookId){
+    var b = state.books[bookId];
+    if (!b) return;
+    var patch = {
+      status: b.currentPage > 0 ? "reading" : "toread",
+      completedAt: null,
+      updatedAt: nowIso()
+    };
+    Object.assign(b, patch);
+    renderAll();
+    writePatch(bookId, patch);
+  }
+
+  /* "다 읽었어!" does the same completion write as before, then shows
+     one dry, unimpressed reaction from the same home bunny - not a
+     reward screen, just a beat before the detail view updates. */
+  function handleMarkDone(bookId){
+    markDone(bookId);
+    showDoneCelebration();
+  }
+  function showDoneCelebration(){
+    openModal('' +
+      '<div class="modal" style="align-items:center;text-align:center;">' +
+        '<div class="speech-bubble">인간이 책 한 권을 끝냄<br>제법인데.</div>' +
+        '<div class="bunny-figure" style="width:184px;height:226px;margin:10px auto 0;">' +
+          '<img class="bunny-done-img" src="assets/bunny-done.png" alt="책 위에 올라가 뻐기듯 서 있는 토끼">' +
+        '</div>' +
+        '<button class="btn btn-dark" id="doneCelebrateClose" style="width:100%;">확인</button>' +
+      '</div>');
+    document.getElementById("doneCelebrateClose").onclick = closeModal;
+  }
+
+  function setCover(bookId, cover){
+    var b = state.books[bookId];
+    if (!b) return;
+    var patch = { coverId: cover.id, coverUrl: cover.url, updatedAt: nowIso() };
+    Object.assign(b, patch);
+    renderAll();
+    writePatch(bookId, patch);
+  }
+
+  function removeBook(bookId){
+    delete state.books[bookId];
+    if (state.selectedBookId === bookId) state.selectedBookId = null;
+    renderAll();
+    writeDelete(bookId);
+  }
+
+  /* ---------------- nav ---------------- */
+  /* No bottom tab bar: home is the default screen, and 서재/책 상세 are
+     reached by tapping into them and left again with an explicit back
+     button — so `detailFrom` remembers whether a book was opened from
+     home (지금 읽는 중) or from 서재, and that back button returns there. */
+  function goTo(view, bookId){
+    state.view = view;
+    if (typeof bookId !== "undefined") state.selectedBookId = bookId;
+    state.editingNoteId = null; /* leaving/entering a screen always drops any open 북로그 edit */
+    state.statsSelectedDate = null; /* re-entering 통계 always starts back on today */
+    renderAll();
+  }
+  function openBook(bookId, from){
+    state.detailFrom = (from === "home") ? "home" : (from === "stats" ? "stats" : "library");
+    goTo("detail", bookId);
+  }
+
+  /* ---------------- render ---------------- */
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  function renderAll(){
+    document.getElementById("view-home").hidden = state.view !== "home";
+    document.getElementById("view-library").hidden = state.view !== "library";
+    document.getElementById("view-detail").hidden = state.view !== "detail";
+    document.getElementById("view-stats").hidden = state.view !== "stats";
+    document.getElementById("libraryNavBtn").hidden = state.view === "library";
+    document.getElementById("statsNavBtn").hidden = state.view === "stats";
+
+    renderOffline();
+    renderHome();
+    renderLibrary();
+    renderDetail();
+    renderStats();
+  }
+
+  function renderOffline(){
+    var el = document.getElementById("offlineNotice");
+    if (state.dbMode === "local"){
+      el.innerHTML = '<div class="offline-pill">로컬 저장소를 사용할 수 없어요. 지금 변경한 내용은 새로고침하면 사라질 수 있어요.</div>';
+    } else {
+      el.innerHTML = "";
+    }
+  }
+
+  /* ---- shared rig pieces, reused across every pose so the character
+     stays one consistent animal: same head/body ratio, same short
+     ears, same flat ㅡㅡ eyes. Only the props/limbs around this base
+     change per behavior. ---- */
+  function bunnyEarsUpright(){
+    return '<rect class="fur" x="15" y="5" width="4" height="6"/>'
+      + '<rect class="fur" x="21" y="5" width="4" height="6"/>'
+      + '<rect class="ear-inner" x="16" y="6.5" width="2" height="3.5"/>'
+      + '<rect class="ear-inner" x="22" y="6.5" width="2" height="3.5"/>';
+  }
+  function bunnyBodyUpright(){
+    /* head+body merged into one small rounded silhouette (single
+       outline, no internal seams - keeps it from reading as boxy
+       stacked furniture) */
+    return '<path class="fur" d="M14,10 L26,10 L26,12 L29,12 L29,14 L30,14 L30,18 L29,18 L29,20 L27,20 L27,22 L26,22 L26,24 L28,24 L28,28 L27,28 L27,29 L13,29 L13,28 L12,28 L12,24 L14,24 L14,22 L13,22 L13,20 L11,20 L11,18 L10,18 L10,14 L11,14 L11,12 L14,12 Z"/>';
+  }
+  function bunnyFaceUpright(){
+    /* sleepy, blank ㅡㅡ eyes - never big, sparkly, or angry, on any
+       pose - the joke is the mismatch between this face and the line */
+    return '<rect class="ink" x="13.5" y="16.2" width="2.6" height="1"/>'
+      + '<rect class="ink" x="23.9" y="16.2" width="2.6" height="1"/>'
+      + '<rect class="ink" x="19" y="18.6" width="2" height="1"/>'
+      + '<rect class="cheek" x="10.5" y="18.8" width="3" height="2"/>'
+      + '<rect class="cheek" x="26.5" y="18.8" width="3" height="2"/>';
+  }
+  function bunnyArmsUpright(){
+    return '<rect class="fur" x="8" y="24" width="3" height="4"/>'
+      + '<rect class="fur" x="29" y="24" width="3" height="4"/>';
+  }
+  function bunnyEarLoaf(){
+    /* one short ear, flopped back - lying down, only one shows */
+    return '<rect class="fur" x="31" y="9.5" width="7" height="5"/>'
+      + '<rect class="ear-inner" x="33" y="10.5" width="3" height="3"/>';
+  }
+  function bunnyBodyLoaf(){
+    return '<path class="fur" d="M16,14 L30,14 L30,16 L35,16 L35,18 L36,18 L36,20 L35,20 L35,22 L31,22 L31,23 L13,23 L13,22 L10,22 L10,20 L9,20 L9,18 L11,18 L11,16 L16,16 Z"/>';
+  }
+  function bunnyFaceLoaf(){
+    return '<rect class="ink" x="28.5" y="17.6" width="2.2" height="1"/>'
+      + '<rect class="ink" x="32.5" y="17.6" width="2.2" height="1"/>'
+      + '<rect class="ink" x="30.7" y="19.3" width="1.6" height="1"/>'
+      + '<rect class="cheek" x="26.3" y="19" width="2.3" height="1.8"/>'
+      + '<rect class="cheek" x="34.5" y="19" width="2.3" height="1.8"/>';
+  }
+  function bunnyBookStackUnder(){
+    return '<rect class="book-alt" x="2" y="27" width="14" height="3"/>'
+      + '<rect class="book" x="4" y="23" width="18" height="5"/>'
+      + '<rect class="book-page" x="5" y="24" width="15" height="1"/>';
+  }
+
+  /* ---- 오늘 기록 없음: 4 poses ---- */
+  function bunnyPoseNibble(){
+    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
+      + bunnyEarsUpright() + bunnyBodyUpright() + bunnyFaceUpright() + bunnyArmsUpright()
+      /* small book with a bite already taken out of the near corner
+         and a crumb mid-air - the "evil deed", entirely harmless */
+      + '<path class="book" d="M16,28 L27,28 L27,33 L13,33 L13,30 L16,30 Z"/>'
+      + '<rect class="book-page" x="17" y="29.5" width="9" height="1"/>'
+      + '<rect class="book" x="14.3" y="25.6" width="1.4" height="1.4"/>'
+      + '<rect class="book" x="17.4" y="24.4" width="1.1" height="1.1"/>'
+      + '</svg>';
+  }
+  function bunnyPoseSandKick(){
+    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
+      + bunnyEarsUpright() + bunnyBodyUpright() + bunnyFaceUpright() + bunnyArmsUpright()
+      /* a closed book knocked slightly askew, disappearing under a
+         wide kicked-up spray of dust - "burying the evidence" */
+      + '<g transform="rotate(8 20 31)">'
+        + '<rect class="book" x="12" y="29" width="16" height="4"/>'
+        + '<rect class="book-page" x="13" y="30" width="14" height="1"/>'
+      + '</g>'
+      + '<rect class="book-alt" x="8" y="24.5" width="2.1" height="2.1"/>'
+      + '<rect class="book-alt" x="12.2" y="21" width="1.7" height="1.7"/>'
+      + '<rect class="book-alt" x="16.5" y="25" width="2.3" height="2.3"/>'
+      + '<rect class="book-alt" x="23.2" y="22" width="1.9" height="1.9"/>'
+      + '<rect class="book-alt" x="28.3" y="25.2" width="2.1" height="2.1"/>'
+      + '</svg>';
+  }
+  function bunnyPoseHideBooks(){
+    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
+      + bunnyEarsUpright() + bunnyBodyUpright() + bunnyFaceUpright()
+      /* two book stacks flank it, tall enough to swallow everything
+         below the chin - only ears and eyes show over the top */
+      + '<rect class="book" x="3" y="20" width="8" height="15"/>'
+      + '<rect class="book-page" x="4" y="21" width="1" height="13"/>'
+      + '<rect class="book-alt" x="29" y="20" width="8" height="15"/>'
+      + '<rect class="book-page" x="35" y="21" width="1" height="13"/>'
+      + '</svg>';
+  }
+  function bunnyPoseLoafDefiant(){
+    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 44 34" shape-rendering="crispEdges" aria-hidden="true">'
+      + bunnyBookStackUnder() + bunnyBodyLoaf() + bunnyEarLoaf() + bunnyFaceLoaf()
+      /* one paw thrown straight up mid-"칼춤" - the whole performance */
+      + '<rect class="fur" x="19" y="8" width="3.4" height="7"/>'
+      + '<rect class="ink" x="23.2" y="7.4" width="1.8" height="0.8"/>'
+      + '</svg>';
+  }
+
+  /* ---- 오늘 기록 있음: 4 poses ---- */
+  function bunnyPoseSprawlSleep(){
+    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 44 34" shape-rendering="crispEdges" aria-hidden="true">'
+      + bunnyBookStackUnder() + bunnyBodyLoaf() + bunnyEarLoaf() + bunnyFaceLoaf()
+      + '</svg>';
+  }
+  function bunnyPoseLeanDoze(){
+    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
+      + '<g transform="rotate(-7 20 20)">'
+        + bunnyEarsUpright() + bunnyBodyUpright() + bunnyFaceUpright() + bunnyArmsUpright()
+      + '</g>'
+      /* a book stood up beside it to lean on, not a snack this time */
+      + '<rect class="book" x="30" y="13" width="6" height="19"/>'
+      + '<rect class="book-page" x="31" y="14" width="1" height="17"/>'
+      + '</svg>';
+  }
+  function bunnyPoseSitWatch(){
+    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
+      + bunnyEarsUpright() + bunnyBodyUpright() + bunnyFaceUpright() + bunnyArmsUpright()
+      /* just a closed book sitting neatly right beside it - for once,
+         not being eaten, kicked, or hidden behind */
+      + '<rect class="book" x="27" y="26" width="10" height="5"/>'
+      + '<rect class="book-page" x="28" y="27" width="8" height="1"/>'
+      + '</svg>';
+  }
+  function bunnyPoseFaceInBook(){
+    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
+      + bunnyEarsUpright() + bunnyBodyUpright() + bunnyArmsUpright()
+      /* an open spread lands right over the face - ears are the only
+         proof anyone is under there */
+      + '<rect class="book-page" x="10" y="15" width="10" height="8"/>'
+      + '<rect class="book-page" x="20" y="15" width="10" height="8"/>'
+      + '<rect class="book" x="19.3" y="14" width="1.4" height="9"/>'
+      + '<rect class="ink" x="12" y="18" width="6" height="0.6"/>'
+      + '<rect class="ink" x="22" y="18" width="6" height="0.6"/>'
+      + '</svg>';
+  }
+
+  /* Character Master 기준 이미지 에셋 풀. 홈 토끼는 더 이상 SVG로
+     그리지 않고 이 목록의 img만 <img>로 표시한다 - 새 행동이 추가되면
+     여기에 항목 하나만 더하면 되고, 코드로 그림을 그릴 필요는 없다.
+     (bunnyPoseNibble()과 그 rig 함수들은 완독 축하 팝업도 이미지 에셋으로
+     전환되면서 더 이상 어디서도 쓰이지 않지만, 삭제 대신 그대로 남겨둠 -
+     안전한 축소 범위 유지가 목적이라 죽은 코드 정리는 이번 작업 범위 밖) */
+  var BUNNY_NONE = [
+    { img: "assets/bunny-chew.png", alt: "책을 갉아먹는 토끼", bubble: "독서 안 함?<br>ㅇㅋ 책 내가 먹음" },
+    { img: "assets/bunny-kick.png", alt: "뒷발로 모래를 차서 책을 덮는 토끼", bubble: "증거 인멸 중" }
+  ];
+  var BUNNY_LOGGED = [
+    { img: "assets/bunny-sleep.png", alt: "책 위에 퍼져 자는 토끼", bubble: "인간이 책을 읽음<br>계획에 없던 일임" }
+  ];
+
+  /* Stable for the whole day (re-rendering shouldn't make the rabbit
+     twitch between poses), varies day to day, and is picked
+     independently for each mode so switching "기록 없음 → 있음"
+     doesn't just reuse whatever index the other pool happened to
+     land on. */
+  function hashStr(s){
+    var h = 0;
+    for (var i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+  }
+  function pickBunnyBehavior(pool, seedKey){
+    return pool[hashStr(todayStr() + "|" + seedKey) % pool.length];
+  }
+
+  /* The home screen's centerpiece: the rabbit, larger and front and
+     center, with its speech bubble reading like it's actually saying
+     something in the room — not a compact status row anymore. Same
+     hasLoggedToday()/todayPagesRead() logic as before; only the pose
+     pool and layout changed. */
+  function bunnyHero(){
+    var logged = hasLoggedToday();
+    var pick = pickBunnyBehavior(logged ? BUNNY_LOGGED : BUNNY_NONE, logged ? "logged" : "none");
+    var img = '<img class="bunny-img" src="' + esc(pick.img) + '" alt="' + esc(pick.alt || "") + '">';
+    var caption = pick.caption || "";
+    var zzz = pick.zzz ? '<div class="zzz"><span class="z1">Z</span><span class="z2">z</span><span class="z3">z</span></div>' : "";
+    var bubble = pick.bubble;
+    var status;
+    if (logged){
+      var todayPages = todayPagesRead();
+      status = "오늘 기록 있음" + (todayPages > 0 ? "<br>오늘 " + todayPages + "p 읽음" : "");
+    } else {
+      status = "오늘 기록 없음";
+    }
+    return '' +
+      '<div class="card bunny-hero">' +
+        '<div class="speech-bubble">' + bubble + '</div>' +
+        '<div class="bunny-figure">' + zzz + img + '</div>' +
+        (caption ? '<div class="bunny-caption">' + caption + '</div>' : '') +
+        '<div class="bunny-status">' + status + '</div>' +
+      '</div>';
+  }
+
+  /* 올해 완독 — now a small secondary line, not the home's headline. */
+  function statLine(){
+    var n = countCompletedThisYear();
+    var y = new Date().getFullYear();
+    return '<button class="stat-line" data-nav="library">' + y + '년 완독 <b>' + n + '권</b> ›</button>';
+  }
+
+  function coverEl(book){
+    if (book && book.coverUrl){
+      return '<div class="cover cover-img"><img src="' + esc(book.coverUrl) + '" alt="' + esc(book.title || "") + ' 표지"></div>';
+    }
+    var letter = (book.title || "?").trim().charAt(0) || "?";
+    return '<div class="cover" style="background:' + coverColor(book.id) + '">' + esc(letter) + '</div>';
+  }
+
+  /* Trimmed down from the old full card: just enough to see progress
+     and log a page without leaving home. Everything else (메모, 완독
+     처리, page history) lives in the book's own detail screen now. */
+  function currentBookMini(){
+    var b = getCurrentReadingBook();
+    if (!b){
+      return '' +
+        '<div>' +
+          '<div class="section-title">지금 읽는 중</div>' +
+          '<div class="card empty-state" style="margin-top:10px;">' +
+            '<p>아직 읽고 있는 책이 없어요.</p>' +
+            '<button class="btn btn-dark" style="flex:none;" id="emptyAddBookBtn">+ 읽을 책 추가</button>' +
+          '</div>' +
+        '</div>';
+    }
+    var p = pct(b.currentPage, b.totalPages);
+    return '' +
+      '<div>' +
+        '<div class="section-title">지금 읽는 중</div>' +
+        '<div class="card book-card" style="margin-top:10px;">' +
+          '<div class="book-row" data-open="' + b.id + '" data-open-from="home" style="cursor:pointer;">' +
+            coverEl(b) +
+            '<div class="book-meta">' +
+              '<div class="book-title">' + esc(b.title) + '</div>' +
+              '<div class="book-author">' + esc(b.author) + '</div>' +
+              '<div class="book-pages">' + b.currentPage + ' / ' + b.totalPages + ' p</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="progress-row">' +
+            '<div class="progress-track"><div class="progress-fill" style="width:' + p + '%"></div></div>' +
+            '<div class="progress-pct">' + p + '%</div>' +
+          '</div>' +
+          '<button class="btn btn-dark" style="width:100%;" data-log="' + b.id + '">+ 페이지 기록</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderHome(){
+    var el = document.getElementById("view-home");
+    el.innerHTML = '' +
+      bunnyHero() +
+      statLine() +
+      currentBookMini() +
+      '<button class="btn-dashed" id="addBookBtnHome">+ 읽을 책 추가</button>';
+  }
+
+  function statusBadge(status){
+    if (status === "reading") return '<span class="badge badge-reading">읽는 중</span>';
+    if (status === "toread") return '<span class="badge badge-toread">읽기 전</span>';
+    return "";
+  }
+
+  /* The completed-book marker: a small cream bookmark tab tucked into the
+     top edge (off to one side, not centered, so it reads as a bookmark
+     rather than a floating decoration), with two short bunny ears poking
+     up out of the tab. Ears reuse the mascot's fur/ear-inner colors via
+     .pixel-bunny; the tab reuses the app's own card-muted surface color
+     so it stays "크림/오프화이트" in both light and dark mode. Only the
+     tab's bottom edge dips into the cover — small and off-center enough
+     to never cover the title/cover art underneath it. */
+  function bunnyEarMarker(){
+    return '' +
+      '<svg class="ear-marker pixel-bunny" viewBox="0 0 18 22" shape-rendering="crispEdges" aria-hidden="true">' +
+        '<rect class="fur" x="4" y="2" width="4" height="9"/>' +
+        '<rect class="fur" x="10" y="2" width="4" height="9"/>' +
+        '<rect class="ear-inner" x="5" y="4" width="2" height="5"/>' +
+        '<rect class="ear-inner" x="11" y="4" width="2" height="5"/>' +
+        '<rect class="marker-tab" x="2" y="9" width="14" height="13"/>' +
+      '</svg>';
+  }
+
+  /* One book standing on the shelf. Spine width leans on the book's own
+     page count (a thicker book gets a thicker spine) so the shelf reads
+     as real books, not identical tiles. */
+  function spineEl(b){
+    var p = pct(b.currentPage, b.totalPages);
+    var widthPx = Math.max(46, Math.min(66, 42 + Math.round(b.totalPages / 14)));
+    var styleParts = ["width:" + widthPx + "px;"];
+    if (!b.coverUrl) styleParts.push("background:" + coverColor(b.id) + ";");
+    var inner = b.coverUrl
+      ? '<img src="' + esc(b.coverUrl) + '" alt="">'
+      : '<div class="spine-label">' + esc(b.title) + '</div>';
+    var doneLabel = b.status === "done" ? " (완독)" : "";
+    return '' +
+      '<div class="spine-wrap" style="width:' + widthPx + 'px;">' +
+        (b.status === "done" ? bunnyEarMarker() : "") +
+        '<button class="spine" style="' + styleParts.join("") + '" data-open="' + b.id + '" data-open-from="library" aria-label="' + esc(b.title) + doneLabel + '">' +
+          inner +
+          '<div class="spine-progress"><div class="spine-progress-fill" style="width:' + p + '%"></div></div>' +
+        '</button>' +
+      '</div>';
+  }
+
+  function renderLibrary(){
+    var el = document.getElementById("view-library");
+    var header = '' +
+      '<div class="sub-topbar">' +
+        '<button class="back-btn" data-nav="home" title="홈으로" aria-label="홈으로">' +
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
+        '</button>' +
+        '<h2>내 책장</h2>' +
+      '</div>';
+    var all = getBooks();
+    if (all.length === 0){
+      el.innerHTML = header +
+        '<div class="card empty-state" style="margin-top:14px;">' +
+          '<p>아직 책장이 비어 있어요. 첫 책을 꽂아 보세요.</p>' +
+          '<button class="btn btn-dark" style="flex:none;" id="emptyAddBookBtn2">+ 읽을 책 추가</button>' +
+        '</div>';
+      return;
+    }
+    /* Oldest first, so a newly added book takes the next open spot —
+       the shelf fills left-to-right, row by row, as a timeline. */
+    all.sort(function(a, b){ return new Date(a.createdAt) - new Date(b.createdAt); });
+    var ROW_SIZE = 4;
+    var rows = [];
+    for (var i = 0; i < all.length; i += ROW_SIZE){ rows.push(all.slice(i, i + ROW_SIZE)); }
+
+    el.innerHTML = header +
+      '<div style="display:flex;flex-direction:column;gap:2px;margin-top:14px;">' +
+        rows.map(function(row){
+          return '<div class="shelf-row">' + row.map(spineEl).join("") + '</div>';
+        }).join("") +
+      '</div>' +
+      '<button class="btn-dashed" id="addBookBtnLib" style="margin-top:18px;">+ 읽을 책 추가</button>';
+  }
+
+  function noteItem(bookId, n){
+    if (state.editingNoteId === n.id){
+      return '' +
+        '<div class="note-item">' +
+          '<textarea class="note-edit-input" data-editnoteinput="' + bookId + '|' + n.id + '">' + esc(n.text) + '</textarea>' +
+          '<div class="note-edit-actions">' +
+            '<button class="note-action-btn" data-canceledit="1">취소</button>' +
+            '<button class="note-action-btn" data-savenote="' + bookId + '|' + n.id + '">저장</button>' +
+          '</div>' +
+        '</div>';
+    }
+    /* body reads first; when it was written and how far in stay small
+       and secondary, right below it */
+    var meta = (n.page ? n.page + 'p · ' : '') + fmtDot(n.createdAt);
+    return '' +
+      '<div class="note-item">' +
+        '<div class="note-text">' + esc(n.text) + '</div>' +
+        '<div class="note-top">' +
+          '<span class="note-date">' + meta + '</span>' +
+          '<span class="note-actions">' +
+            '<button class="note-action-btn" data-editnote="' + bookId + '|' + n.id + '">수정</button>' +
+            '<button class="note-action-btn" data-delnote="' + bookId + '|' + n.id + '">삭제</button>' +
+          '</span>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderDetail(){
+    var el = document.getElementById("view-detail");
+    var id = state.selectedBookId;
+    if (!id || !state.books[id]){
+      var fallback = getCurrentReadingBook() || getBooks()[0];
+      if (fallback){ state.selectedBookId = fallback.id; id = fallback.id; }
+    }
+    var backTarget = state.detailFrom === "home" ? "home" : (state.detailFrom === "stats" ? "stats" : "library");
+    var header = '' +
+      '<div class="sub-topbar">' +
+        '<button class="back-btn" data-nav="' + backTarget + '" title="뒤로" aria-label="뒤로">' +
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
+        '</button>' +
+        '<h2>내 기록</h2>' +
+      '</div>';
+    if (!id || !state.books[id]){
+      el.innerHTML = header +
+        '<div class="card empty-state" style="margin-top:14px;">' +
+          '<p>등록된 책이 없어요. 먼저 책을 추가해 주세요.</p>' +
+          '<button class="btn btn-dark" style="flex:none;" id="emptyAddBookBtn3">+ 읽을 책 추가</button>' +
+        '</div>';
+      return;
+    }
+    var b = state.books[id];
+    var p = pct(b.currentPage, b.totalPages);
+    /* oldest first - reads like the thread of thought actually
+       unfolded while working through the book */
+    var notes = (b.notes || []).slice().sort(function(a,c){ return new Date(a.createdAt) - new Date(c.createdAt); });
+
+    el.innerHTML = header +
+      '<div class="card" style="margin-top:14px;">' +
+        '<div class="detail-header">' +
+          '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
+            '<div style="position:relative;">' +
+              (b.status === "done" ? bunnyEarMarker() : "") +
+              coverEl(b) +
+            '</div>' +
+            '<button class="cover-link-btn" data-editcover="' + b.id + '" type="button">표지 변경</button>' +
+          '</div>' +
+          '<div class="detail-title-block">' +
+            '<div class="detail-title">' + esc(b.title) + '</div>' +
+            '<div class="detail-author">' + esc(b.author) + '</div>' +
+            (b.status === "done"
+              ? ''
+              : '<div class="detail-status">' + statusBadge(b.status) + '</div>') +
+          '</div>' +
+          '<button class="icon-btn" id="deleteBookBtn" title="책 삭제" aria-label="책 삭제">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div style="margin-top:14px;" class="progress-row">' +
+          '<div class="progress-track"><div class="progress-fill" style="width:' + p + '%"></div></div>' +
+          '<div class="progress-pct">' + p + '%</div>' +
+        '</div>' +
+        '<div class="page-pages-edit" style="margin-top:6px;">' +
+          '<input type="number" class="page-inline-input" data-pageinput="' + b.id + '" inputmode="numeric" min="0" max="' + b.totalPages + '" value="' + b.currentPage + '" aria-label="현재 읽은 페이지">' +
+          '<span>/ ' + b.totalPages + ' p</span>' +
+        '</div>' +
+        '<div class="btn-row" style="margin-top:14px;">' +
+          (b.status === "done"
+            ? '<button class="btn btn-outline" data-undo="' + b.id + '" style="width:100%;">완독 취소</button>'
+            : '<button class="btn btn-dark" data-done="' + b.id + '" style="width:100%;">다 읽었어!</button>') +
+        '</div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="section-title">북로그 ' + notes.length + '개</div>' +
+        '<div class="note-compose" style="margin-top:10px;">' +
+          '<textarea id="noteComposeInput" placeholder="읽다가 든 생각을 남겨보세요"></textarea>' +
+          '<div class="note-compose-actions">' +
+            '<button class="btn btn-dark btn-small" data-savecompose="' + b.id + '">남기기</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="notes-list" style="margin-top:14px;">' +
+          (notes.length ? notes.map(function(n){ return noteItem(b.id, n); }).join("") : '<p style="font-size:.85rem;color:var(--ink-faint);padding:4px 2px;">아직 북로그가 없어요.</p>') +
+        '</div>' +
+      '</div>';
+  }
+
+  /* 오늘/이번 주 읽은 페이지, 이번 달/올해 완독 권수, 이번 달 캘린더
+     (읽은 날 점 표시 + 날짜 클릭 시 그날의 책별 기록)를 보여주는 통계
+     화면. pageLogs/completedAt을 읽기만 하고 쓰지 않음 - 목표·연속
+     독서일수·월 이동은 이번 버전에 없음. */
+  function renderStats(){
+    var el = document.getElementById("view-stats");
+    var header = '' +
+      '<div class="sub-topbar">' +
+        '<button class="back-btn" data-nav="home" title="홈으로" aria-label="홈으로">' +
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
+        '</button>' +
+        '<h2 class="stats-title">독서 통계</h2>' +
+      '</div>';
+
+    var today = todayPagesRead();
+    var week = pagesReadThisWeek();
+    var monthDone = countCompletedThisMonth();
+    var yearDone = countCompletedThisYear();
+    var cal = monthCalendarDays();
+    var selDate = state.statsSelectedDate || dateKey(new Date());
+    var records = bookRecordsOnDate(selDate);
+
+    var weekdayNames = ["월","화","수","목","금","토","일"];
+    var weekdaysHtml = weekdayNames.map(function(w){ return '<div class="cal-weekday">' + w + '</div>'; }).join("");
+    var leadHtml = "";
+    for (var i = 0; i < cal.leadBlanks; i++){ leadHtml += '<div class="cal-day cal-empty"></div>'; }
+    var daysHtml = cal.cells.map(function(c){
+      var cls = "cal-day" + (c.isToday ? " cal-today" : "") + (c.date === selDate ? " cal-selected" : "");
+      return '<button class="' + cls + '" data-selectday="' + c.date + '">' +
+        c.day +
+        (c.hasRead ? '<span class="cal-dot"></span>' : '') +
+        '</button>';
+    }).join("");
+
+    el.innerHTML = header +
+      '<div class="stats-summary" style="margin-top:20px;">' +
+        '<div class="stats-summary-item"><div class="stats-summary-label">오늘</div><div class="stats-summary-value">' + today + 'p</div></div>' +
+        '<div class="stats-summary-item"><div class="stats-summary-label">이번 주</div><div class="stats-summary-value">' + week + 'p</div></div>' +
+        '<div class="stats-summary-item"><div class="stats-summary-label">이번 달</div><div class="stats-summary-value">' + monthDone + '권</div></div>' +
+        '<div class="stats-summary-item"><div class="stats-summary-label">올해</div><div class="stats-summary-value">' + yearDone + '권</div></div>' +
+      '</div>' +
+      '<div style="margin-top:24px;">' +
+        '<div class="stats-heading">' + cal.label + '</div>' +
+        '<div class="card cal-card" style="margin-top:8px;">' +
+          '<div class="cal-grid cal-weekdays-row">' + weekdaysHtml + '</div>' +
+          '<div class="cal-grid cal-days-grid">' + leadHtml + daysHtml + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-top:24px;">' +
+        '<div class="stats-heading">' + fmtDayLabel(selDate) + '</div>' +
+        '<div class="card stats-day-card" style="margin-top:8px;">' +
+          (records.length
+            ? records.map(function(r, i){
+                var borderStyle = i < records.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
+                /* 그 책의 북로그를 보러 상세 화면으로 이동 - 페이지 기록과
+                   북로그는 별개 데이터라 "그날 쓴 북로그"만 골라 보여줄 수는
+                   없지만, 책을 눌러 북로그 목록으로 바로 넘어가는 것만으로도
+                   충분히 "그때 무슨 생각을 했는지 돌아보기"가 됨. */
+                return '<div class="stats-day-row" style="' + borderStyle + '" data-open="' + r.bookId + '" data-open-from="stats">' +
+                  '<span class="stats-day-label">' + esc(r.title) + '</span>' +
+                  '<span class="stats-day-pages">' + r.pages + 'p</span>' +
+                '</div>';
+              }).join("")
+            : '<p style="font-size:.85rem;color:var(--ink-faint);padding:10px 0;">이 날은 기록이 없어요.</p>') +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ---------------- modals ---------------- */
+  var overlay = document.getElementById("modalOverlay");
+  function closeModal(){
+    overlay.hidden = true;
+    overlay.innerHTML = "";
+  }
+  function openModal(html){
+    overlay.innerHTML = html;
+    overlay.hidden = false;
+    var first = overlay.querySelector("input, textarea");
+    if (first) setTimeout(function(){ first.focus(); }, 30);
+  }
+  overlay.addEventListener("click", function(e){
+    if (e.target === overlay) closeModal();
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && !overlay.hidden) closeModal();
+  });
+
+  function modalAddBook(from){
+    openModal('' +
+      '<div class="modal">' +
+        '<h2>읽을 책 추가</h2>' +
+        '<div class="field"><label for="f-title">제목</label><input id="f-title" type="text" placeholder="예: 아몬드" maxlength="80"></div>' +
+        '<div class="field"><label for="f-author">저자</label><input id="f-author" type="text" placeholder="예: 손원평" maxlength="60"></div>' +
+        '<div class="field"><label for="f-total">전체 페이지</label><input id="f-total" type="number" inputmode="numeric" min="1" placeholder="예: 264"></div>' +
+        '<div class="field">' +
+          '<label for="f-cover">표지 이미지 (선택)</label>' +
+          '<input id="f-cover" type="file" accept="image/*">' +
+          '<div class="field-hint">제목·저자로 표지를 자동으로 찾아오는 기능은 아직 지원하지 않아요. 가진 사진이 있다면 올려주세요.</div>' +
+        '</div>' +
+        '<div class="modal-error" id="addBookErr" hidden></div>' +
+        '<div class="modal-actions">' +
+          '<button class="btn btn-outline" id="addBookCancel">취소</button>' +
+          '<button class="btn btn-dark" id="addBookSave">추가하기</button>' +
+        '</div>' +
+      '</div>');
+    document.getElementById("addBookCancel").onclick = closeModal;
+    document.getElementById("addBookSave").onclick = function(){
+      var title = document.getElementById("f-title").value.trim();
+      var author = document.getElementById("f-author").value.trim();
+      var total = parseInt(document.getElementById("f-total").value, 10);
+      var file = document.getElementById("f-cover").files[0];
+      var err = document.getElementById("addBookErr");
+      if (!title){ err.textContent = "제목을 입력해 주세요."; err.hidden = false; return; }
+      if (!total || total <= 0){ err.textContent = "전체 페이지 수를 입력해 주세요."; err.hidden = false; return; }
+      var saveBtn = document.getElementById("addBookSave");
+      function finish(cover){
+        var id = addBook(title, author, total, cover);
+        closeModal();
+        openBook(id, from);
+      }
+      if (file && localImages){
+        saveBtn.disabled = true;
+        saveBtn.textContent = "업로드 중...";
+        localImages.upload(file).then(function(res){
+          finish({ id: res.id, url: res.url });
+        }).catch(function(){
+          finish(null);
+        });
+      } else {
+        finish(null);
+      }
+    };
+  }
+
+  function modalEditCover(bookId){
+    var b = state.books[bookId];
+    if (!b) return;
+    openModal('' +
+      '<div class="modal">' +
+        '<h2>표지 변경 · ' + esc(b.title) + '</h2>' +
+        (localImages
+          ? '<div class="field"><label for="f-cover2">표지 이미지</label><input id="f-cover2" type="file" accept="image/*"></div>' +
+            '<div class="field-hint">제목·저자로 표지를 자동으로 찾아오는 기능은 아직 지원하지 않아요. 사진을 올려 표지로 사용해 보세요.</div>'
+          : '<div class="field-hint">지금 이 화면에서는 표지 업로드를 사용할 수 없어요.</div>') +
+        '<div class="modal-error" id="coverErr" hidden></div>' +
+        '<div class="modal-actions">' +
+          '<button class="btn btn-outline" id="coverCancel">취소</button>' +
+          (localImages ? '<button class="btn btn-dark" id="coverSave">저장</button>' : '') +
+        '</div>' +
+      '</div>');
+    document.getElementById("coverCancel").onclick = closeModal;
+    var saveBtn = document.getElementById("coverSave");
+    if (saveBtn){
+      saveBtn.onclick = function(){
+        var file = document.getElementById("f-cover2").files[0];
+        var err = document.getElementById("coverErr");
+        if (!file){ err.textContent = "이미지를 선택해 주세요."; err.hidden = false; return; }
+        saveBtn.disabled = true;
+        saveBtn.textContent = "업로드 중...";
+        localImages.upload(file).then(function(res){
+          setCover(bookId, { id: res.id, url: res.url });
+          closeModal();
+        }).catch(function(){
+          err.textContent = "업로드에 실패했어요. 다시 시도해 주세요.";
+          err.hidden = false;
+          saveBtn.disabled = false;
+          saveBtn.textContent = "저장";
+        });
+      };
+    }
+  }
+
+  function modalLogPage(bookId){
+    var b = state.books[bookId];
+    if (!b) return;
+    openModal('' +
+      '<div class="modal">' +
+        '<h2>페이지 기록 · ' + esc(b.title) + '</h2>' +
+        '<div class="field">' +
+          '<label for="f-page">현재 페이지</label>' +
+          '<input id="f-page" type="number" inputmode="numeric" min="0" max="' + b.totalPages + '" value="' + b.currentPage + '">' +
+          '<div class="field-hint">전체 ' + b.totalPages + 'p · 진행률 <span id="pageLivePct">' + pct(b.currentPage, b.totalPages) + '</span>%</div>' +
+        '</div>' +
+        '<div class="modal-error" id="logPageErr" hidden></div>' +
+        '<div class="modal-actions">' +
+          '<button class="btn btn-outline" id="logPageCancel">취소</button>' +
+          '<button class="btn btn-dark" id="logPageSave">저장</button>' +
+        '</div>' +
+      '</div>');
+    var input = document.getElementById("f-page");
+    input.addEventListener("input", function(){
+      var v = parseInt(input.value, 10);
+      if (isNaN(v)) v = 0;
+      document.getElementById("pageLivePct").textContent = pct(v, b.totalPages);
+    });
+    document.getElementById("logPageCancel").onclick = closeModal;
+    document.getElementById("logPageSave").onclick = function(){
+      var v = parseInt(input.value, 10);
+      var err = document.getElementById("logPageErr");
+      if (isNaN(v) || v < 0){ err.textContent = "0 이상의 숫자를 입력해 주세요."; err.hidden = false; return; }
+      logPage(bookId, v);
+      closeModal();
+    };
+  }
+
+  /* ---------------- event delegation ---------------- */
+  document.body.addEventListener("click", function(e){
+    var t = e.target.closest("[data-nav]");
+    if (t){ goTo(t.getAttribute("data-nav")); return; }
+
+    t = e.target.closest("[data-selectday]");
+    if (t){ state.statsSelectedDate = t.getAttribute("data-selectday"); renderAll(); return; }
+
+    t = e.target.closest("[data-open]");
+    if (t){ openBook(t.getAttribute("data-open"), t.getAttribute("data-open-from")); return; }
+
+    t = e.target.closest("[data-log]");
+    if (t){ modalLogPage(t.getAttribute("data-log")); return; }
+
+    t = e.target.closest("[data-savecompose]");
+    if (t){
+      var composeBookId = t.getAttribute("data-savecompose");
+      var composeBook = state.books[composeBookId];
+      var composeInput = document.getElementById("noteComposeInput");
+      var composeText = composeInput ? composeInput.value.trim() : "";
+      if (composeBook && composeText){ addNote(composeBookId, composeText, composeBook.currentPage || null); }
+      return;
+    }
+
+    t = e.target.closest("[data-editnote]");
+    if (t){
+      var editParts = t.getAttribute("data-editnote").split("|");
+      state.editingNoteId = editParts[1];
+      renderAll();
+      return;
+    }
+
+    t = e.target.closest("[data-canceledit]");
+    if (t){ state.editingNoteId = null; renderAll(); return; }
+
+    t = e.target.closest("[data-savenote]");
+    if (t){
+      var saveParts = t.getAttribute("data-savenote").split("|");
+      var editBox = document.querySelector('[data-editnoteinput="' + saveParts[0] + '|' + saveParts[1] + '"]');
+      var newText = editBox ? editBox.value.trim() : "";
+      if (newText){ updateNote(saveParts[0], saveParts[1], newText); }
+      return;
+    }
+
+    t = e.target.closest("[data-done]");
+    if (t){ handleMarkDone(t.getAttribute("data-done")); return; }
+
+    t = e.target.closest("[data-undo]");
+    if (t){ undoDone(t.getAttribute("data-undo")); return; }
+
+    t = e.target.closest("[data-delnote]");
+    if (t){
+      var parts = t.getAttribute("data-delnote").split("|");
+      deleteNote(parts[0], parts[1]);
+      return;
+    }
+
+    t = e.target.closest("[data-editcover]");
+    if (t){ modalEditCover(t.getAttribute("data-editcover")); return; }
+
+    if (e.target.id === "addBookBtnHome" || e.target.id === "emptyAddBookBtn"){
+      modalAddBook("home");
+      return;
+    }
+    if (e.target.id === "addBookBtnLib" || e.target.id === "emptyAddBookBtn2" || e.target.id === "emptyAddBookBtn3"){
+      modalAddBook("library");
+      return;
+    }
+    if (e.target.id === "deleteBookBtn"){
+      var bk = state.books[state.selectedBookId];
+      if (bk && window.confirm('"' + bk.title + '"을(를) 삭제할까요? 되돌릴 수 없어요.')){
+        removeBook(state.selectedBookId);
+        goTo("library");
+      }
+      return;
+    }
+  });
+
+  /* Committing the inline current-page field - fires on blur/Enter,
+     same underlying page-log write as the old modal used. */
+  document.body.addEventListener("change", function(e){
+    var t = e.target.closest("[data-pageinput]");
+    if (!t) return;
+    var bookId = t.getAttribute("data-pageinput");
+    var b = state.books[bookId];
+    if (!b) return;
+    var v = parseInt(t.value, 10);
+    if (isNaN(v) || v < 0){ t.value = b.currentPage; return; }
+    logPage(bookId, v);
+  });
+
+  /* ---------------- boot ---------------- */
+  renderAll();
+  initDb();
+  initAssets();
+
+  /* Catch the day rolling over to the next date while the page stays
+     open, so the bunny resets to "오늘 기록 없음" without a reload. */
+  var lastKnownDay = todayStr();
+  setInterval(function(){
+    var t = todayStr();
+    if (t !== lastKnownDay){
+      lastKnownDay = t;
+      renderAll();
+    }
+  }, 60000);
+})();
+</script>
+
+</body></html>
