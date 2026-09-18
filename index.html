@@ -959,8 +959,9 @@
     if (p >= total && total > 0){
       patch.status = "done";
       patch.completedAt = b.completedAt || nowIso();
-    } else if (p > 0){
-      patch.status = "reading";
+    } else {
+      patch.status = p > 0 ? "reading" : "toread";
+      patch.completedAt = null;
     }
     return patch;
   }
@@ -970,6 +971,8 @@
     if (!b) return;
     var patch = buildPageLogPatch(b, page);
     Object.assign(b, patch);
+    var pageInput = document.querySelector('[data-pageinput="' + bookId + '"]');
+    if (pageInput){ pageInput.value = patch.currentPage; pageInput.defaultValue = patch.currentPage; }
     renderAll();
     writePatch(bookId, patch);
   }
@@ -984,6 +987,8 @@
        page record, never to a 북로그. */
     var patch = { notes: notes, updatedAt: nowIso() };
     Object.assign(b, patch);
+    var composeInput = document.getElementById("noteComposeInput");
+    if (composeInput) composeInput.value = "";
     renderAll();
     writePatch(bookId, patch);
   }
@@ -1098,6 +1103,23 @@
   }
 
   function renderAll(){
+    // Keep unsaved inputs only when the same book/input survives the render.
+    var detail = document.getElementById("view-detail");
+    var oldPage = detail.querySelector("[data-pageinput]");
+    var draftBookId = oldPage && oldPage.getAttribute("data-pageinput");
+    var drafts = [];
+    detail.querySelectorAll("textarea, [data-pageinput]").forEach(function(input){
+      if (input.hasAttribute("data-pageinput") && input.value === input.defaultValue) return;
+      drafts.push({
+        selector: input.id ? "#" + input.id : (input.hasAttribute("data-editnoteinput")
+          ? '[data-editnoteinput="' + input.getAttribute("data-editnoteinput") + '"]'
+          : "[data-pageinput]"),
+        value: input.value,
+        focused: document.activeElement === input,
+        start: input.selectionStart,
+        end: input.selectionEnd
+      });
+    });
     document.getElementById("view-home").hidden = state.view !== "home";
     document.getElementById("view-library").hidden = state.view !== "library";
     document.getElementById("view-detail").hidden = state.view !== "detail";
@@ -1110,6 +1132,17 @@
     renderLibrary();
     renderDetail();
     renderStats();
+    if (draftBookId === state.selectedBookId){
+      drafts.forEach(function(draft){
+        var input = detail.querySelector(draft.selector);
+        if (!input) return;
+        input.value = draft.value;
+        if (draft.focused && state.view === "detail"){
+          input.focus({ preventScroll: true });
+          if (draft.start !== null) input.setSelectionRange(draft.start, draft.end);
+        }
+      });
+    }
   }
 
   function renderOffline(){
