@@ -732,6 +732,96 @@
     width:calc(100% - 48px); top:auto;
     bottom:calc(8px + env(safe-area-inset-bottom, 0px));
   }
+
+  /* Visual System v0.5: detail-only editorial reading traces. */
+  body.detail-prototype{ background:#fff; color:#171717; padding-top:28px; }
+  body.detail-prototype .app{ padding-inline:24px; gap:24px; }
+  body.detail-prototype .topbar h1{ color:#909090; font-size:.8rem; font-weight:500; }
+  body.detail-prototype .topbar-actions{ gap:6px; }
+  body.detail-prototype .icon-nav-btn{
+    width:36px; height:36px; border:0; border-radius:3px; background:transparent; color:#171717;
+  }
+  body.detail-prototype .icon-nav-btn:hover{ background:#f5f5f5; }
+  body.detail-prototype .rabbit-event{
+    width:calc(100% - 48px); top:auto;
+    bottom:calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+  body.detail-prototype .rabbit-event .speech-bubble{
+    background:#fff; color:#171717; border:1px solid #e9e9e9;
+    border-radius:7px; font-weight:500; line-height:1.5;
+  }
+  body.detail-prototype .rabbit-event .speech-bubble::before{ background:#fff; border-color:#e9e9e9; border-width:1px; }
+  #view-detail{
+    --ink:#171717; --ink-soft:#737373; --ink-faint:#909090;
+    --surface:#fff; --surface-muted:#f7f7f7; --border:#e9e9e9;
+    --track:#eeeeee; --fill:#171717; --bg:#fff;
+    --cover-1:#eed0d4; --cover-2:#dbe6d5; --cover-3:#d7e4ee;
+    --cover-4:#f1e7b9; --cover-5:#e4dbea;
+  }
+  #view-detail .sub-topbar{ gap:8px; }
+  #view-detail .sub-topbar h2{ font-size:.95rem; font-weight:600; }
+  #view-detail .back-btn{ width:32px; height:32px; border:0; border-radius:3px; background:transparent; }
+  #view-detail .back-btn:hover{ background:#f5f5f5; }
+  #view-detail .detail-overview{ margin-top:28px; }
+  #view-detail .detail-header{ gap:16px; }
+  #view-detail .detail-header .cover{ width:64px; height:90px; border:0; border-radius:3px; font-size:1.35rem; font-weight:600; }
+  #view-detail .detail-title{ font-size:1.3rem; font-weight:600; line-height:1.35; letter-spacing:-.02em; }
+  #view-detail .detail-author{ margin-top:5px; font-size:.78rem; font-weight:400; }
+  #view-detail .detail-status{ margin-top:10px; }
+  #view-detail .badge{ padding:2px 0; border:0; border-radius:0; background:none; font-size:.68rem; font-weight:400; color:#909090; }
+  #view-detail .cover-link-btn{ color:#909090; font-size:.64rem; font-weight:400; }
+  #view-detail .icon-btn{ width:32px; height:32px; border:0; border-radius:3px; background:transparent; }
+  #view-detail .icon-btn:hover{ background:#f7f7f7; }
+  #view-detail .reading-position{ margin-top:32px; padding-block:22px 20px; border-block:1px solid #e9e9e9; }
+  #view-detail .reading-position-label{ display:block; color:#737373; font-size:.72rem; font-weight:400; }
+  #view-detail .reading-position-main{ display:flex; align-items:baseline; gap:6px; margin-top:12px; }
+  #view-detail .page-inline-input{
+    width:5.5ch; max-width:50%; padding:0 0 3px; border:0; border-bottom:1px solid #bdbdbd;
+    border-radius:0; background:transparent; color:#171717; font-size:2rem; font-weight:500;
+    line-height:1; text-align:left; letter-spacing:-.04em;
+  }
+  #view-detail .page-inline-input::-webkit-inner-spin-button,
+  #view-detail .page-inline-input::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  #view-detail .page-inline-input:focus{ outline:0; border-color:#171717; }
+  #view-detail .reading-total{ color:#737373; font-size:.8rem; }
+  #view-detail .reading-position-main .progress-pct{ margin-left:auto; color:#171717; font-size:.82rem; font-weight:500; }
+  #view-detail .reading-position .progress-row{ margin-top:14px; }
+  #view-detail .reading-position .progress-track{ height:3px; border-radius:0; }
+  #view-detail .reading-position .progress-fill{ border-radius:0; }
+  #view-detail .completion-action{ display:flex; justify-content:flex-end; margin-top:12px; }
+  #view-detail .completion-action .btn{
+    flex:none; width:auto !important; min-height:40px; padding:9px 0; border:0; border-radius:0;
+    background:transparent; color:#737373; font-size:.74rem; font-weight:400;
+  }
+  #view-detail .completion-action .btn:hover{ color:#171717; }
+  #view-detail .traces-section{ margin-top:46px; }
+  #view-detail .traces-heading{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  #view-detail .traces-heading .section-title{ padding:0; font-size:1rem; font-weight:600; }
+  #view-detail .traces-count{ color:#909090; font-size:.7rem; }
+  #view-detail .note-compose{ margin-top:18px; border-bottom:1px solid #e9e9e9; padding-bottom:10px; }
+  #view-detail .note-compose textarea, #view-detail .note-edit-input{
+    field-sizing:content; min-height:44px; max-height:180px; padding:8px 0;
+    border:0; border-radius:0; background:transparent; color:#171717;
+    font-size:.88rem; line-height:1.6; resize:vertical;
+  }
+  #view-detail .note-compose textarea:focus, #view-detail .note-edit-input:focus{ outline:0; }
+  #view-detail .note-compose-actions{ align-items:center; justify-content:space-between; margin-top:4px; }
+  #view-detail .composer-page{ color:#909090; font-size:.7rem; }
+  #view-detail .note-compose-actions .btn{
+    flex:none; min-height:40px; padding:8px 0 8px 14px; border:0; border-radius:0;
+    background:transparent; color:#737373; font-size:.74rem; font-weight:500;
+  }
+  #view-detail .note-compose-actions .btn:hover{ color:#171717; }
+  #view-detail .notes-list{ gap:0; margin-top:8px !important; }
+  #view-detail .note-item{ padding:20px 0; border:0; border-bottom:1px solid #e9e9e9; border-radius:0; background:none; }
+  #view-detail .note-date{ display:block; margin-bottom:8px; color:#909090; font-size:.7rem; }
+  #view-detail .note-text{ color:#171717; font-size:.9rem; line-height:1.7; }
+  #view-detail .note-top{ justify-content:flex-end; margin-top:10px; }
+  #view-detail .note-actions{ gap:14px; }
+  #view-detail .note-action-btn{ min-height:32px; padding:5px 0; color:#909090; font-size:.68rem; }
+  #view-detail .note-action-btn:hover{ color:#171717; }
+  #view-detail .note-edit-actions{ margin-top:6px; }
+  #view-detail .traces-empty{ color:#909090; font-size:.78rem; padding:20px 0; }
 </style>
 
 <div class="app" id="app">
@@ -807,6 +897,12 @@
     if(!iso) return "";
     var d = new Date(iso);
     return d.getFullYear() + "." + String(d.getMonth()+1).padStart(2,"0") + "." + String(d.getDate()).padStart(2,"0");
+  }
+  function fmtMonthDay(iso){
+    if(!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    return (d.getMonth()+1) + "." + d.getDate();
   }
   function pct(cur, total){
     if(!total || total<=0) return 0;
@@ -1193,7 +1289,7 @@
     var b = state.books[bookId];
     if (!b) return;
     var notes = (b.notes || []).slice();
-    notes.push({ id: uid(), bookId: bookId, text: text, page: page || null, createdAt: nowIso() });
+    notes.push({ id: uid(), bookId: bookId, text: text, page: Number.isFinite(page) ? page : null, createdAt: nowIso() });
     /* Notes never touch lastPageLogDate/dayStartPage/pageLogs — the
        home bunny and the page-history trail only react to an actual
        page record, never to a 북로그. */
@@ -1317,6 +1413,7 @@
 
   function renderAll(){
     document.body.classList.toggle("home-prototype", state.view === "home");
+    document.body.classList.toggle("detail-prototype", state.view === "detail");
     document.querySelector(".topbar h1").textContent = state.view === "home" ? "BOOKTOKKI" : "내 독서 기록";
     // Keep unsaved inputs only when the same book/input survives the render.
     var detail = document.getElementById("view-detail");
@@ -1725,14 +1822,12 @@
           '</div>' +
         '</div>';
     }
-    /* body reads first; when it was written and how far in stay small
-       and secondary, right below it */
-    var meta = (n.page ? n.page + 'p · ' : '') + fmtDot(n.createdAt);
+    var meta = (n.page != null ? 'p.' + n.page + ' · ' : '') + fmtMonthDay(n.createdAt);
     return '' +
       '<div class="note-item">' +
+        '<span class="note-date">' + meta + '</span>' +
         '<div class="note-text">' + esc(n.text) + '</div>' +
         '<div class="note-top">' +
-          '<span class="note-date">' + meta + '</span>' +
           '<span class="note-actions">' +
             '<button class="note-action-btn" data-editnote="' + bookId + '|' + n.id + '">수정</button>' +
             '<button class="note-action-btn" data-delnote="' + bookId + '|' + n.id + '">삭제</button>' +
@@ -1771,7 +1866,7 @@
     var notes = (b.notes || []).slice().sort(function(a,c){ return new Date(a.createdAt) - new Date(c.createdAt); });
 
     el.innerHTML = header +
-      '<div class="card" style="margin-top:14px;">' +
+      '<div class="detail-overview">' +
         '<div class="detail-header">' +
           '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
             '<div style="position:relative;">' +
@@ -1791,31 +1886,32 @@
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>' +
           '</button>' +
         '</div>' +
-        '<div style="margin-top:14px;" class="progress-row">' +
-          '<div class="progress-track"><div class="progress-fill" style="width:' + p + '%"></div></div>' +
-          '<div class="progress-pct">' + p + '%</div>' +
-        '</div>' +
-        '<label class="page-record-label" for="currentPageInput">페이지 기록</label>' +
-        '<div class="page-pages-edit" style="margin-top:6px;">' +
+        '<div class="reading-position">' +
+          '<label class="reading-position-label" for="currentPageInput">현재 읽은 위치</label>' +
+          '<div class="reading-position-main">' +
           '<input id="currentPageInput" type="number" class="page-inline-input" data-pageinput="' + b.id + '" inputmode="numeric" min="0" max="' + b.totalPages + '" value="' + b.currentPage + '" aria-label="현재 읽은 페이지">' +
-          '<span>/ ' + b.totalPages + ' p</span>' +
+            '<span class="reading-total">/ ' + b.totalPages + 'p</span>' +
+            '<span class="progress-pct">' + p + '%</span>' +
+          '</div>' +
+          '<div class="progress-row"><div class="progress-track"><div class="progress-fill" style="width:' + p + '%"></div></div></div>' +
         '</div>' +
-        '<div class="btn-row" style="margin-top:14px;">' +
+        '<div class="completion-action">' +
           (b.status === "done"
             ? '<button class="btn btn-outline" data-undo="' + b.id + '" style="width:100%;">완독 취소</button>'
             : '<button class="btn btn-outline" data-done="' + b.id + '" style="width:100%;">다 읽었어!</button>') +
         '</div>' +
       '</div>' +
-      '<div>' +
-        '<div class="section-title">북로그 ' + notes.length + '개</div>' +
-        '<div class="note-compose" style="margin-top:10px;">' +
+      '<div class="traces-section">' +
+        '<div class="traces-heading"><div class="section-title">이 책에 남긴 흔적</div><span class="traces-count">' + notes.length + '개</span></div>' +
+        '<div class="note-compose">' +
           '<textarea id="noteComposeInput" placeholder="읽다가 든 생각을 남겨보세요"></textarea>' +
           '<div class="note-compose-actions">' +
-            '<button class="btn btn-dark btn-small" data-savecompose="' + b.id + '">남기기</button>' +
+            '<span class="composer-page">p.' + b.currentPage + '</span>' +
+            '<button class="btn btn-small" data-savecompose="' + b.id + '">남기기</button>' +
           '</div>' +
         '</div>' +
         '<div class="notes-list" style="margin-top:14px;">' +
-          (notes.length ? notes.map(function(n){ return noteItem(b.id, n); }).join("") : '<p style="font-size:.85rem;color:var(--ink-faint);padding:4px 2px;">아직 북로그가 없어요.</p>') +
+          (notes.length ? notes.map(function(n){ return noteItem(b.id, n); }).join("") : '<p class="traces-empty">아직 남긴 흔적이 없어요.</p>') +
         '</div>' +
       '</div>';
   }
@@ -2045,7 +2141,7 @@
       var composeBook = state.books[composeBookId];
       var composeInput = document.getElementById("noteComposeInput");
       var composeText = composeInput ? composeInput.value.trim() : "";
-      if (composeBook && composeText){ addNote(composeBookId, composeText, composeBook.currentPage || null); }
+      if (composeBook && composeText){ addNote(composeBookId, composeText, composeBook.currentPage); }
       return;
     }
 
