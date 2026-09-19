@@ -192,7 +192,6 @@
      넓은 여백 안에 작은 캐릭터가 혼자 있는 듯한 존재감을 냄
      (1차 68% → 2차로 그 70% 수준까지 추가 축소, 목표 범위 최초의 45~50%) */
   .bunny-img{ max-width:47%; max-height:47%; width:auto; height:auto; display:block; }
-  .bunny-svg{ width:184px; height:226px; display:block; }
   /* 완독 축하 팝업 전용 이미지(Character Master 완독 포즈). 홈 토끼처럼
      박스 안을 꽉 채우지 않고 여백 안에 작게 행동하는 느낌을 유지하되,
      한 번성 축하 모먼트라 홈(47%)보다는 조금 더 뚜렷하게 보이도록 함.
@@ -201,12 +200,6 @@
   .pixel-bunny rect, .pixel-bunny path{ stroke:#2A2018; stroke-width:1; stroke-linejoin:miter; }
   .pixel-bunny .fur{ fill:#FFFBF3; }
   .pixel-bunny .ear-inner{ fill:#F0B7B2; }
-  .pixel-bunny .cheek{ fill:#F3C6C1; }
-  .pixel-bunny .ink{ fill:#2A2018; }
-  .pixel-bunny .book{ fill:#AD8358; }
-  .pixel-bunny .book-alt{ fill:#C79B6C; }
-  .pixel-bunny .book-page{ fill:#F3E6CE; }
-  .pixel-bunny .notch{ fill:var(--surface); stroke:none; }
   .bunny-caption{
     font-size:.78rem;
     color:var(--ink-faint);
@@ -326,9 +319,6 @@
   }
   .cal-day.cal-selected .cal-dot{ background:var(--surface); }
 
-  /* current book card */
-  .book-card{ display:flex; flex-direction:column; gap:12px; }
-  .book-row{ display:flex; gap:12px; }
   .cover{
     flex:none;
     width:56px;
@@ -361,7 +351,6 @@
   .book-title{ font-size:1.02rem; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .book-author{ font-size:.82rem; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .book-pages{ font-size:.78rem; color:var(--ink-faint); font-variant-numeric:tabular-nums; margin-top:2px; }
-  .page-pages-edit{ display:flex; align-items:center; gap:5px; font-size:.78rem; color:var(--ink-faint); font-variant-numeric:tabular-nums; }
   .page-inline-input{
     width:56px;
     font-size:.9rem;
@@ -375,8 +364,6 @@
     font-variant-numeric:tabular-nums;
   }
   .page-inline-input:focus{ outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
-  .page-record-label{ display:block; font-size:.88rem; font-weight:800; margin-top:16px; }
-  .page-pages-edit .page-inline-input{ width:76px; font-size:1.15rem; padding:8px; }
 
   /* A passing character, without a notification panel or interaction. */
   .rabbit-event{
@@ -417,8 +404,6 @@
   }
   .progress-fill{ height:100%; background:var(--fill); border-radius:999px; }
   .progress-pct{ font-size:.78rem; font-weight:800; font-variant-numeric:tabular-nums; width:36px; text-align:right; }
-
-  .book-foot{ display:flex; align-items:center; justify-content:space-between; font-size:.78rem; color:var(--ink-faint); }
 
   .btn-row{ display:flex; gap:8px; }
   .btn{
@@ -562,15 +547,11 @@
     padding:12px 14px;
   }
   .note-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; }
-  .note-page{ font-size:.72rem; font-weight:800; color:var(--accent); background:var(--accent-soft); padding:2px 8px; border-radius:999px; }
   .note-date{ font-size:.72rem; color:var(--ink-faint); }
   .note-text{ font-size:.9rem; line-height:1.5; white-space:pre-wrap; }
   .note-actions{ display:flex; align-items:center; gap:10px; flex:none; }
   .note-action-btn{ background:none; border:none; color:var(--ink-faint); font-size:.72rem; cursor:pointer; padding:0; }
   .note-action-btn:hover{ color:var(--ink); }
-  .note-del{ background:none; border:none; color:var(--ink-faint); font-size:.72rem; cursor:pointer; padding:0; margin-top:6px; }
-  .note-del:hover{ color:var(--danger); }
-
   .note-compose textarea, .note-edit-input{
     width:100%;
     border:1.5px solid var(--border);
@@ -684,10 +665,6 @@
   #view-home .stat-line:hover .monthly-label{ color:#171717; }
   #view-home > div:not(.bunny-hero){ margin-top:28px; }
   #view-home .section-title{ padding:0; font-size:.95rem; font-weight:600; }
-  #view-home .book-card{
-    border:0; border-radius:0; padding:0; gap:18px; margin-top:20px !important; background:none;
-  }
-  #view-home .book-row{ gap:16px; }
   #view-home .cover{ border:0; border-radius:3px; font-weight:600; }
   #view-home .book-meta{ gap:4px; }
   #view-home .book-title{ font-size:1.1rem; font-weight:600; }
@@ -822,6 +799,95 @@
   #view-detail .note-action-btn:hover{ color:#171717; }
   #view-detail .note-edit-actions{ margin-top:6px; }
   #view-detail .traces-empty{ color:#909090; font-size:.78rem; padding:20px 0; }
+
+  /* Visual System v0.6: library-only physical reading traces. */
+  body.library-prototype{ background:#fff; color:#171717; padding-top:28px; }
+  body.library-prototype .app{ padding-inline:24px; gap:24px; }
+  body.library-prototype .topbar h1{ color:#909090; font-size:.8rem; font-weight:500; }
+  body.library-prototype .topbar-actions{ gap:6px; }
+  body.library-prototype .icon-nav-btn{ width:36px; height:36px; border:0; border-radius:3px; background:transparent; color:#171717; }
+  body.library-prototype .icon-nav-btn:hover{ background:#f5f5f5; }
+  #view-library{
+    --ink:#171717; --ink-soft:#737373; --ink-faint:#909090;
+    --surface:#fff; --surface-muted:#f7f7f7; --border:#e9e9e9;
+    --track:#eeeeee; --fill:#171717; --bg:#fff;
+    --cover-1:#eed0d4; --cover-2:#dbe6d5; --cover-3:#d7e4ee;
+    --cover-4:#f1e7b9; --cover-5:#e4dbea;
+  }
+  #view-library .sub-topbar{ gap:8px; }
+  #view-library .sub-topbar h2{ font-size:1.1rem; font-weight:600; letter-spacing:-.02em; }
+  #view-library .back-btn{ width:32px; height:32px; border:0; border-radius:3px; background:transparent; }
+  #view-library .back-btn:hover{ background:#f5f5f5; }
+  #view-library .library-shelves{ display:flex; flex-direction:column; margin-top:30px; }
+  #view-library .shelf-row{
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); align-items:end; gap:8px;
+    min-height:166px; padding:42px 2px 13px; border:0; border-bottom:1px solid #cfcfcf;
+    border-radius:0; box-shadow:none;
+  }
+  #view-library .spine-wrap{
+    width:100% !important; height:110px; display:flex; align-items:flex-end; justify-content:center;
+    position:relative; min-width:0;
+  }
+  #view-library .book-object{
+    position:relative; width:min(var(--spine-width),100%); height:var(--spine-height);
+    transform-origin:50% 100%; z-index:1;
+  }
+  #view-library .book-object.lean-left{ transform:rotate(-1.4deg); }
+  #view-library .book-object.lean-right{ transform:rotate(1.4deg); }
+  #view-library .spine{
+    width:100%; height:100%; border:1px solid rgba(23,23,23,.15); border-radius:2px 2px 1px 1px;
+    background:var(--surface-muted); box-shadow:none; overflow:hidden;
+  }
+  #view-library .spine:hover{ border-color:rgba(23,23,23,.38); }
+  #view-library .spine img{ image-rendering:auto; }
+  #view-library .spine-label{ max-height:calc(100% - 12px); padding:8px 0; color:#171717; opacity:.78; font-size:.68rem; font-weight:600; }
+  #view-library .spine-progress{ height:2px; background:rgba(23,23,23,.1); }
+  #view-library .spine-progress-fill{ background:#171717; opacity:.65; }
+  #view-library .reading-bookmark{
+    position:absolute; z-index:4; top:-8px; right:7px; width:9px; height:23px;
+    background:#d9a6a2; border:1px solid rgba(23,23,23,.12); border-bottom:0; pointer-events:none;
+  }
+  #view-library .reading-bookmark::after{
+    content:""; position:absolute; left:-1px; bottom:-6px; width:9px; height:7px;
+    background:#d9a6a2; clip-path:polygon(0 0,100% 0,50% 100%);
+  }
+  #view-library .note-tabs{ position:absolute; inset:0; z-index:5; pointer-events:none; }
+  #view-library .note-tab{ position:absolute; right:-5px; width:12px; height:7px; border:1px solid rgba(23,23,23,.1); border-left:0; }
+  #view-library .note-tab:nth-child(1){ top:24%; background:#f0dda4; }
+  #view-library .note-tab:nth-child(2){ top:48%; background:#cbded0; }
+  #view-library .note-tab:nth-child(3){ top:70%; background:#d8d7e8; }
+  #view-library .wear-trace{ position:absolute; inset:0; z-index:3; pointer-events:none; }
+  #view-library .wear-trace::before,
+  #view-library .wear-trace::after{ content:""; position:absolute; border-color:rgba(23,23,23,.22); }
+  #view-library .wear-trace::before{ left:5px; top:15px; width:8px; height:1px; border-top:1px solid; transform:rotate(-18deg); }
+  #view-library .wear-trace::after{ right:4px; bottom:13px; width:6px; height:6px; border-right:1px solid; border-bottom:1px solid; }
+  #view-library .wear-trace.is-returned-more{ box-shadow:inset 1px 0 rgba(23,23,23,.12), inset -1px 0 rgba(23,23,23,.08); }
+  #view-library .completion-mark{
+    position:absolute; z-index:2; left:7px; top:-5px; width:7px; height:13px;
+    border:1px solid rgba(23,23,23,.3); border-bottom:0; background:#fff; pointer-events:none;
+  }
+  #view-library .completion-mark::after{
+    content:""; position:absolute; left:-1px; bottom:-4px; width:7px; height:5px;
+    background:#fff; clip-path:polygon(0 0,100% 0,50% 100%);
+  }
+  #view-library .library-rabbit{
+    position:absolute; z-index:8; width:58px; height:45px; right:-7px; top:-38px;
+    object-fit:contain; image-rendering:pixelated; pointer-events:none;
+    filter:drop-shadow(0 1px 0 rgba(23,23,23,.08));
+  }
+  #view-library .library-empty{ margin-top:28px; padding:28px 0; border:0; background:none; }
+  #view-library .library-empty p{ color:#737373; font-size:.8rem; font-weight:400; }
+  #view-library .library-empty .btn{ flex:none; min-height:44px; padding:12px 0; border:0; border-radius:0; background:none; color:#171717; font-weight:500; }
+  #view-library .library-add{
+    margin-top:24px !important; padding:14px 0; border:0; border-radius:0; background:none;
+    color:#737373; font-size:.8rem; font-weight:400; text-align:left;
+  }
+  #view-library .library-add:hover{ color:#171717; }
+  @media (max-width:350px){
+    body.library-prototype .app{ padding-inline:16px; }
+    #view-library .shelf-row{ gap:6px; }
+    #view-library .library-rabbit{ width:52px; right:-5px; }
+  }
 </style>
 
 <div class="app" id="app">
@@ -888,16 +954,6 @@
     return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
   }
   function nowIso(){ return new Date().toISOString(); }
-  function fmtShort(iso){
-    if(!iso) return "";
-    var d = new Date(iso);
-    return (d.getMonth()+1) + "월 " + d.getDate() + "일";
-  }
-  function fmtDot(iso){
-    if(!iso) return "";
-    var d = new Date(iso);
-    return d.getFullYear() + "." + String(d.getMonth()+1).padStart(2,"0") + "." + String(d.getDate()).padStart(2,"0");
-  }
   function fmtMonthDay(iso){
     if(!iso) return "";
     var d = new Date(iso);
@@ -1391,7 +1447,7 @@
   /* No bottom tab bar: home is the default screen, and 서재/책 상세 are
      reached by tapping into them and left again with an explicit back
      button — so `detailFrom` remembers whether a book was opened from
-     home (지금 읽는 중) or from 서재, and that back button returns there. */
+     home (요즘 읽는 책), 통계, or 서재, and that back button returns there. */
   function goTo(view, bookId){
     state.view = view;
     if (typeof bookId !== "undefined") state.selectedBookId = bookId;
@@ -1414,6 +1470,7 @@
   function renderAll(){
     document.body.classList.toggle("home-prototype", state.view === "home");
     document.body.classList.toggle("detail-prototype", state.view === "detail");
+    document.body.classList.toggle("library-prototype", state.view === "library");
     document.querySelector(".topbar h1").textContent = state.view === "home" ? "BOOKTOKKI" : "내 독서 기록";
     // Keep unsaved inputs only when the same book/input survives the render.
     var detail = document.getElementById("view-detail");
@@ -1466,148 +1523,8 @@
     }
   }
 
-  /* ---- shared rig pieces, reused across every pose so the character
-     stays one consistent animal: same head/body ratio, same short
-     ears, same flat ㅡㅡ eyes. Only the props/limbs around this base
-     change per behavior. ---- */
-  function bunnyEarsUpright(){
-    return '<rect class="fur" x="15" y="5" width="4" height="6"/>'
-      + '<rect class="fur" x="21" y="5" width="4" height="6"/>'
-      + '<rect class="ear-inner" x="16" y="6.5" width="2" height="3.5"/>'
-      + '<rect class="ear-inner" x="22" y="6.5" width="2" height="3.5"/>';
-  }
-  function bunnyBodyUpright(){
-    /* head+body merged into one small rounded silhouette (single
-       outline, no internal seams - keeps it from reading as boxy
-       stacked furniture) */
-    return '<path class="fur" d="M14,10 L26,10 L26,12 L29,12 L29,14 L30,14 L30,18 L29,18 L29,20 L27,20 L27,22 L26,22 L26,24 L28,24 L28,28 L27,28 L27,29 L13,29 L13,28 L12,28 L12,24 L14,24 L14,22 L13,22 L13,20 L11,20 L11,18 L10,18 L10,14 L11,14 L11,12 L14,12 Z"/>';
-  }
-  function bunnyFaceUpright(){
-    /* sleepy, blank ㅡㅡ eyes - never big, sparkly, or angry, on any
-       pose - the joke is the mismatch between this face and the line */
-    return '<rect class="ink" x="13.5" y="16.2" width="2.6" height="1"/>'
-      + '<rect class="ink" x="23.9" y="16.2" width="2.6" height="1"/>'
-      + '<rect class="ink" x="19" y="18.6" width="2" height="1"/>'
-      + '<rect class="cheek" x="10.5" y="18.8" width="3" height="2"/>'
-      + '<rect class="cheek" x="26.5" y="18.8" width="3" height="2"/>';
-  }
-  function bunnyArmsUpright(){
-    return '<rect class="fur" x="8" y="24" width="3" height="4"/>'
-      + '<rect class="fur" x="29" y="24" width="3" height="4"/>';
-  }
-  function bunnyEarLoaf(){
-    /* one short ear, flopped back - lying down, only one shows */
-    return '<rect class="fur" x="31" y="9.5" width="7" height="5"/>'
-      + '<rect class="ear-inner" x="33" y="10.5" width="3" height="3"/>';
-  }
-  function bunnyBodyLoaf(){
-    return '<path class="fur" d="M16,14 L30,14 L30,16 L35,16 L35,18 L36,18 L36,20 L35,20 L35,22 L31,22 L31,23 L13,23 L13,22 L10,22 L10,20 L9,20 L9,18 L11,18 L11,16 L16,16 Z"/>';
-  }
-  function bunnyFaceLoaf(){
-    return '<rect class="ink" x="28.5" y="17.6" width="2.2" height="1"/>'
-      + '<rect class="ink" x="32.5" y="17.6" width="2.2" height="1"/>'
-      + '<rect class="ink" x="30.7" y="19.3" width="1.6" height="1"/>'
-      + '<rect class="cheek" x="26.3" y="19" width="2.3" height="1.8"/>'
-      + '<rect class="cheek" x="34.5" y="19" width="2.3" height="1.8"/>';
-  }
-  function bunnyBookStackUnder(){
-    return '<rect class="book-alt" x="2" y="27" width="14" height="3"/>'
-      + '<rect class="book" x="4" y="23" width="18" height="5"/>'
-      + '<rect class="book-page" x="5" y="24" width="15" height="1"/>';
-  }
-
-  /* ---- 오늘 기록 없음: 4 poses ---- */
-  function bunnyPoseNibble(){
-    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
-      + bunnyEarsUpright() + bunnyBodyUpright() + bunnyFaceUpright() + bunnyArmsUpright()
-      /* small book with a bite already taken out of the near corner
-         and a crumb mid-air - the "evil deed", entirely harmless */
-      + '<path class="book" d="M16,28 L27,28 L27,33 L13,33 L13,30 L16,30 Z"/>'
-      + '<rect class="book-page" x="17" y="29.5" width="9" height="1"/>'
-      + '<rect class="book" x="14.3" y="25.6" width="1.4" height="1.4"/>'
-      + '<rect class="book" x="17.4" y="24.4" width="1.1" height="1.1"/>'
-      + '</svg>';
-  }
-  function bunnyPoseSandKick(){
-    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
-      + bunnyEarsUpright() + bunnyBodyUpright() + bunnyFaceUpright() + bunnyArmsUpright()
-      /* a closed book knocked slightly askew, disappearing under a
-         wide kicked-up spray of dust - "burying the evidence" */
-      + '<g transform="rotate(8 20 31)">'
-        + '<rect class="book" x="12" y="29" width="16" height="4"/>'
-        + '<rect class="book-page" x="13" y="30" width="14" height="1"/>'
-      + '</g>'
-      + '<rect class="book-alt" x="8" y="24.5" width="2.1" height="2.1"/>'
-      + '<rect class="book-alt" x="12.2" y="21" width="1.7" height="1.7"/>'
-      + '<rect class="book-alt" x="16.5" y="25" width="2.3" height="2.3"/>'
-      + '<rect class="book-alt" x="23.2" y="22" width="1.9" height="1.9"/>'
-      + '<rect class="book-alt" x="28.3" y="25.2" width="2.1" height="2.1"/>'
-      + '</svg>';
-  }
-  function bunnyPoseHideBooks(){
-    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
-      + bunnyEarsUpright() + bunnyBodyUpright() + bunnyFaceUpright()
-      /* two book stacks flank it, tall enough to swallow everything
-         below the chin - only ears and eyes show over the top */
-      + '<rect class="book" x="3" y="20" width="8" height="15"/>'
-      + '<rect class="book-page" x="4" y="21" width="1" height="13"/>'
-      + '<rect class="book-alt" x="29" y="20" width="8" height="15"/>'
-      + '<rect class="book-page" x="35" y="21" width="1" height="13"/>'
-      + '</svg>';
-  }
-  function bunnyPoseLoafDefiant(){
-    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 44 34" shape-rendering="crispEdges" aria-hidden="true">'
-      + bunnyBookStackUnder() + bunnyBodyLoaf() + bunnyEarLoaf() + bunnyFaceLoaf()
-      /* one paw thrown straight up mid-"칼춤" - the whole performance */
-      + '<rect class="fur" x="19" y="8" width="3.4" height="7"/>'
-      + '<rect class="ink" x="23.2" y="7.4" width="1.8" height="0.8"/>'
-      + '</svg>';
-  }
-
-  /* ---- 오늘 기록 있음: 4 poses ---- */
-  function bunnyPoseSprawlSleep(){
-    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 44 34" shape-rendering="crispEdges" aria-hidden="true">'
-      + bunnyBookStackUnder() + bunnyBodyLoaf() + bunnyEarLoaf() + bunnyFaceLoaf()
-      + '</svg>';
-  }
-  function bunnyPoseLeanDoze(){
-    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
-      + '<g transform="rotate(-7 20 20)">'
-        + bunnyEarsUpright() + bunnyBodyUpright() + bunnyFaceUpright() + bunnyArmsUpright()
-      + '</g>'
-      /* a book stood up beside it to lean on, not a snack this time */
-      + '<rect class="book" x="30" y="13" width="6" height="19"/>'
-      + '<rect class="book-page" x="31" y="14" width="1" height="17"/>'
-      + '</svg>';
-  }
-  function bunnyPoseSitWatch(){
-    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
-      + bunnyEarsUpright() + bunnyBodyUpright() + bunnyFaceUpright() + bunnyArmsUpright()
-      /* just a closed book sitting neatly right beside it - for once,
-         not being eaten, kicked, or hidden behind */
-      + '<rect class="book" x="27" y="26" width="10" height="5"/>'
-      + '<rect class="book-page" x="28" y="27" width="8" height="1"/>'
-      + '</svg>';
-  }
-  function bunnyPoseFaceInBook(){
-    return '<svg class="bunny-svg pixel-bunny" viewBox="0 0 40 40" shape-rendering="crispEdges" aria-hidden="true">'
-      + bunnyEarsUpright() + bunnyBodyUpright() + bunnyArmsUpright()
-      /* an open spread lands right over the face - ears are the only
-         proof anyone is under there */
-      + '<rect class="book-page" x="10" y="15" width="10" height="8"/>'
-      + '<rect class="book-page" x="20" y="15" width="10" height="8"/>'
-      + '<rect class="book" x="19.3" y="14" width="1.4" height="9"/>'
-      + '<rect class="ink" x="12" y="18" width="6" height="0.6"/>'
-      + '<rect class="ink" x="22" y="18" width="6" height="0.6"/>'
-      + '</svg>';
-  }
-
-  /* Character Master 기준 이미지 에셋 풀. 홈 토끼는 더 이상 SVG로
-     그리지 않고 이 목록의 img만 <img>로 표시한다 - 새 행동이 추가되면
-     여기에 항목 하나만 더하면 되고, 코드로 그림을 그릴 필요는 없다.
-     (bunnyPoseNibble()과 그 rig 함수들은 완독 축하 팝업도 이미지 에셋으로
-     전환되면서 더 이상 어디서도 쓰이지 않지만, 삭제 대신 그대로 남겨둠 -
-     안전한 축소 범위 유지가 목적이라 죽은 코드 정리는 이번 작업 범위 밖) */
+  /* Character Master 기준 이미지 에셋 풀. 홈 토끼는 이 목록의 PNG만
+     사용하며 새 행동도 같은 캐릭터 에셋으로 추가한다. */
   var BUNNY_NONE = [
     { img: "assets/bunny-chew.png", alt: "책을 갉아먹는 토끼", bubble: "독서 안 함?<br>ㅇㅋ 책 내가 먹음" },
     { img: "assets/bunny-kick.png", alt: "뒷발로 모래를 차서 책을 덮는 토끼", bubble: "증거 인멸 중" }
@@ -1736,14 +1653,8 @@
     return "";
   }
 
-  /* The completed-book marker: a small cream bookmark tab tucked into the
-     top edge (off to one side, not centered, so it reads as a bookmark
-     rather than a floating decoration), with two short bunny ears poking
-     up out of the tab. Ears reuse the mascot's fur/ear-inner colors via
-     .pixel-bunny; the tab reuses the app's own card-muted surface color
-     so it stays "크림/오프화이트" in both light and dark mode. Only the
-     tab's bottom edge dips into the cover — small and off-center enough
-     to never cover the title/cover art underneath it. */
+  /* Shared by the existing statistics book rows. The v0.6 library uses
+     its own quieter completion trace, but stats keeps this marker. */
   function bunnyEarMarker(){
     return '' +
       '<svg class="ear-marker pixel-bunny" viewBox="0 0 18 22" shape-rendering="crispEdges" aria-hidden="true">' +
@@ -1755,25 +1666,73 @@
       '</svg>';
   }
 
-  /* One book standing on the shelf. Spine width leans on the book's own
-     page count (a thicker book gets a thicker spine) so the shelf reads
-     as real books, not identical tiles. */
-  function spineEl(b){
+  function libraryTraceForBook(b, latestPositiveBookId){
+    var positives = (b.pageLogs || []).filter(function(log){
+      return log.delta > 0 && /^\d{4}-\d{2}-\d{2}$/.test(log.date || "");
+    }).slice().sort(function(a, c){ return (Date.parse(a.at) || 0) - (Date.parse(c.at) || 0); });
+    var returnCount = 0;
+    var previousDate = null;
+    positives.forEach(function(log){
+      var parts = log.date.split("-").map(Number);
+      var day = Date.UTC(parts[0], parts[1]-1, parts[2]);
+      if (previousDate != null && (day - previousDate) / 86400000 >= 3) returnCount += 1;
+      previousDate = day;
+    });
+    var notes = b.notes || [];
+    var distinctPages = {};
+    notes.forEach(function(note){ if (note.page != null) distinctPages[String(note.page)] = true; });
+    var distinctPageCount = Object.keys(distinctPages).length;
+    var noteTabs = notes.length === 0 ? 0 :
+      ((distinctPageCount >= 3 || notes.length >= 4) ? 3 : (notes.length >= 2 ? 2 : 1));
+    return {
+      hasPositive: positives.length > 0,
+      returnCount: returnCount,
+      noteTabs: noteTabs,
+      isLatest: b.id === latestPositiveBookId
+    };
+  }
+
+  function latestPositiveBookId(){
+    var latestId = null;
+    var latestTime = -Infinity;
+    getBooks().forEach(function(book){
+      (book.pageLogs || []).forEach(function(log){
+        if (!(log.delta > 0)) return;
+        var time = Date.parse(log.at);
+        if (Number.isFinite(time) && time > latestTime){ latestTime = time; latestId = book.id; }
+      });
+    });
+    return latestId;
+  }
+
+  /* Reading history stays derived from pageLogs/notes; no trace is stored. */
+  function spineEl(b, index, latestBookId){
     var p = pct(b.currentPage, b.totalPages);
-    var widthPx = Math.max(46, Math.min(66, 42 + Math.round(b.totalPages / 14)));
-    var styleParts = ["width:" + widthPx + "px;"];
+    var widthPx = Math.max(48, Math.min(58, 45 + Math.round(b.totalPages / 24)));
+    var heightPx = 98 + ((index * 7 + b.id.length) % 3) * 6;
+    var styleParts = [];
     if (!b.coverUrl) styleParts.push("background:" + coverColor(b.id) + ";");
     var inner = b.coverUrl
       ? '<img src="' + esc(b.coverUrl) + '" alt="">'
       : '<div class="spine-label">' + esc(b.title) + '</div>';
     var doneLabel = b.status === "done" ? " (완독)" : "";
+    var trace = libraryTraceForBook(b, latestBookId);
+    var noteTabs = "";
+    for (var i = 0; i < trace.noteTabs; i++) noteTabs += '<span class="note-tab"></span>';
+    var leanClass = index % 8 === 2 ? " lean-left" : (index % 8 === 6 ? " lean-right" : "");
     return '' +
-      '<div class="spine-wrap" style="width:' + widthPx + 'px;">' +
-        (b.status === "done" ? bunnyEarMarker() : "") +
-        '<button class="spine" style="' + styleParts.join("") + '" data-open="' + b.id + '" data-open-from="library" aria-label="' + esc(b.title) + doneLabel + '">' +
-          inner +
-          '<div class="spine-progress"><div class="spine-progress-fill" style="width:' + p + '%"></div></div>' +
-        '</button>' +
+      '<div class="spine-wrap">' +
+        (trace.isLatest ? '<img class="library-rabbit" src="assets/bunny-sleep.png" alt="최근 읽은 책 위에서 자는 북토끼">' : '') +
+        '<div class="book-object' + leanClass + '" style="--spine-width:' + widthPx + 'px;--spine-height:' + heightPx + 'px;">' +
+          (trace.returnCount ? '<span class="wear-trace' + (trace.returnCount > 1 ? ' is-returned-more' : '') + '"></span>' : '') +
+          (trace.noteTabs ? '<span class="note-tabs">' + noteTabs + '</span>' : '') +
+          (trace.hasPositive && b.status !== "done" && b.currentPage > 0 ? '<span class="reading-bookmark" style="top:' + (-6 - Math.round(p / 25)) + 'px"></span>' : '') +
+          (b.status === "done" ? '<span class="completion-mark"></span>' : '') +
+          '<button class="spine" style="' + styleParts.join("") + '" data-open="' + b.id + '" data-open-from="library" aria-label="' + esc(b.title) + doneLabel + '">' +
+            inner +
+            '<div class="spine-progress"><div class="spine-progress-fill" style="width:' + p + '%"></div></div>' +
+          '</button>' +
+        '</div>' +
       '</div>';
   }
 
@@ -1789,9 +1748,9 @@
     var all = getBooks();
     if (all.length === 0){
       el.innerHTML = header +
-        '<div class="card empty-state" style="margin-top:14px;">' +
+        '<div class="empty-state library-empty">' +
           '<p>아직 책장이 비어 있어요. 첫 책을 꽂아 보세요.</p>' +
-          '<button class="btn btn-dark" style="flex:none;" id="emptyAddBookBtn2">+ 읽을 책 추가</button>' +
+          '<button class="btn" id="emptyAddBookBtn2">+ 읽을 책 추가</button>' +
         '</div>';
       return;
     }
@@ -1801,14 +1760,17 @@
     var ROW_SIZE = 4;
     var rows = [];
     for (var i = 0; i < all.length; i += ROW_SIZE){ rows.push(all.slice(i, i + ROW_SIZE)); }
+    var latestBookId = latestPositiveBookId();
 
     el.innerHTML = header +
-      '<div style="display:flex;flex-direction:column;gap:2px;margin-top:14px;">' +
-        rows.map(function(row){
-          return '<div class="shelf-row">' + row.map(spineEl).join("") + '</div>';
+      '<div class="library-shelves">' +
+        rows.map(function(row, rowIndex){
+          return '<div class="shelf-row">' + row.map(function(book, columnIndex){
+            return spineEl(book, rowIndex * ROW_SIZE + columnIndex, latestBookId);
+          }).join("") + '</div>';
         }).join("") +
       '</div>' +
-      '<button class="btn-dashed" id="addBookBtnLib" style="margin-top:18px;">+ 읽을 책 추가</button>';
+      '<button class="btn-dashed library-add" id="addBookBtnLib">+ 읽을 책 추가</button>';
   }
 
   function noteItem(bookId, n){
