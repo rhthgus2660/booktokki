@@ -888,6 +888,54 @@
     #view-library .shelf-row{ gap:6px; }
     #view-library .library-rabbit{ width:52px; right:-5px; }
   }
+
+  /* v0.7: Stats uses the same quiet editorial surface as the other views. */
+  body.stats-prototype{ background:#fff; color:#171717; padding-top:28px; }
+  body.stats-prototype .app{ padding-inline:24px; gap:24px; }
+  body.stats-prototype .topbar h1{ color:#909090; font-size:.8rem; font-weight:500; }
+  body.stats-prototype .topbar-actions{ gap:6px; }
+  body.stats-prototype .icon-nav-btn{ width:36px; height:36px; border:0; border-radius:3px; background:transparent; color:#171717; }
+  body.stats-prototype .icon-nav-btn:hover{ background:#f5f5f5; }
+  #view-stats{ --ink:#171717; --ink-soft:#737373; --ink-faint:#909090; --surface:#fff; --border:#e9e9e9; min-width:0; }
+  #view-stats .sub-topbar{ gap:8px; }
+  #view-stats .sub-topbar h2.stats-title{ font-size:.95rem; font-weight:600; }
+  #view-stats .back-btn{ width:32px; height:32px; border:0; border-radius:3px; background:transparent; }
+  #view-stats .back-btn:hover{ background:#f5f5f5; }
+  #view-stats .stats-month-summary{ margin-top:32px; padding-bottom:29px; border-bottom:1px solid #e9e9e9; }
+  #view-stats .stats-month-nav{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  #view-stats .stats-month-nav h3{ font-size:1.55rem; font-weight:600; letter-spacing:-.04em; }
+  #view-stats .stats-month-nav button{ width:44px; height:44px; border:0; background:none; color:#737373; font-size:1.65rem; font-weight:300; cursor:pointer; }
+  #view-stats .stats-month-nav button:hover{ color:#171717; }
+  #view-stats .stats-summary{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:30px; }
+  #view-stats .stats-summary-item{ min-width:0; padding:0 10px; gap:8px; border-right:1px solid #e9e9e9; }
+  #view-stats .stats-summary-item:first-child{ padding-left:0; }
+  #view-stats .stats-summary-item:last-child{ padding-right:0; border:0; }
+  #view-stats .stats-summary-label{ color:#737373; font-size:.72rem; font-weight:400; }
+  #view-stats .stats-summary-value{ color:#171717; font-size:1.45rem; font-weight:500; letter-spacing:-.04em; }
+  #view-stats .stats-summary-value small{ margin-left:3px; font-size:.72rem; font-weight:400; letter-spacing:0; }
+  #view-stats .stats-completed{ margin-top:19px; color:#737373; font-size:.74rem; }
+  #view-stats .stats-calendar-section, #view-stats .stats-day-section, #view-stats .stats-books-section{ margin-top:34px; }
+  #view-stats .stats-heading{ padding:0; color:#171717; font-size:.95rem; font-weight:600; }
+  #view-stats .cal-card{ margin-top:18px; padding:0; border:0; border-radius:0; background:none; box-shadow:none; }
+  #view-stats .cal-grid{ gap:2px; }
+  #view-stats .cal-weekdays-row{ margin-bottom:8px; }
+  #view-stats .cal-weekday{ padding:0 0 6px; color:#909090; font-size:.7rem; font-weight:400; }
+  #view-stats .cal-day{ min-width:0; min-height:40px; border:0; border-radius:0; color:#737373; font-weight:400; }
+  #view-stats .cal-day.cal-today{ color:#171717; box-shadow:inset 0 0 0 1px #d5d5d5; }
+  #view-stats .cal-day.cal-selected{ margin:0; border:0; border-radius:3px; background:#171717; color:#fff; box-shadow:none; }
+  #view-stats .cal-dot{ width:4px; height:4px; bottom:5px; margin-left:-2px; background:#c99e9c; }
+  #view-stats .cal-day.cal-selected .cal-dot{ background:#fff; }
+  #view-stats .stats-day-list{ margin-top:10px; }
+  #view-stats .stats-day-row{ width:100%; min-height:48px; margin:0; padding:13px 0; border:0; border-bottom:1px solid #e9e9e9; border-radius:0; background:none; color:#171717; font-size:.84rem; font-weight:400; text-align:left; overflow-wrap:anywhere; }
+  #view-stats .stats-day-row:hover{ background:none; color:#737373; }
+  #view-stats .stats-books-section{ padding-top:30px; border-top:1px solid #e9e9e9; }
+  #view-stats .stats-book-list{ margin-top:10px; }
+  #view-stats .stats-book-row{ display:flex; flex-direction:column; align-items:flex-start; width:100%; min-height:92px; gap:7px; padding:18px 0; border:0; border-bottom:1px solid #e9e9e9; background:none; color:inherit; text-align:left; cursor:pointer; }
+  #view-stats .stats-book-title{ max-width:100%; color:#171717; font-size:.94rem; font-weight:600; line-height:1.5; overflow-wrap:anywhere; }
+  #view-stats .stats-book-meta, #view-stats .stats-book-last{ color:#737373; font-size:.72rem; font-weight:400; line-height:1.5; }
+  #view-stats .stats-book-last{ color:#909090; }
+  #view-stats .stats-empty{ padding:22px 0; color:#909090; font-size:.78rem; }
+  @media (max-width:350px){ body.stats-prototype .app{ padding-inline:16px; } }
 </style>
 
 <div class="app" id="app">
@@ -936,6 +984,7 @@
     detailFrom: "library", /* which screen "back" from the detail view returns to */
     editingNoteId: null, /* which 북로그 is currently in its inline edit mode, if any */
     statsSelectedDate: null, /* selected day (YYYY-MM-DD) on the 통계 calendar; null = today */
+    statsMonth: null, /* selected stats month (YYYY-MM); null = current month */
     dbMode: null /* 'db' | 'local' */
   };
   var db = null;
@@ -1449,6 +1498,7 @@
      button — so `detailFrom` remembers whether a book was opened from
      home (요즘 읽는 책), 통계, or 서재, and that back button returns there. */
   function goTo(view, bookId){
+    if (view === "stats" && state.view !== "stats") state.statsMonth = null;
     state.view = view;
     if (typeof bookId !== "undefined") state.selectedBookId = bookId;
     state.editingNoteId = null; /* leaving/entering a screen always drops any open 북로그 edit */
@@ -1471,6 +1521,7 @@
     document.body.classList.toggle("home-prototype", state.view === "home");
     document.body.classList.toggle("detail-prototype", state.view === "detail");
     document.body.classList.toggle("library-prototype", state.view === "library");
+    document.body.classList.toggle("stats-prototype", state.view === "stats");
     document.querySelector(".topbar h1").textContent = state.view === "home" ? "BOOKTOKKI" : "내 독서 기록";
     // Keep unsaved inputs only when the same book/input survives the render.
     var detail = document.getElementById("view-detail");
@@ -1878,10 +1929,68 @@
       '</div>';
   }
 
-  /* 오늘/이번 주 읽은 페이지, 이번 달/올해 완독 권수, 이번 달 캘린더
-     (읽은 날 점 표시 + 날짜 클릭 시 그날의 책별 기록)를 보여주는 통계
-     화면. pageLogs/completedAt을 읽기만 하고 쓰지 않음 - 목표·연속
-     독서일수·월 이동은 이번 버전에 없음. */
+  /* Stats derives recorded activity without treating page movement as reading volume. */
+  function validStatsDate(value){
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    var parts = value.split("-").map(Number);
+    return dateKey(new Date(parts[0], parts[1] - 1, parts[2])) === value;
+  }
+  function statsMonthData(monthKey){
+    var prefix = monthKey + "-";
+    var days = {};
+    var books = [];
+    getBooks().forEach(function(book){
+      var activeDates = {};
+      var latestAt = -Infinity;
+      var latestDate = "";
+      (book.pageLogs || []).forEach(function(log){
+        if (!(log.delta > 0) || !validStatsDate(log.date) || log.date.indexOf(prefix) !== 0) return;
+        var time = Date.parse(log.at);
+        if (!Number.isFinite(time)) return;
+        activeDates[log.date] = true;
+        days[log.date] = days[log.date] || {};
+        days[log.date][book.id] = true;
+        if (time > latestAt){ latestAt = time; latestDate = log.date; }
+      });
+      var readDays = Object.keys(activeDates).length;
+      if (!readDays) return;
+      var noteCount = (book.notes || []).filter(function(note){
+        var time = Date.parse(note.createdAt);
+        return Number.isFinite(time) && dateKey(new Date(time)).indexOf(prefix) === 0;
+      }).length;
+      books.push({ book:book, readDays:readDays, noteCount:noteCount, latestAt:latestAt, latestDate:latestDate });
+    });
+    books.sort(function(a, b){ return b.latestAt - a.latestAt || a.book.title.localeCompare(b.book.title, "ko") || a.book.id.localeCompare(b.book.id); });
+    var allNotes = getBooks().reduce(function(count, book){
+      return count + (book.notes || []).filter(function(note){
+        var time = Date.parse(note.createdAt);
+        return Number.isFinite(time) && dateKey(new Date(time)).indexOf(prefix) === 0;
+      }).length;
+    }, 0);
+    var completed = getBooks().filter(function(book){
+      if (book.status !== "done") return false;
+      var time = Date.parse(book.completedAt);
+      return Number.isFinite(time) && dateKey(new Date(time)).indexOf(prefix) === 0;
+    }).length;
+    return { books:books, days:days, readDays:Object.keys(days).length, notes:allNotes, completed:completed };
+  }
+  function statsMonthCalendar(monthKey, activeDays){
+    var parts = monthKey.split("-").map(Number);
+    var year = parts[0], month = parts[1] - 1;
+    var first = new Date(year, month, 1);
+    var count = new Date(year, month + 1, 0).getDate();
+    var blanks = (first.getDay() + 6) % 7;
+    var cells = [];
+    for (var day = 1; day <= count; day++){
+      var key = dateKey(new Date(year, month, day));
+      cells.push({ date:key, day:day, isToday:key === dateKey(new Date()), hasRead:!!activeDays[key] });
+    }
+    return { label:(month + 1) + "월", leadBlanks:blanks, cells:cells };
+  }
+  function statsDateLabel(date){
+    var parts = date.split("-").map(Number);
+    return parts[1] + "월 " + parts[2] + "일";
+  }
   function renderStats(){
     var el = document.getElementById("view-stats");
     var header = '' +
@@ -1889,16 +1998,18 @@
         '<button class="back-btn" data-nav="home" title="홈으로" aria-label="홈으로">' +
           '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
         '</button>' +
-        '<h2 class="stats-title">독서 통계</h2>' +
+        '<h2 class="stats-title">독서 기록</h2>' +
       '</div>';
 
-    var today = todayPagesRead();
-    var week = pagesReadThisWeek();
-    var monthDone = countCompletedThisMonth();
-    var yearDone = countCompletedThisYear();
-    var cal = monthCalendarDays();
-    var selDate = state.statsSelectedDate || dateKey(new Date());
-    var records = bookRecordsOnDate(selDate);
+    var monthKey = state.statsMonth || dateKey(new Date()).slice(0, 7);
+    var data = statsMonthData(monthKey);
+    var cal = statsMonthCalendar(monthKey, data.days);
+    var recordedDates = Object.keys(data.days).sort();
+    var selDate = state.statsSelectedDate || recordedDates[recordedDates.length - 1] ||
+      (monthKey === dateKey(new Date()).slice(0, 7) ? dateKey(new Date()) : null);
+    var dayIds = (selDate && data.days[selDate]) || {};
+    var dayBooks = getBooks().filter(function(book){ return !!dayIds[book.id]; });
+    dayBooks.sort(function(a, b){ return a.title.localeCompare(b.title, "ko") || a.id.localeCompare(b.id); });
 
     var weekdayNames = ["월","화","수","목","금","토","일"];
     var weekdaysHtml = weekdayNames.map(function(w){ return '<div class="cal-weekday">' + w + '</div>'; }).join("");
@@ -1913,37 +2024,40 @@
     }).join("");
 
     el.innerHTML = header +
-      '<div class="stats-summary" style="margin-top:20px;">' +
-        '<div class="stats-summary-item"><div class="stats-summary-label">오늘</div><div class="stats-summary-value">' + today + 'p</div></div>' +
-        '<div class="stats-summary-item"><div class="stats-summary-label">이번 주</div><div class="stats-summary-value">' + week + 'p</div></div>' +
-        '<div class="stats-summary-item"><div class="stats-summary-label">이번 달</div><div class="stats-summary-value">' + monthDone + '권</div></div>' +
-        '<div class="stats-summary-item"><div class="stats-summary-label">올해</div><div class="stats-summary-value">' + yearDone + '권</div></div>' +
-      '</div>' +
-      '<div style="margin-top:24px;">' +
-        '<div class="stats-heading">' + cal.label + '</div>' +
-        '<div class="card cal-card" style="margin-top:8px;">' +
+      '<section class="stats-month-summary">' +
+        '<div class="stats-month-nav"><button type="button" data-stats-month="-1" aria-label="이전 달">‹</button><h3>' + cal.label + '</h3><button type="button" data-stats-month="1" aria-label="다음 달">›</button></div>' +
+        '<div class="stats-summary">' +
+          '<div class="stats-summary-item"><span class="stats-summary-label">읽은 책</span><span class="stats-summary-value">' + data.books.length + '<small>권</small></span></div>' +
+          '<div class="stats-summary-item"><span class="stats-summary-label">읽은 날</span><span class="stats-summary-value">' + data.readDays + '<small>일</small></span></div>' +
+          '<div class="stats-summary-item"><span class="stats-summary-label">북로그</span><span class="stats-summary-value">' + data.notes + '<small>개</small></span></div>' +
+        '</div>' +
+        (data.completed ? '<div class="stats-completed">완독 ' + data.completed + '권</div>' : '') +
+      '</section>' +
+      '<section class="stats-calendar-section">' +
+        '<div class="cal-card">' +
           '<div class="cal-grid cal-weekdays-row">' + weekdaysHtml + '</div>' +
           '<div class="cal-grid cal-days-grid">' + leadHtml + daysHtml + '</div>' +
         '</div>' +
-      '</div>' +
-      '<div style="margin-top:24px;">' +
-        '<div class="stats-heading">' + fmtDayLabel(selDate) + '</div>' +
-        '<div class="card stats-day-card" style="margin-top:8px;">' +
-          (records.length
-            ? records.map(function(r, i){
-                var borderStyle = i < records.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
-                /* 그 책의 북로그를 보러 상세 화면으로 이동 - 페이지 기록과
-                   북로그는 별개 데이터라 "그날 쓴 북로그"만 골라 보여줄 수는
-                   없지만, 책을 눌러 북로그 목록으로 바로 넘어가는 것만으로도
-                   충분히 "그때 무슨 생각을 했는지 돌아보기"가 됨. */
-                return '<div class="stats-day-row" style="' + borderStyle + '" data-open="' + r.bookId + '" data-open-from="stats">' +
-                  '<span class="stats-day-label">' + esc(r.title) + '</span>' +
-                  '<span class="stats-day-pages">' + r.pages + 'p</span>' +
-                '</div>';
-              }).join("")
-            : '<p style="font-size:.85rem;color:var(--ink-faint);padding:10px 0;">이 날은 기록이 없어요.</p>') +
+      '</section>' +
+      (selDate ? '<section class="stats-day-section">' +
+        '<div class="stats-heading">' + statsDateLabel(selDate) + '</div>' +
+        '<div class="stats-day-list">' +
+          (dayBooks.length ? dayBooks.map(function(book){
+            return '<button type="button" class="stats-day-row" data-open="' + book.id + '" data-open-from="stats">' + esc(book.title) + '</button>';
+          }).join("") : '<p class="stats-empty">기록 없음</p>') +
         '</div>' +
-      '</div>';
+      '</section>' : '') +
+      '<section class="stats-books-section">' +
+        '<div class="stats-heading">' + (monthKey === dateKey(new Date()).slice(0, 7) ? '이번 달 읽은 책' : cal.label + '에 읽은 책') + '</div>' +
+        (data.books.length ? '<div class="stats-book-list">' + data.books.map(function(entry){
+          return '<button type="button" class="stats-book-row" data-open="' + entry.book.id + '" data-open-from="stats">' +
+            '<span class="stats-book-title">' + esc(entry.book.title) + '</span>' +
+            '<span class="stats-book-meta">읽은 날 ' + entry.readDays + '일' + (entry.noteCount ? ' · 북로그 ' + entry.noteCount + '개' : '') +
+              (entry.book.status === "done" ? ' · 완독' : '') + '</span>' +
+            '<span class="stats-book-last">마지막으로 읽은 날 ' + statsDateLabel(entry.latestDate) + '</span>' +
+          '</button>';
+        }).join("") + '</div>' : '<p class="stats-empty">기록 없음</p>') +
+      '</section>';
   }
 
   /* ---------------- modals ---------------- */
@@ -2087,6 +2201,16 @@
   document.body.addEventListener("click", function(e){
     var t = e.target.closest("[data-nav]");
     if (t){ goTo(t.getAttribute("data-nav")); return; }
+
+    t = e.target.closest("[data-stats-month]");
+    if (t){
+      var parts = (state.statsMonth || dateKey(new Date()).slice(0, 7)).split("-").map(Number);
+      var next = new Date(parts[0], parts[1] - 1 + Number(t.getAttribute("data-stats-month")), 1);
+      state.statsMonth = dateKey(next).slice(0, 7);
+      state.statsSelectedDate = null;
+      renderAll();
+      return;
+    }
 
     t = e.target.closest("[data-selectday]");
     if (t){ state.statsSelectedDate = t.getAttribute("data-selectday"); renderAll(); return; }
