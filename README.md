@@ -9,17 +9,25 @@
 3. 아래 명령을 실행합니다.
 
 ```sh
-python3 -m http.server 8000 --bind 127.0.0.1
+python3 dev_server.py
 ```
 
 4. 터미널을 켜 둔 상태로 브라우저에서 <http://localhost:8000>을 엽니다.
 5. 종료하려면 터미널에서 Control + C를 누릅니다. 다시 사용할 때 같은 명령으로 실행합니다.
 
-Python 3가 필요합니다. 이 컴퓨터의 기본 `python3`는 개발 도구가 없어 실행되지 않았습니다. Codex에서 제공하는 Python으로는 다음 명령을 사용할 수 있습니다.
+Python 3가 필요합니다. 이 컴퓨터의 기본 `python3`를 사용할 수 없다면 Codex에서 제공하는 Python으로 다음 명령을 실행할 수 있습니다.
 
 ```sh
-/Users/yunz/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m http.server 8000 --bind 127.0.0.1
+/Users/yunz/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 dev_server.py
 ```
+
+`dev_server.py`는 현재 프로젝트 폴더만 제공하고 브라우저 캐시를 사용하지 않도록 설정되어 있습니다.
+
+## GitHub Pages와 홈 화면 실행
+
+이 프로젝트는 빌드 과정 없이 저장소 루트를 GitHub Pages로 배포할 수 있습니다. 배포 URL을 스마트폰 브라우저에서 연 뒤 iPhone은 공유 메뉴의 `홈 화면에 추가`, Android Chrome은 브라우저 메뉴의 `앱 설치` 또는 `홈 화면에 추가`를 사용합니다. 설치된 아이콘으로 실행하면 standalone 화면으로 열립니다.
+
+앱 데이터는 URL과 브라우저별 IndexedDB에 저장됩니다. `http://localhost:8000`의 데이터는 GitHub Pages의 HTTPS URL로 자동 이동하지 않으며, 도메인을 바꾸거나 사이트 데이터를 삭제하면 기존 기록에 접근할 수 없습니다. 실사용 기록을 시작한 뒤에는 같은 배포 URL과 홈 화면 아이콘을 계속 사용하세요.
 
 ## 저장 복원 확인
 
