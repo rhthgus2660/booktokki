@@ -1337,12 +1337,13 @@
     if (!b) return;
     var patch = buildPageLogPatch(b, page);
     var reaction = readingReaction(b, patch.currentPage);
+    var reactionSeed = b.id + "|" + todayStr() + "|" + patch.currentPage;
     Object.assign(b, patch);
     var pageInput = document.querySelector('[data-pageinput="' + bookId + '"]');
     if (pageInput){ pageInput.value = patch.currentPage; pageInput.defaultValue = patch.currentPage; }
     renderAll();
     writePatch(bookId, patch);
-    if (reaction) showReadingReaction(reaction);
+    if (reaction) showReadingReaction(reaction, reactionSeed);
   }
 
   // Read existing page history before the new record is applied.
@@ -1379,7 +1380,11 @@
   var rabbitEventTimer = null;
   var READING_REACTIONS = {
     A: { img:"assets/bunny-sleep.png", text:"인간이 또 읽음.<br>방해 실패." },
-    B: { img:"assets/bunny-sleep.png", text:"다시 나타남.<br>독서 의지 말살 실패." },
+    B: [
+      { img:"assets/bunny-sleep.png", text:"다시 나타남.<br>독서 의지 말살 실패." },
+      { img:"assets/bunny-sleep.png", text:"또 왔네.<br>이거 안 버렸네." },
+      { img:"assets/bunny-sleep.png", text:"인간 복귀.<br>계획에 없었음." }
+    ],
     C: { img:"assets/bunny-kick.png", text:"인간 또 딴 책 폄.<br>또 시작됨." },
     D: { img:"assets/bunny-sleep.png", text:"이건 좀 많이 읽는데.<br>작전 수정 필요." },
     E: { img:"assets/bunny-done.png", text:"인간이 책 한 권을 끝냄<br>제법인데." }
@@ -1391,10 +1396,23 @@
     el.classList.remove("is-reacting");
     el.innerHTML = "";
   }
-  function showReadingReaction(mode){
+  function reactionVariantIndex(seed, length){
+    var hash = 2166136261;
+    var value = String(seed == null ? "" : seed);
+    for (var i = 0; i < value.length; i++){
+      hash ^= value.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0) % length;
+  }
+  function pickReadingReaction(mode, seed){
+    var reactions = READING_REACTIONS[mode];
+    return Array.isArray(reactions) ? reactions[reactionVariantIndex(seed, reactions.length)] : reactions;
+  }
+  function showReadingReaction(mode, seed){
     hideReadingReaction();
     var el = document.getElementById("rabbitEvent");
-    var reaction = READING_REACTIONS[mode];
+    var reaction = pickReadingReaction(mode, seed);
     el.innerHTML = '<img src="' + reaction.img + '" alt="북토끼"><div class="speech-bubble">' + reaction.text + '</div>';
     el.dataset.reaction = mode;
     el.hidden = false;
