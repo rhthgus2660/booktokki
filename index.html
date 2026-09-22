@@ -648,7 +648,7 @@
     width:48px; height:68px; flex:none; display:flex; align-items:center; justify-content:center;
     overflow:hidden; background:#f4f4f4; color:#999; font-size:.62rem; text-align:center;
   }
-  .book-search-cover img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .book-search-cover img{ width:100%; height:100%; object-fit:contain; display:block; }
   .book-search-copy{ min-width:0; display:flex; flex-direction:column; gap:4px; }
   .book-search-title{ font-size:.9rem; font-weight:700; line-height:1.4; }
   .book-search-meta{ font-size:.72rem; color:#737373; line-height:1.5; }
@@ -666,6 +666,24 @@
   .book-search-modal .field input:focus{ outline:none; border-color:#171717; }
   .book-search-modal .modal-actions{ border-top:1px solid #e9e9e9; padding-top:14px; }
   .book-search-modal .modal-actions .btn{ border-radius:3px; font-weight:500; }
+  .page-log-modal, .completion-modal{ background:#fff; color:#171717; border-radius:12px 12px 0 0; }
+  .page-log-modal h2{ font-size:1.12rem; font-weight:600; letter-spacing:-.02em; }
+  .page-log-book{ margin-top:-8px; color:#737373; font-size:.76rem; line-height:1.5; }
+  .page-log-modal .field{ margin-top:8px; }
+  .page-log-modal .field label{ color:#737373; font-weight:400; }
+  .page-log-modal .field input{
+    padding:10px 2px 8px; border:0; border-bottom:1px solid #bdbdbd; border-radius:0;
+    background:#fff; color:#171717; font-size:1.7rem; font-weight:500;
+  }
+  .page-log-modal .field input:focus{ outline:0; border-color:#171717; }
+  .page-log-modal .field-hint{ color:#909090; font-weight:400; }
+  .page-log-modal .modal-actions, .completion-modal .modal-actions{ border-top:1px solid #e9e9e9; padding-top:14px; }
+  .page-log-modal .btn, .completion-modal .btn{ border-radius:3px; font-weight:500; }
+  .completion-modal{ align-items:center; text-align:center; gap:10px; }
+  .completion-modal .speech-bubble{ max-width:220px; border:1px solid #e9e9e9; border-radius:7px; background:#fff; font-size:.84rem; font-weight:500; }
+  .completion-modal .bunny-figure{ width:132px; height:150px; margin:0 auto; }
+  .completion-modal .done-reflection-link{ margin-top:2px; }
+  @media (min-width:480px){ .page-log-modal, .completion-modal{ border-radius:12px; } }
 
   [hidden]{ display:none !important; }
 
@@ -983,14 +1001,18 @@
   #view-stats .stats-month-nav button{ width:44px; height:44px; border:0; background:none; color:#737373; font-size:1.65rem; font-weight:300; cursor:pointer; }
   #view-stats .stats-month-nav button:hover{ color:#171717; }
   #view-stats .stats-summary{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:30px; }
-  #view-stats .stats-summary-item{ min-width:0; padding:0 10px; gap:8px; border-right:1px solid #e9e9e9; }
+  #view-stats .stats-summary-item{ position:relative; min-width:0; padding:0 10px; gap:8px; border:0; border-right:1px solid #e9e9e9; border-radius:0; background:none; color:inherit; text-align:left; font:inherit; }
   #view-stats .stats-summary-item:first-child{ padding-left:0; }
   #view-stats .stats-summary-item:last-child{ padding-right:0; border:0; }
+  #view-stats .stats-summary-entry{ cursor:pointer; }
+  #view-stats .stats-summary-entry:hover .stats-summary-label, #view-stats .stats-summary-entry[aria-expanded="true"] .stats-summary-label{ color:#171717; }
+  #view-stats .stats-entry-arrow{ position:absolute; right:8px; bottom:2px; color:#a0a0a0; font-size:1rem; transform:rotate(0); }
+  #view-stats .stats-summary-entry[aria-expanded="true"] .stats-entry-arrow{ transform:rotate(90deg); color:#171717; }
   #view-stats .stats-summary-label{ color:#737373; font-size:.72rem; font-weight:400; }
   #view-stats .stats-summary-value{ color:#171717; font-size:1.45rem; font-weight:500; letter-spacing:-.04em; }
   #view-stats .stats-summary-value small{ margin-left:3px; font-size:.72rem; font-weight:400; letter-spacing:0; }
   #view-stats .stats-completed{ margin-top:19px; color:#737373; font-size:.74rem; }
-  #view-stats .stats-calendar-section, #view-stats .stats-day-section, #view-stats .stats-books-section{ margin-top:34px; }
+  #view-stats .stats-calendar-section, #view-stats .stats-day-section{ margin-top:34px; }
   #view-stats .stats-heading{ padding:0; color:#171717; font-size:.95rem; font-weight:600; }
   #view-stats .cal-card{ margin-top:18px; padding:0; border:0; border-radius:0; background:none; box-shadow:none; }
   #view-stats .cal-grid{ gap:2px; }
@@ -1002,14 +1024,25 @@
   #view-stats .cal-dot{ width:4px; height:4px; bottom:5px; margin-left:-2px; background:#c99e9c; }
   #view-stats .cal-day.cal-selected .cal-dot{ background:#fff; }
   #view-stats .stats-day-list{ margin-top:10px; }
-  #view-stats .stats-day-row{ width:100%; min-height:48px; margin:0; padding:13px 0; border:0; border-bottom:1px solid #e9e9e9; border-radius:0; background:none; color:#171717; font-size:.84rem; font-weight:400; text-align:left; overflow-wrap:anywhere; }
+  #view-stats .stats-day-row{ display:flex; align-items:center; gap:12px; width:100%; min-height:58px; margin:0; padding:9px 0; border:0; border-bottom:1px solid #e9e9e9; border-radius:0; background:none; color:#171717; font-size:.84rem; font-weight:400; text-align:left; overflow-wrap:anywhere; }
   #view-stats .stats-day-row:hover{ background:none; color:#737373; }
-  #view-stats .stats-books-section{ padding-top:30px; border-top:1px solid #e9e9e9; }
-  #view-stats .stats-book-list{ margin-top:10px; }
-  #view-stats .stats-book-row{ display:flex; flex-direction:column; align-items:flex-start; width:100%; min-height:92px; gap:7px; padding:18px 0; border:0; border-bottom:1px solid #e9e9e9; background:none; color:inherit; text-align:left; cursor:pointer; }
+  #view-stats .stats-archive-panel{ margin-top:0; padding:22px 0 26px; border-bottom:1px solid #e9e9e9; }
+  #view-stats .stats-archive-heading{ color:#171717; font-size:.86rem; font-weight:600; }
+  #view-stats .stats-archive-books, #view-stats .stats-note-groups{ margin-top:10px; }
+  #view-stats .stats-archive-book{ display:flex; align-items:flex-start; gap:13px; width:100%; min-height:78px; padding:13px 0; border:0; border-bottom:1px solid #e9e9e9; background:none; color:inherit; text-align:left; cursor:pointer; }
+  #view-stats .stats-archive-copy{ min-width:0; display:flex; flex:1; flex-direction:column; gap:4px; padding-top:1px; }
+  #view-stats .stats-cover{ width:42px; height:60px; flex:none; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f4f4f4; color:#737373; font-size:.72rem; }
+  #view-stats .stats-cover img{ width:100%; height:100%; object-fit:contain; display:block; }
+  #view-stats .stats-cover-fallback{ font-weight:600; }
   #view-stats .stats-book-title{ max-width:100%; color:#171717; font-size:.94rem; font-weight:600; line-height:1.5; overflow-wrap:anywhere; }
-  #view-stats .stats-book-meta, #view-stats .stats-book-last{ color:#737373; font-size:.72rem; font-weight:400; line-height:1.5; }
-  #view-stats .stats-book-last{ color:#909090; }
+  #view-stats .stats-book-meta{ color:#737373; font-size:.72rem; font-weight:400; line-height:1.5; }
+  #view-stats .stats-reflection{ display:-webkit-box; margin-top:5px; overflow:hidden; color:#565656; font-size:.76rem; line-height:1.55; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+  #view-stats .stats-note-group{ border-bottom:1px solid #e9e9e9; padding:10px 0 14px; }
+  #view-stats .stats-note-book{ display:flex; align-items:center; gap:12px; width:100%; padding:5px 0 10px; border:0; background:none; color:#171717; font:inherit; font-size:.86rem; font-weight:600; text-align:left; cursor:pointer; }
+  #view-stats .stats-note-book .stats-cover{ width:34px; height:48px; }
+  #view-stats .stats-note-row{ display:flex; flex-direction:column; gap:4px; width:100%; padding:10px 0 10px 46px; border:0; background:none; color:inherit; text-align:left; cursor:pointer; }
+  #view-stats .stats-note-meta{ color:#909090; font-size:.68rem; }
+  #view-stats .stats-note-text{ display:-webkit-box; overflow:hidden; color:#4f4f4f; font-size:.78rem; line-height:1.55; overflow-wrap:anywhere; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
   #view-stats .stats-empty{ padding:22px 0; color:#909090; font-size:.78rem; }
   @media (max-width:350px){ body.stats-prototype .app{ padding-inline:16px; } }
 </style>
@@ -1027,7 +1060,7 @@
           <rect x="16" y="4" width="4" height="17"/>
         </svg>
       </button>
-      <button class="icon-nav-btn" id="libraryNavBtn" data-nav="library" title="내 책장" aria-label="내 책장으로 이동">
+      <button class="icon-nav-btn" id="libraryNavBtn" data-nav="library" title="내 서재" aria-label="내 서재로 이동">
         <svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
           <rect x="3" y="6" width="4" height="14"/>
           <rect x="9" y="3" width="4" height="17"/>
@@ -1065,6 +1098,7 @@
     noteComposeDrafts: {},
     completionReflectionOpenBookId: null,
     completionReflectionDrafts: {},
+    statsArchivePanel: null,
     statsSelectedDate: null, /* selected day (YYYY-MM-DD) on the 통계 calendar; null = today */
     statsMonth: null, /* selected stats month (YYYY-MM); null = current month */
     dbMode: null /* 'db' | 'local' */
@@ -1465,6 +1499,11 @@
     D: { img:"assets/bunny-sleep.png", text:"이건 좀 많이 읽는데.<br>작전 수정 필요." },
     E: { img:"assets/bunny-done.png", text:"인간이 책 한 권을 끝냄<br>제법인데." }
   };
+  var COMPLETION_REACTIONS = [
+    "인간이 책 한 권을 끝냄.<br>제법인데.",
+    "끝까지 읽었네.<br>예상 밖임.",
+    "인간 완독 확인.<br>방해 실패."
+  ];
   function hideReadingReaction(){
     clearTimeout(rabbitEventTimer);
     var el = document.getElementById("rabbitEvent");
@@ -1607,10 +1646,13 @@
     }, 0);
   }
   function showDoneCelebration(bookId){
+    var b = state.books[bookId];
+    var seed = bookId + "|" + (b && b.completedAt ? b.completedAt : "");
+    var copy = COMPLETION_REACTIONS[reactionVariantIndex(seed, COMPLETION_REACTIONS.length)];
     openModal('' +
-      '<div class="modal" style="align-items:center;text-align:center;">' +
-        '<div class="speech-bubble">인간이 책 한 권을 끝냄<br>제법인데.</div>' +
-        '<div class="bunny-figure" style="width:184px;height:226px;margin:10px auto 0;">' +
+      '<div class="modal completion-modal">' +
+        '<div class="speech-bubble">' + copy + '</div>' +
+        '<div class="bunny-figure">' +
           '<img class="bunny-done-img" src="assets/bunny-done.png" alt="책 위에 올라가 뻐기듯 서 있는 토끼">' +
         '</div>' +
         '<button class="done-reflection-link" id="doneReflectionOpen" type="button">이 책을 다 읽고 든 생각 남기기</button>' +
@@ -1645,7 +1687,10 @@
      button — so `detailFrom` remembers whether a book was opened from
      home (요즘 읽는 책), 통계, or 서재, and that back button returns there. */
   function goTo(view, bookId){
-    if (view === "stats" && state.view !== "stats") state.statsMonth = null;
+    if (view === "stats" && state.view !== "stats"){
+      state.statsMonth = null;
+      state.statsArchivePanel = null;
+    }
     state.view = view;
     if (typeof bookId !== "undefined") state.selectedBookId = bookId;
     state.editingNoteId = null; /* leaving/entering a screen always drops any open 북로그 edit */
@@ -1829,7 +1874,7 @@
               '</div>' +
             '</div>' +
           '</button>' +
-          '<button type="button" class="recent-page-action" data-log="' + b.id + '" aria-label="' + esc(b.title) + ' 페이지 기록">+ 페이지 기록</button>' +
+          '<button type="button" class="recent-page-action" data-log="' + b.id + '" aria-label="' + esc(b.title) + ' 읽은 페이지 남기기">+ 읽은 페이지</button>' +
           '</div>';
         }).join("") +
         '</div>' +
@@ -1941,7 +1986,7 @@
         '<button class="back-btn" data-nav="home" title="홈으로" aria-label="홈으로">' +
           '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
         '</button>' +
-        '<h2>내 책장</h2>' +
+        '<h2>내 서재</h2>' +
       '</div>';
     var all = getBooks();
     if (all.length === 0){
@@ -2009,7 +2054,6 @@
         '<button class="back-btn" data-nav="' + backTarget + '" title="뒤로" aria-label="뒤로">' +
           '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
         '</button>' +
-        '<h2>내 기록</h2>' +
       '</div>';
     if (!id || !state.books[id]){
       el.innerHTML = header +
@@ -2079,7 +2123,7 @@
             : '<button class="reflection-open" data-openreflection="' + b.id + '">+ 다 읽고 든 생각 남기기</button>')) +
         '</div>' : '') +
       '<div class="traces-section">' +
-        '<div class="traces-heading"><div class="section-title">이 책에 남긴 흔적</div><span class="traces-count">' + notes.length + '개</span></div>' +
+        '<div class="traces-heading"><div class="section-title">북로그</div><span class="traces-count">' + notes.length + '개</span></div>' +
         (composeOpen
           ? '<div class="note-compose">' +
               '<textarea id="noteComposeInput" data-composedraft="' + b.id + '" placeholder="읽다가 든 생각을 남겨보세요">' + esc(composeDraft) + '</textarea>' +
@@ -2088,9 +2132,9 @@
                 '<button class="btn btn-small" data-savecompose="' + b.id + '">남기기</button>' +
               '</span></div>' +
             '</div>'
-          : '<button class="note-compose-open" data-opencompose="' + b.id + '">+ 흔적 남기기</button>') +
+          : '<button class="note-compose-open" data-opencompose="' + b.id + '">+ 북로그 쓰기</button>') +
         '<div class="notes-list" style="margin-top:14px;">' +
-          (notes.length ? notes.map(function(n){ return noteItem(b.id, n); }).join("") : '<p class="traces-empty">아직 남긴 흔적이 없어요.</p>') +
+          (notes.length ? notes.map(function(n){ return noteItem(b.id, n); }).join("") : '<p class="traces-empty">아직 쓴 북로그가 없어요.</p>') +
         '</div>' +
       '</div>';
   }
@@ -2127,18 +2171,29 @@
       books.push({ book:book, readDays:readDays, noteCount:noteCount, latestAt:latestAt, latestDate:latestDate });
     });
     books.sort(function(a, b){ return b.latestAt - a.latestAt || a.book.title.localeCompare(b.book.title, "ko") || a.book.id.localeCompare(b.book.id); });
-    var allNotes = getBooks().reduce(function(count, book){
-      return count + (book.notes || []).filter(function(note){
+    var noteGroups = [];
+    var allNotes = 0;
+    getBooks().forEach(function(book){
+      var monthNotes = (book.notes || []).filter(function(note){
         var time = Date.parse(note.createdAt);
         return Number.isFinite(time) && dateKey(new Date(time)).indexOf(prefix) === 0;
-      }).length;
-    }, 0);
+      }).sort(function(a, b){ return Date.parse(a.createdAt) - Date.parse(b.createdAt); });
+      if (monthNotes.length){
+        allNotes += monthNotes.length;
+        noteGroups.push({ book:book, notes:monthNotes });
+      }
+    });
+    noteGroups.sort(function(a, b){
+      var aTime = Date.parse(a.notes[a.notes.length - 1].createdAt) || 0;
+      var bTime = Date.parse(b.notes[b.notes.length - 1].createdAt) || 0;
+      return bTime - aTime || a.book.title.localeCompare(b.book.title, "ko");
+    });
     var completed = getBooks().filter(function(book){
       if (book.status !== "done") return false;
       var time = Date.parse(book.completedAt);
       return Number.isFinite(time) && dateKey(new Date(time)).indexOf(prefix) === 0;
     }).length;
-    return { books:books, days:days, readDays:Object.keys(days).length, notes:allNotes, completed:completed };
+    return { books:books, days:days, readDays:Object.keys(days).length, notes:allNotes, completed:completed, noteGroups:noteGroups };
   }
   function statsMonthCalendar(monthKey, activeDays){
     var parts = monthKey.split("-").map(Number);
@@ -2157,6 +2212,10 @@
     var parts = date.split("-").map(Number);
     return parts[1] + "월 " + parts[2] + "일";
   }
+  function statsCover(book){
+    if (book.coverUrl) return '<span class="stats-cover"><img src="' + esc(book.coverUrl) + '" alt=""></span>';
+    return '<span class="stats-cover stats-cover-fallback" style="background:' + coverColor(book.id) + '">' + esc((book.title || "?").charAt(0)) + '</span>';
+  }
   function renderStats(){
     var el = document.getElementById("view-stats");
     var header = '' +
@@ -2164,7 +2223,7 @@
         '<button class="back-btn" data-nav="home" title="홈으로" aria-label="홈으로">' +
           '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
         '</button>' +
-        '<h2 class="stats-title">독서 기록</h2>' +
+        '<h2 class="stats-title">독서 캘린더</h2>' +
       '</div>';
 
     var monthKey = state.statsMonth || dateKey(new Date()).slice(0, 7);
@@ -2189,16 +2248,42 @@
         '</button>';
     }).join("");
 
+    var archiveHtml = "";
+    if (state.statsArchivePanel === "books"){
+      archiveHtml = '<section class="stats-archive-panel"><div class="stats-archive-heading">' + cal.label + '에 읽은 책</div>' +
+        (data.books.length ? '<div class="stats-archive-books">' + data.books.map(function(entry){
+          var reflection = entry.book.status === "done" && entry.book.completionReflection;
+          return '<button type="button" class="stats-archive-book" data-open="' + entry.book.id + '" data-open-from="stats">' +
+            statsCover(entry.book) + '<span class="stats-archive-copy"><span class="stats-book-title">' + esc(entry.book.title) + '</span>' +
+            '<span class="stats-book-meta">읽은 날 ' + entry.readDays + '일' + (entry.noteCount ? ' · 북로그 ' + entry.noteCount + '개' : '') +
+              (entry.book.status === "done" ? ' · 완독' : '') + '</span>' +
+            (reflection ? '<span class="stats-reflection">“' + esc(reflection.text) + '”</span>' : '') +
+            '</span></button>';
+        }).join("") + '</div>' : '<p class="stats-empty">기록 없음</p>') + '</section>';
+    } else if (state.statsArchivePanel === "notes"){
+      archiveHtml = '<section class="stats-archive-panel"><div class="stats-archive-heading">' + cal.label + ' 북로그</div>' +
+        (data.noteGroups.length ? '<div class="stats-note-groups">' + data.noteGroups.map(function(group){
+          return '<div class="stats-note-group"><button type="button" class="stats-note-book" data-open="' + group.book.id + '" data-open-from="stats">' +
+            statsCover(group.book) + '<span>' + esc(group.book.title) + '</span></button>' +
+            group.notes.map(function(note){
+              var meta = (note.page != null ? 'p.' + note.page + ' · ' : '') + fmtMonthDay(note.createdAt);
+              return '<button type="button" class="stats-note-row" data-open="' + group.book.id + '" data-open-from="stats">' +
+                '<span class="stats-note-meta">' + meta + '</span><span class="stats-note-text">“' + esc(note.text) + '”</span></button>';
+            }).join("") + '</div>';
+        }).join("") + '</div>' : '<p class="stats-empty">기록 없음</p>') + '</section>';
+    }
+
     el.innerHTML = header +
       '<section class="stats-month-summary">' +
         '<div class="stats-month-nav"><button type="button" data-stats-month="-1" aria-label="이전 달">‹</button><h3>' + cal.label + '</h3><button type="button" data-stats-month="1" aria-label="다음 달">›</button></div>' +
         '<div class="stats-summary">' +
-          '<div class="stats-summary-item"><span class="stats-summary-label">읽은 책</span><span class="stats-summary-value">' + data.books.length + '<small>권</small></span></div>' +
+          '<button type="button" class="stats-summary-item stats-summary-entry" data-stats-panel="books" aria-expanded="' + (state.statsArchivePanel === "books") + '"><span class="stats-summary-label">읽은 책</span><span class="stats-summary-value">' + data.books.length + '<small>권</small></span><span class="stats-entry-arrow">›</span></button>' +
           '<div class="stats-summary-item"><span class="stats-summary-label">읽은 날</span><span class="stats-summary-value">' + data.readDays + '<small>일</small></span></div>' +
-          '<div class="stats-summary-item"><span class="stats-summary-label">북로그</span><span class="stats-summary-value">' + data.notes + '<small>개</small></span></div>' +
+          '<button type="button" class="stats-summary-item stats-summary-entry" data-stats-panel="notes" aria-expanded="' + (state.statsArchivePanel === "notes") + '"><span class="stats-summary-label">북로그</span><span class="stats-summary-value">' + data.notes + '<small>개</small></span><span class="stats-entry-arrow">›</span></button>' +
         '</div>' +
         (data.completed ? '<div class="stats-completed">완독 ' + data.completed + '권</div>' : '') +
       '</section>' +
+      archiveHtml +
       '<section class="stats-calendar-section">' +
         '<div class="cal-card">' +
           '<div class="cal-grid cal-weekdays-row">' + weekdaysHtml + '</div>' +
@@ -2209,21 +2294,10 @@
         '<div class="stats-heading">' + statsDateLabel(selDate) + '</div>' +
         '<div class="stats-day-list">' +
           (dayBooks.length ? dayBooks.map(function(book){
-            return '<button type="button" class="stats-day-row" data-open="' + book.id + '" data-open-from="stats">' + esc(book.title) + '</button>';
+            return '<button type="button" class="stats-day-row" data-open="' + book.id + '" data-open-from="stats">' + statsCover(book) + '<span>' + esc(book.title) + '</span></button>';
           }).join("") : '<p class="stats-empty">기록 없음</p>') +
         '</div>' +
-      '</section>' : '') +
-      '<section class="stats-books-section">' +
-        '<div class="stats-heading">' + (monthKey === dateKey(new Date()).slice(0, 7) ? '이번 달 읽은 책' : cal.label + '에 읽은 책') + '</div>' +
-        (data.books.length ? '<div class="stats-book-list">' + data.books.map(function(entry){
-          return '<button type="button" class="stats-book-row" data-open="' + entry.book.id + '" data-open-from="stats">' +
-            '<span class="stats-book-title">' + esc(entry.book.title) + '</span>' +
-            '<span class="stats-book-meta">읽은 날 ' + entry.readDays + '일' + (entry.noteCount ? ' · 북로그 ' + entry.noteCount + '개' : '') +
-              (entry.book.status === "done" ? ' · 완독' : '') + '</span>' +
-            '<span class="stats-book-last">마지막으로 읽은 날 ' + statsDateLabel(entry.latestDate) + '</span>' +
-          '</button>';
-        }).join("") + '</div>' : '<p class="stats-empty">기록 없음</p>') +
-      '</section>';
+      '</section>' : '');
   }
 
   /* ---------------- modals ---------------- */
@@ -2472,8 +2546,9 @@
     var b = state.books[bookId];
     if (!b) return;
     openModal('' +
-      '<div class="modal">' +
-        '<h2>페이지 기록 · ' + esc(b.title) + '</h2>' +
+      '<div class="modal page-log-modal">' +
+        '<h2>어디까지 읽었어?</h2>' +
+        '<div class="page-log-book">' + esc(b.title) + '</div>' +
         '<div class="field">' +
           '<label for="f-page">현재 페이지</label>' +
           '<input id="f-page" type="number" inputmode="numeric" min="0" max="' + b.totalPages + '" value="' + b.currentPage + '">' +
@@ -2512,6 +2587,15 @@
       var next = new Date(parts[0], parts[1] - 1 + Number(t.getAttribute("data-stats-month")), 1);
       state.statsMonth = dateKey(next).slice(0, 7);
       state.statsSelectedDate = null;
+      state.statsArchivePanel = null;
+      renderAll();
+      return;
+    }
+
+    t = e.target.closest("[data-stats-panel]");
+    if (t){
+      var panel = t.getAttribute("data-stats-panel");
+      state.statsArchivePanel = state.statsArchivePanel === panel ? null : panel;
       renderAll();
       return;
     }
