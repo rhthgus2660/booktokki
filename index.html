@@ -914,12 +914,12 @@
   #view-library .back-btn:hover{ background:#f5f5f5; }
   #view-library .library-shelves{ display:flex; flex-direction:column; margin-top:30px; }
   #view-library .shelf-row{
-    display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); align-items:end; gap:8px;
+    display:flex; flex-wrap:nowrap; align-items:flex-end; gap:2px;
     min-height:166px; padding:42px 2px 13px; border:0; border-bottom:1px solid #cfcfcf;
     border-radius:0; box-shadow:none;
   }
   #view-library .spine-wrap{
-    width:100% !important; height:110px; display:flex; align-items:flex-end; justify-content:center;
+    width:auto !important; height:110px; display:flex; align-items:flex-end; justify-content:flex-start;
     position:relative; min-width:0;
   }
   #view-library .book-object{
@@ -938,11 +938,11 @@
   #view-library .spine-progress{ height:2px; background:rgba(23,23,23,.1); }
   #view-library .spine-progress-fill{ background:#171717; opacity:.65; }
   #view-library .reading-bookmark{
-    position:absolute; z-index:4; top:-8px; right:7px; width:9px; height:23px;
+    position:absolute; z-index:4; top:-5px; right:5px; width:6px; height:8px;
     background:#d9a6a2; border:1px solid rgba(23,23,23,.12); border-bottom:0; pointer-events:none;
   }
   #view-library .reading-bookmark::after{
-    content:""; position:absolute; left:-1px; bottom:-6px; width:9px; height:7px;
+    content:""; position:absolute; left:-1px; bottom:-3px; width:6px; height:4px;
     background:#d9a6a2; clip-path:polygon(0 0,100% 0,50% 100%);
   }
   #view-library .note-tabs{ position:absolute; inset:0; z-index:5; pointer-events:none; }
@@ -957,15 +957,13 @@
   #view-library .wear-trace::after{ right:4px; bottom:13px; width:6px; height:6px; border-right:1px solid; border-bottom:1px solid; }
   #view-library .wear-trace.is-returned-more{ box-shadow:inset 1px 0 rgba(23,23,23,.12), inset -1px 0 rgba(23,23,23,.08); }
   #view-library .completion-mark{
-    position:absolute; z-index:2; left:7px; top:-5px; width:7px; height:13px;
-    border:1px solid rgba(23,23,23,.3); border-bottom:0; background:#fff; pointer-events:none;
+    position:absolute; z-index:2; left:50%; bottom:3px; width:auto; height:auto;
+    color:#737373; font-size:8px; line-height:1; font-weight:600; pointer-events:none; transform:translateX(-50%);
   }
-  #view-library .completion-mark::after{
-    content:""; position:absolute; left:-1px; bottom:-4px; width:7px; height:5px;
-    background:#fff; clip-path:polygon(0 0,100% 0,50% 100%);
-  }
+  #view-library .completion-mark::before{ content:"✓"; }
   #view-library .library-rabbit{
-    position:absolute; z-index:8; width:58px; height:45px; right:-7px; top:-38px;
+    position:absolute; z-index:8; width:48px; height:38px; left:50%; right:auto; top:-36px;
+    transform:translateX(-50%);
     object-fit:contain; image-rendering:pixelated; pointer-events:none;
     filter:drop-shadow(0 1px 0 rgba(23,23,23,.08));
   }
@@ -977,10 +975,20 @@
     color:#737373; font-size:.8rem; font-weight:400; text-align:left;
   }
   #view-library .library-add:hover{ color:#171717; }
+  #view-library .library-legend{
+    display:flex; align-items:center; gap:12px; margin:20px 0 0; color:#909090; font-size:.68rem;
+  }
+  #view-library .library-legend-item{ display:inline-flex; align-items:center; gap:4px; }
+  #view-library .library-legend .reading-bookmark,
+  #view-library .library-legend .completion-mark{
+    position:relative; left:auto; right:auto; top:auto; bottom:auto; transform:none; display:inline-block; flex:none;
+  }
+  #view-library .library-legend .reading-bookmark{ width:6px; height:8px; }
+  #view-library .library-legend .completion-mark{ font-size:8px; }
   @media (max-width:350px){
     body.library-prototype .app{ padding-inline:16px; }
-    #view-library .shelf-row{ gap:6px; }
-    #view-library .library-rabbit{ width:52px; right:-5px; }
+    #view-library .shelf-row{ gap:1px; }
+    #view-library .library-rabbit{ width:44px; right:auto; }
   }
 
   /* v0.7: Stats uses the same quiet editorial surface as the other views. */
@@ -1951,26 +1959,24 @@
   /* Reading history stays derived from pageLogs/notes; no trace is stored. */
   function spineEl(b, index, latestBookId){
     var p = pct(b.currentPage, b.totalPages);
-    var widthPx = Math.max(48, Math.min(58, 45 + Math.round(b.totalPages / 24)));
+    var widthPx = Math.max(28, Math.min(34, 28 + Math.round(b.totalPages / 32)));
     var heightPx = 98 + ((index * 7 + b.id.length) % 3) * 6;
-    var styleParts = [];
-    if (!b.coverUrl) styleParts.push("background:" + coverColor(b.id) + ";");
-    var inner = b.coverUrl
-      ? '<img src="' + esc(b.coverUrl) + '" alt="">'
-      : '<div class="spine-label">' + esc(b.title) + '</div>';
-    var doneLabel = b.status === "done" ? " (완독)" : "";
+    var styleParts = ["background:" + coverColor(b.id) + ";"];
     var trace = libraryTraceForBook(b, latestBookId);
+    var completed = b.status === "done" || !!b.completedAt;
+    var inner = '<div class="spine-label">' + esc(b.title) + '</div>';
+    var doneLabel = completed ? " (완독)" : "";
     var noteTabs = "";
     for (var i = 0; i < trace.noteTabs; i++) noteTabs += '<span class="note-tab"></span>';
     var leanClass = index % 8 === 2 ? " lean-left" : (index % 8 === 6 ? " lean-right" : "");
     return '' +
       '<div class="spine-wrap">' +
-        (trace.isLatest ? '<img class="library-rabbit" src="assets/bunny-sleep.png" alt="최근 읽은 책 위에서 자는 북토끼">' : '') +
         '<div class="book-object' + leanClass + '" style="--spine-width:' + widthPx + 'px;--spine-height:' + heightPx + 'px;">' +
+          (trace.isLatest ? '<img class="library-rabbit" src="assets/bunny-sleep.png" alt="최근 읽은 책 위에서 자는 북토끼">' : '') +
           (trace.returnCount ? '<span class="wear-trace' + (trace.returnCount > 1 ? ' is-returned-more' : '') + '"></span>' : '') +
           (trace.noteTabs ? '<span class="note-tabs">' + noteTabs + '</span>' : '') +
-          (trace.hasPositive && b.status !== "done" && b.currentPage > 0 ? '<span class="reading-bookmark" style="top:' + (-6 - Math.round(p / 25)) + 'px"></span>' : '') +
-          (b.status === "done" ? '<span class="completion-mark"></span>' : '') +
+          (trace.hasPositive && !completed && b.currentPage > 0 ? '<span class="reading-bookmark" style="top:-5px"></span>' : '') +
+          (completed ? '<span class="completion-mark"></span>' : '') +
           '<button class="spine" style="' + styleParts.join("") + '" data-open="' + b.id + '" data-open-from="library" aria-label="' + esc(b.title) + doneLabel + '">' +
             inner +
             '<div class="spine-progress"><div class="spine-progress-fill" style="width:' + p + '%"></div></div>' +
@@ -1992,7 +1998,7 @@
     if (all.length === 0){
       el.innerHTML = header +
         '<div class="empty-state library-empty">' +
-          '<p>아직 책장이 비어 있어요. 첫 책을 꽂아 보세요.</p>' +
+          '<p>아직 서재가 비어 있어요. 첫 책을 꽂아 보세요.</p>' +
           '<button class="btn" id="emptyAddBookBtn2">+ 읽을 책 추가</button>' +
         '</div>';
       return;
@@ -2000,7 +2006,8 @@
     /* Oldest first, so a newly added book takes the next open spot —
        the shelf fills left-to-right, row by row, as a timeline. */
     all.sort(function(a, b){ return new Date(a.createdAt) - new Date(b.createdAt); });
-    var ROW_SIZE = 4;
+    var shelfWidth = Math.max(280, Math.min((window.innerWidth || 390) - 48, 600));
+    var ROW_SIZE = Math.max(1, Math.floor((shelfWidth + 2) / 34));
     var rows = [];
     for (var i = 0; i < all.length; i += ROW_SIZE){ rows.push(all.slice(i, i + ROW_SIZE)); }
     var latestBookId = latestPositiveBookId();
@@ -2013,6 +2020,7 @@
           }).join("") + '</div>';
         }).join("") +
       '</div>' +
+      '<div class="library-legend" aria-label="책 상태 안내"><span class="library-legend-item"><span class="reading-bookmark" aria-hidden="true"></span> 읽는 중</span><span class="library-legend-item"><span class="completion-mark" aria-hidden="true"></span> 완독</span></div>' +
       '<button class="btn-dashed library-add" id="addBookBtnLib">+ 읽을 책 추가</button>';
   }
 
