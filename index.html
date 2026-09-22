@@ -622,6 +622,51 @@
   .modal-actions{ display:flex; gap:8px; margin-top:4px; }
   .modal-error{ font-size:.8rem; color:var(--danger); font-weight:700; }
 
+  /* v0.10 add-book search: an editorial list inside the existing sheet. */
+  .book-search-modal{ background:#fff; color:#171717; gap:18px; }
+  .book-search-modal h2{ font-size:1.2rem; font-weight:700; letter-spacing:-.02em; }
+  .book-search-form{ display:flex; gap:8px; align-items:stretch; }
+  .book-search-input{
+    min-width:0; flex:1; border:0; border-bottom:1px solid #dcdcdc; border-radius:0;
+    background:#fff; color:#171717; padding:11px 2px; font-size:.95rem;
+  }
+  .book-search-input:focus{ outline:none; border-color:#171717; }
+  .book-search-submit{
+    flex:none; min-width:58px; border:0; border-radius:3px; background:#171717;
+    color:#fff; padding:10px 13px; font:inherit; font-size:.82rem; cursor:pointer;
+  }
+  .book-search-submit:disabled{ opacity:.45; cursor:default; }
+  .book-search-status{ min-height:18px; font-size:.76rem; color:#737373; }
+  .book-search-results{ border-top:1px solid #e9e9e9; }
+  .book-search-result{
+    width:100%; display:flex; align-items:center; gap:13px; border:0;
+    border-bottom:1px solid #e9e9e9; background:#fff; color:#171717;
+    padding:14px 0; text-align:left; cursor:pointer;
+  }
+  .book-search-result:hover{ background:#fafafa; }
+  .book-search-cover{
+    width:48px; height:68px; flex:none; display:flex; align-items:center; justify-content:center;
+    overflow:hidden; background:#f4f4f4; color:#999; font-size:.62rem; text-align:center;
+  }
+  .book-search-cover img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .book-search-copy{ min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .book-search-title{ font-size:.9rem; font-weight:700; line-height:1.4; }
+  .book-search-meta{ font-size:.72rem; color:#737373; line-height:1.5; }
+  .book-search-direct{
+    align-self:flex-start; border:0; background:none; color:#737373; font:inherit;
+    font-size:.8rem; padding:10px 0; text-decoration:underline; cursor:pointer;
+  }
+  .book-search-selection{ display:flex; gap:15px; padding-block:3px 18px; border-bottom:1px solid #e9e9e9; }
+  .book-search-selection .book-search-cover{ width:64px; height:92px; }
+  .book-search-selection .book-search-title{ font-size:1rem; }
+  .book-search-back{ align-self:flex-start; border:0; background:none; color:#737373; padding:0; font:inherit; font-size:.78rem; cursor:pointer; }
+  .book-search-modal .field input{
+    background:#fff; border:0; border-bottom:1px solid #dcdcdc; border-radius:0; padding-inline:2px;
+  }
+  .book-search-modal .field input:focus{ outline:none; border-color:#171717; }
+  .book-search-modal .modal-actions{ border-top:1px solid #e9e9e9; padding-top:14px; }
+  .book-search-modal .modal-actions .btn{ border-radius:3px; font-weight:500; }
+
   [hidden]{ display:none !important; }
 
   button:focus-visible, .spine:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
@@ -787,6 +832,11 @@
   #view-detail .traces-heading .section-title{ padding:0; font-size:1rem; font-weight:600; }
   #view-detail .traces-count{ color:#909090; font-size:.7rem; }
   #view-detail .note-compose{ margin-top:18px; border-bottom:1px solid #e9e9e9; padding-bottom:10px; }
+  #view-detail .note-compose-open, #view-detail .reflection-open{
+    min-height:44px; margin-top:12px; padding:10px 0; border:0; background:transparent;
+    color:#737373; font:inherit; font-size:.78rem; text-align:left; cursor:pointer;
+  }
+  #view-detail .note-compose-open:hover, #view-detail .reflection-open:hover{ color:#171717; }
   #view-detail .note-compose textarea, #view-detail .note-edit-input{
     field-sizing:content; min-height:44px; max-height:180px; padding:8px 0;
     border:0; border-radius:0; background:transparent; color:#171717;
@@ -794,6 +844,7 @@
   }
   #view-detail .note-compose textarea:focus, #view-detail .note-edit-input:focus{ outline:0; }
   #view-detail .note-compose-actions{ align-items:center; justify-content:space-between; margin-top:4px; }
+  #view-detail .note-compose-actions > span:last-child{ display:flex; align-items:center; gap:14px; }
   #view-detail .composer-page{ color:#909090; font-size:.7rem; }
   #view-detail .note-compose-actions .btn{
     flex:none; min-height:40px; padding:8px 0 8px 14px; border:0; border-radius:0;
@@ -810,6 +861,20 @@
   #view-detail .note-action-btn:hover{ color:#171717; }
   #view-detail .note-edit-actions{ margin-top:6px; }
   #view-detail .traces-empty{ color:#909090; font-size:.78rem; padding:20px 0; }
+  #view-detail .completion-reflection{ margin-top:34px; padding-block:22px; border-block:1px solid #e9e9e9; }
+  #view-detail .completion-reflection-title{ color:#171717; font-size:.88rem; font-weight:600; }
+  #view-detail .completion-reflection-text{ margin:14px 0 10px; color:#171717; font-size:.9rem; line-height:1.7; white-space:pre-wrap; }
+  #view-detail .completion-reflection textarea{
+    field-sizing:content; width:100%; min-height:58px; max-height:220px; margin-top:12px; padding:8px 0;
+    border:0; border-bottom:1px solid #e9e9e9; border-radius:0; background:transparent;
+    color:#171717; font:inherit; font-size:.88rem; line-height:1.6; resize:vertical;
+  }
+  #view-detail .completion-reflection textarea:focus{ outline:0; border-color:#171717; }
+  #view-detail .reflection-actions{ display:flex; justify-content:flex-end; gap:16px; margin-top:8px; }
+  .done-reflection-link{
+    border:0; background:transparent; color:#737373; padding:10px 4px; font:inherit;
+    font-size:.78rem; text-decoration:underline; cursor:pointer;
+  }
 
   /* Visual System v0.6: library-only physical reading traces. */
   body.library-prototype{ background:#fff; color:#171717; padding-top:28px; }
@@ -996,6 +1061,10 @@
     selectedBookId: null,
     detailFrom: "library", /* which screen "back" from the detail view returns to */
     editingNoteId: null, /* which 북로그 is currently in its inline edit mode, if any */
+    noteComposerOpenBookId: null,
+    noteComposeDrafts: {},
+    completionReflectionOpenBookId: null,
+    completionReflectionDrafts: {},
     statsSelectedDate: null, /* selected day (YYYY-MM-DD) on the 통계 calendar; null = today */
     statsMonth: null, /* selected stats month (YYYY-MM); null = current month */
     dbMode: null /* 'db' | 'local' */
@@ -1004,6 +1073,9 @@
   var localImages = null;
   var storageReady = null;
   var localSeq = 0;
+  /* Set after the Worker is deployed. This URL is public configuration;
+     the Kakao key remains a Worker secret and is never shipped here. */
+  var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
 
   function uid(){
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -1268,7 +1340,7 @@
   /* Every mutation updates state.books and calls renderAll() FIRST (so
      the screen reflects the change immediately, with no wait on any
      round trip), then syncs the same change to the store. */
-  function addBook(title, author, totalPages, cover){
+  function addBook(title, author, totalPages, cover, metadata){
     var id = uid();
     var data = {
       title: title,
@@ -1286,6 +1358,10 @@
       coverId: (cover && cover.id) || null,
       coverUrl: (cover && cover.url) || null
     };
+    metadata = metadata || {};
+    ["isbn13", "publisher", "publishedAt", "sourceProvider", "sourceId"].forEach(function(key){
+      if (metadata[key]) data[key] = metadata[key];
+    });
     applyDoc(id, data);
     renderAll();
     writeBook(id, data);
@@ -1431,8 +1507,30 @@
        page record, never to a 북로그. */
     var patch = { notes: notes, updatedAt: nowIso() };
     Object.assign(b, patch);
+    delete state.noteComposeDrafts[bookId];
+    state.noteComposerOpenBookId = null;
     var composeInput = document.getElementById("noteComposeInput");
     if (composeInput) composeInput.value = "";
+    renderAll();
+    writePatch(bookId, patch);
+  }
+
+  function saveCompletionReflection(bookId, text){
+    var b = state.books[bookId];
+    if (!b || !text) return;
+    var existing = b.completionReflection;
+    var now = nowIso();
+    var patch = {
+      completionReflection: {
+        text: text,
+        createdAt: existing && existing.createdAt ? existing.createdAt : now,
+        updatedAt: now
+      },
+      updatedAt: now
+    };
+    Object.assign(b, patch);
+    delete state.completionReflectionDrafts[bookId];
+    state.completionReflectionOpenBookId = null;
     renderAll();
     writePatch(bookId, patch);
   }
@@ -1493,18 +1591,36 @@
   function handleMarkDone(bookId){
     hideReadingReaction();
     markDone(bookId);
-    showDoneCelebration();
+    showDoneCelebration(bookId);
   }
-  function showDoneCelebration(){
+  function openCompletionReflection(bookId){
+    var b = state.books[bookId];
+    if (!b) return;
+    state.completionReflectionOpenBookId = bookId;
+    if (!Object.prototype.hasOwnProperty.call(state.completionReflectionDrafts, bookId)){
+      state.completionReflectionDrafts[bookId] = b.completionReflection ? b.completionReflection.text : "";
+    }
+    renderAll();
+    setTimeout(function(){
+      var input = document.getElementById("completionReflectionInput");
+      if (input){ input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+    }, 0);
+  }
+  function showDoneCelebration(bookId){
     openModal('' +
       '<div class="modal" style="align-items:center;text-align:center;">' +
         '<div class="speech-bubble">인간이 책 한 권을 끝냄<br>제법인데.</div>' +
         '<div class="bunny-figure" style="width:184px;height:226px;margin:10px auto 0;">' +
           '<img class="bunny-done-img" src="assets/bunny-done.png" alt="책 위에 올라가 뻐기듯 서 있는 토끼">' +
         '</div>' +
+        '<button class="done-reflection-link" id="doneReflectionOpen" type="button">이 책을 다 읽고 든 생각 남기기</button>' +
         '<button class="btn btn-dark" id="doneCelebrateClose" style="width:100%;">확인</button>' +
       '</div>');
     document.getElementById("doneCelebrateClose").onclick = closeModal;
+    document.getElementById("doneReflectionOpen").onclick = function(){
+      closeModal();
+      openCompletionReflection(bookId);
+    };
   }
 
   function setCover(bookId, cover){
@@ -1908,6 +2024,13 @@
     /* oldest first - reads like the thread of thought actually
        unfolded while working through the book */
     var notes = (b.notes || []).slice().sort(function(a,c){ return new Date(a.createdAt) - new Date(c.createdAt); });
+    var composeOpen = state.noteComposerOpenBookId === b.id;
+    var composeDraft = state.noteComposeDrafts[b.id] || "";
+    var reflectionOpen = state.completionReflectionOpenBookId === b.id;
+    var reflection = b.completionReflection;
+    var reflectionDraft = Object.prototype.hasOwnProperty.call(state.completionReflectionDrafts, b.id)
+      ? state.completionReflectionDrafts[b.id]
+      : (reflection ? reflection.text : "");
 
     el.innerHTML = header +
       '<div class="detail-overview">' +
@@ -1945,15 +2068,27 @@
             : '<button class="btn btn-outline" data-done="' + b.id + '" style="width:100%;">다 읽었어!</button>') +
         '</div>' +
       '</div>' +
+      (b.status === "done" ? '<div class="completion-reflection">' +
+        '<div class="completion-reflection-title">이 책을 다 읽고 든 생각</div>' +
+        (reflectionOpen
+          ? '<textarea id="completionReflectionInput" data-reflectiondraft="' + b.id + '" placeholder="이 책을 다 읽고 든 생각을 남겨보세요">' + esc(reflectionDraft) + '</textarea>' +
+            '<div class="reflection-actions"><button class="note-action-btn" data-cancelreflection="' + b.id + '">취소</button>' +
+            '<button class="note-action-btn" data-savereflection="' + b.id + '">남기기</button></div>'
+          : (reflection
+            ? '<div class="completion-reflection-text">' + esc(reflection.text) + '</div><button class="note-action-btn" data-openreflection="' + b.id + '">수정</button>'
+            : '<button class="reflection-open" data-openreflection="' + b.id + '">+ 다 읽고 든 생각 남기기</button>')) +
+        '</div>' : '') +
       '<div class="traces-section">' +
         '<div class="traces-heading"><div class="section-title">이 책에 남긴 흔적</div><span class="traces-count">' + notes.length + '개</span></div>' +
-        '<div class="note-compose">' +
-          '<textarea id="noteComposeInput" placeholder="읽다가 든 생각을 남겨보세요"></textarea>' +
-          '<div class="note-compose-actions">' +
-            '<span class="composer-page">p.' + b.currentPage + '</span>' +
-            '<button class="btn btn-small" data-savecompose="' + b.id + '">남기기</button>' +
-          '</div>' +
-        '</div>' +
+        (composeOpen
+          ? '<div class="note-compose">' +
+              '<textarea id="noteComposeInput" data-composedraft="' + b.id + '" placeholder="읽다가 든 생각을 남겨보세요">' + esc(composeDraft) + '</textarea>' +
+              '<div class="note-compose-actions"><span class="composer-page">p.' + b.currentPage + '</span><span>' +
+                '<button class="note-action-btn" data-closecompose="' + b.id + '">취소</button>' +
+                '<button class="btn btn-small" data-savecompose="' + b.id + '">남기기</button>' +
+              '</span></div>' +
+            '</div>'
+          : '<button class="note-compose-open" data-opencompose="' + b.id + '">+ 흔적 남기기</button>') +
         '<div class="notes-list" style="margin-top:14px;">' +
           (notes.length ? notes.map(function(n){ return noteItem(b.id, n); }).join("") : '<p class="traces-empty">아직 남긴 흔적이 없어요.</p>') +
         '</div>' +
@@ -2110,9 +2245,146 @@
     if (e.key === "Escape" && !overlay.hidden) closeModal();
   });
 
+  function bookSearchCover(book){
+    return '<div class="book-search-cover">' +
+      (book.coverUrl ? '<img src="' + esc(book.coverUrl) + '" alt="" data-search-cover>' : '<span>표지 없음</span>') +
+      '</div>';
+  }
+
+  function bindSearchCoverFallbacks(){
+    overlay.querySelectorAll("[data-search-cover]").forEach(function(image){
+      image.addEventListener("error", function(){
+        var cover = image.parentElement;
+        image.remove();
+        cover.innerHTML = '<span>표지 없음</span>';
+      }, { once:true });
+    });
+  }
+
+  function searchBooks(query){
+    if (!BOOK_SEARCH_ENDPOINT) return Promise.reject(new Error("SEARCH_NOT_CONFIGURED"));
+    var controller = new AbortController();
+    var timer = setTimeout(function(){ controller.abort(); }, 10000);
+    return fetch(BOOK_SEARCH_ENDPOINT + "?q=" + encodeURIComponent(query), {
+      method: "GET",
+      credentials: "omit",
+      cache: "no-store",
+      signal: controller.signal
+    }).then(function(response){
+      if (!response.ok) throw new Error("SEARCH_FAILED");
+      return response.json();
+    }).then(function(data){
+      return Array.isArray(data.books) ? data.books : [];
+    }).finally(function(){ clearTimeout(timer); });
+  }
+
   function modalAddBook(from){
     openModal('' +
-      '<div class="modal">' +
+      '<div class="modal book-search-modal">' +
+        '<h2>읽을 책 추가</h2>' +
+        '<form class="book-search-form" id="bookSearchForm">' +
+          '<input class="book-search-input" id="bookSearchInput" type="search" maxlength="100" autocomplete="off" placeholder="책 제목이나 저자를 검색해보세요" aria-label="책 제목이나 저자 검색">' +
+          '<button class="book-search-submit" id="bookSearchSubmit" type="submit">검색</button>' +
+        '</form>' +
+        '<div class="book-search-status" id="bookSearchStatus" role="status"></div>' +
+        '<div class="book-search-results" id="bookSearchResults"></div>' +
+        '<button class="book-search-direct" id="manualAddBook" type="button">직접 추가하기</button>' +
+        '<button class="book-search-direct" id="addBookCancel" type="button">취소</button>' +
+      '</div>');
+
+    var form = document.getElementById("bookSearchForm");
+    var input = document.getElementById("bookSearchInput");
+    var submit = document.getElementById("bookSearchSubmit");
+    var status = document.getElementById("bookSearchStatus");
+    var results = document.getElementById("bookSearchResults");
+
+    function setResults(books){
+      if (!books.length){
+        results.innerHTML = "";
+        status.textContent = "검색 결과 없음";
+        return;
+      }
+      status.textContent = books.length + "권";
+      results.innerHTML = books.map(function(book, index){
+        var author = (book.authors || []).join(", ") || "저자 미상";
+        var details = [author, book.publisher, (book.publishedAt || "").slice(0, 4)].filter(Boolean).join(" · ");
+        return '<button class="book-search-result" type="button" data-search-result="' + index + '">' +
+          bookSearchCover(book) +
+          '<span class="book-search-copy"><span class="book-search-title">' + esc(book.title) + '</span>' +
+          '<span class="book-search-meta">' + esc(details) + '</span></span></button>';
+      }).join("");
+      bindSearchCoverFallbacks();
+      results.querySelectorAll("[data-search-result]").forEach(function(button){
+        button.addEventListener("click", function(){
+          modalAddSearchedBook(from, books[Number(button.getAttribute("data-search-result"))]);
+        });
+      });
+    }
+
+    form.addEventListener("submit", function(event){
+      event.preventDefault();
+      var query = input.value.trim();
+      if (!query){ status.textContent = "검색어를 입력해 주세요."; input.focus(); return; }
+      submit.disabled = true;
+      submit.textContent = "검색 중";
+      status.textContent = "검색 중...";
+      results.innerHTML = "";
+      searchBooks(query).then(setResults).catch(function(error){
+        if (error.message === "SEARCH_NOT_CONFIGURED") status.textContent = "책 검색 연결 설정이 필요해요.";
+        else if (error.name === "AbortError") status.textContent = "검색 시간이 초과됐어요. 다시 시도해 주세요.";
+        else status.textContent = "책을 검색하지 못했어요. 다시 시도하거나 직접 추가해 주세요.";
+      }).finally(function(){
+        submit.disabled = false;
+        submit.textContent = "검색";
+      });
+    });
+    document.getElementById("manualAddBook").onclick = function(){ modalAddBookManual(from); };
+    document.getElementById("addBookCancel").onclick = closeModal;
+  }
+
+  function modalAddSearchedBook(from, book){
+    if (!book) return;
+    var author = (book.authors || []).join(", ") || "저자 미상";
+    var details = [author, book.publisher, (book.publishedAt || "").slice(0, 4)].filter(Boolean).join(" · ");
+    openModal('' +
+      '<div class="modal book-search-modal">' +
+        '<button class="book-search-back" id="searchBookBack" type="button">‹ 검색 결과</button>' +
+        '<div class="book-search-selection">' + bookSearchCover(book) +
+          '<div class="book-search-copy"><div class="book-search-title">' + esc(book.title) + '</div>' +
+          '<div class="book-search-meta">' + esc(details) + '</div></div>' +
+        '</div>' +
+        '<div class="field"><label for="f-search-total">전체 페이지</label><input id="f-search-total" type="number" inputmode="numeric" min="1" placeholder="예: 264"></div>' +
+        '<div class="modal-error" id="addSearchBookErr" hidden></div>' +
+        '<div class="modal-actions">' +
+          '<button class="btn btn-outline" id="addSearchBookCancel" type="button">취소</button>' +
+          '<button class="btn btn-dark" id="addSearchBookSave" type="button">추가하기</button>' +
+        '</div>' +
+      '</div>');
+    bindSearchCoverFallbacks();
+    document.getElementById("searchBookBack").onclick = function(){ modalAddBook(from); };
+    document.getElementById("addSearchBookCancel").onclick = closeModal;
+    document.getElementById("addSearchBookSave").onclick = function(){
+      var total = parseInt(document.getElementById("f-search-total").value, 10);
+      var err = document.getElementById("addSearchBookErr");
+      if (!total || total <= 0){ err.textContent = "전체 페이지 수를 입력해 주세요."; err.hidden = false; return; }
+      var id = addBook(book.title, author, total,
+        book.coverUrl ? { id:null, url:book.coverUrl } : null,
+        {
+          isbn13: book.isbn13 || null,
+          publisher: book.publisher || null,
+          publishedAt: book.publishedAt || null,
+          sourceProvider: book.source || "kakao",
+          sourceId: book.sourceId || null
+        });
+      closeModal();
+      openBook(id, from);
+    };
+  }
+
+  function modalAddBookManual(from){
+    openModal('' +
+      '<div class="modal book-search-modal">' +
+        '<button class="book-search-back" id="manualBookBack" type="button">‹ 책 검색</button>' +
         '<h2>읽을 책 추가</h2>' +
         '<div class="field"><label for="f-title">제목</label><input id="f-title" type="text" placeholder="예: 아몬드" maxlength="80"></div>' +
         '<div class="field"><label for="f-author">저자</label><input id="f-author" type="text" placeholder="예: 손원평" maxlength="60"></div>' +
@@ -2128,6 +2400,7 @@
           '<button class="btn btn-dark" id="addBookSave">추가하기</button>' +
         '</div>' +
       '</div>');
+    document.getElementById("manualBookBack").onclick = function(){ modalAddBook(from); };
     document.getElementById("addBookCancel").onclick = closeModal;
     document.getElementById("addBookSave").onclick = function(){
       var title = document.getElementById("f-title").value.trim();
@@ -2252,6 +2525,18 @@
     t = e.target.closest("[data-log]");
     if (t){ modalLogPage(t.getAttribute("data-log")); return; }
 
+    t = e.target.closest("[data-opencompose]");
+    if (t){
+      var openComposeBookId = t.getAttribute("data-opencompose");
+      state.noteComposerOpenBookId = openComposeBookId;
+      renderAll();
+      setTimeout(function(){ var input = document.getElementById("noteComposeInput"); if (input) input.focus(); }, 0);
+      return;
+    }
+
+    t = e.target.closest("[data-closecompose]");
+    if (t){ state.noteComposerOpenBookId = null; renderAll(); return; }
+
     t = e.target.closest("[data-savecompose]");
     if (t){
       var composeBookId = t.getAttribute("data-savecompose");
@@ -2259,6 +2544,21 @@
       var composeInput = document.getElementById("noteComposeInput");
       var composeText = composeInput ? composeInput.value.trim() : "";
       if (composeBook && composeText){ addNote(composeBookId, composeText, composeBook.currentPage); }
+      return;
+    }
+
+    t = e.target.closest("[data-openreflection]");
+    if (t){ openCompletionReflection(t.getAttribute("data-openreflection")); return; }
+
+    t = e.target.closest("[data-cancelreflection]");
+    if (t){ state.completionReflectionOpenBookId = null; renderAll(); return; }
+
+    t = e.target.closest("[data-savereflection]");
+    if (t){
+      var reflectionBookId = t.getAttribute("data-savereflection");
+      var reflectionInput = document.getElementById("completionReflectionInput");
+      var reflectionText = reflectionInput ? reflectionInput.value.trim() : "";
+      if (reflectionText) saveCompletionReflection(reflectionBookId, reflectionText);
       return;
     }
 
@@ -2327,6 +2627,16 @@
     var v = parseInt(t.value, 10);
     if (isNaN(v) || v < 0){ t.value = b.currentPage; return; }
     logPage(bookId, v);
+  });
+
+  document.body.addEventListener("input", function(e){
+    var t = e.target;
+    if (t && t.hasAttribute("data-composedraft")){
+      state.noteComposeDrafts[t.getAttribute("data-composedraft")] = t.value;
+    }
+    if (t && t.hasAttribute("data-reflectiondraft")){
+      state.completionReflectionDrafts[t.getAttribute("data-reflectiondraft")] = t.value;
+    }
   });
 
   /* ---------------- boot ---------------- */
