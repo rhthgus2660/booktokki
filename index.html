@@ -1975,7 +1975,6 @@
           (trace.isLatest ? '<img class="library-rabbit" src="assets/bunny-sleep.png" alt="최근 읽은 책 위에서 자는 북토끼">' : '') +
           (trace.returnCount ? '<span class="wear-trace' + (trace.returnCount > 1 ? ' is-returned-more' : '') + '"></span>' : '') +
           (trace.noteTabs ? '<span class="note-tabs">' + noteTabs + '</span>' : '') +
-          (trace.hasPositive && !completed && b.currentPage > 0 ? '<span class="reading-bookmark" style="top:-5px"></span>' : '') +
           (completed ? '<span class="completion-mark"></span>' : '') +
           '<button class="spine" style="' + styleParts.join("") + '" data-open="' + b.id + '" data-open-from="library" aria-label="' + esc(b.title) + doneLabel + '">' +
             inner +
@@ -2020,7 +2019,6 @@
           }).join("") + '</div>';
         }).join("") +
       '</div>' +
-      '<div class="library-legend" aria-label="책 상태 안내"><span class="library-legend-item"><span class="reading-bookmark" aria-hidden="true"></span> 읽는 중</span><span class="library-legend-item"><span class="completion-mark" aria-hidden="true"></span> 완독</span></div>' +
       '<button class="btn-dashed library-add" id="addBookBtnLib">+ 읽을 책 추가</button>';
   }
 
@@ -2291,7 +2289,6 @@
         '</div>' +
         (data.completed ? '<div class="stats-completed">완독 ' + data.completed + '권</div>' : '') +
       '</section>' +
-      archiveHtml +
       '<section class="stats-calendar-section">' +
         '<div class="cal-card">' +
           '<div class="cal-grid cal-weekdays-row">' + weekdaysHtml + '</div>' +
@@ -2305,7 +2302,8 @@
             return '<button type="button" class="stats-day-row" data-open="' + book.id + '" data-open-from="stats">' + statsCover(book) + '<span>' + esc(book.title) + '</span></button>';
           }).join("") : '<p class="stats-empty">기록 없음</p>') +
         '</div>' +
-      '</section>' : '');
+      '</section>' : '') +
+      archiveHtml;
   }
 
   /* ---------------- modals ---------------- */
