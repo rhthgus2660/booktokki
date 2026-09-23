@@ -95,6 +95,27 @@
     gap:18px;
   }
 
+  /* ---------- auth gate ---------- */
+  .auth-gate{
+    width:min(100% - 32px,396px); min-height:calc(100vh - 92px); margin:0 auto;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:48px 18px; text-align:center;
+  }
+  .auth-gate img{ width:92px; height:72px; object-fit:contain; image-rendering:pixelated; }
+  .auth-gate h1{ margin-top:22px; color:#171717; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+  .auth-gate-copy{ margin-top:8px; color:#737373; font-size:.78rem; line-height:1.6; }
+  .auth-kakao{
+    width:100%; min-height:48px; margin-top:30px; border:0; border-radius:4px;
+    background:#fee500; color:#191919; font-size:.88rem; font-weight:600; cursor:pointer;
+  }
+  .auth-kakao:disabled{ opacity:.5; cursor:default; }
+  .auth-status{ min-height:20px; margin-top:12px; color:#737373; font-size:.72rem; line-height:1.5; }
+  .auth-logout{
+    min-height:38px; padding:0 4px; border:0; background:none; color:#909090;
+    font-size:.68rem; font-weight:400; cursor:pointer;
+  }
+  .auth-logout:hover{ color:#171717; }
+
   /* ---------- topbar ---------- */
   .topbar{
     display:flex;
@@ -1057,7 +1078,15 @@
 </head>
 <body>
 
-<div class="app" id="app">
+<section class="auth-gate" id="authGate" aria-live="polite">
+  <img src="assets/bunny-sleep.png" alt="책 위에서 자는 북토끼">
+  <h1>BOOKTOKKI</h1>
+  <p class="auth-gate-copy">읽던 책과 남긴 기록을 이어서 봅니다.</p>
+  <button class="auth-kakao" id="kakaoLoginBtn" type="button" disabled>카카오로 시작하기</button>
+  <p class="auth-status" id="authStatus">로그인 상태를 확인하고 있어요.</p>
+</section>
+
+<div class="app" id="app" hidden>
   <div class="topbar">
     <h1>내 독서 기록</h1>
     <div class="topbar-actions">
@@ -1076,6 +1105,7 @@
           <rect x="3" y="20" width="18" height="1.6"/>
         </svg>
       </button>
+      <button class="auth-logout" id="logoutBtn" type="button">로그아웃</button>
     </div>
   </div>
   <div id="offlineNotice"></div>
@@ -1091,6 +1121,8 @@
 <div class="modal-overlay" id="modalOverlay" hidden></div>
 <div class="rabbit-event" id="rabbitEvent" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
+<script src="./auth-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
   "use strict";
@@ -1115,6 +1147,8 @@
   var localImages = null;
   var storageReady = null;
   var localSeq = 0;
+  var supabaseClient = null;
+  var appStarted = false;
   /* Set after the Worker is deployed. This URL is public configuration;
      the Kakao key remains a Worker secret and is never shipped here. */
   var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
@@ -2729,10 +2763,111 @@
     }
   });
 
+  /* ---------------- auth ---------------- */
+  function authRedirectUrl(){
+    return new URL("./", window.location.href).href;
+  }
+
+  function cleanAuthRedirectUrl(){
+    var url = new URL(window.location.href);
+    var hadAuthQuery = false;
+    ["code", "error", "error_code", "error_description"].forEach(function(key){
+      if (url.searchParams.has(key)){
+        url.searchParams.delete(key);
+        hadAuthQuery = true;
+      }
+    });
+    var hadAuthHash = /(?:access_token|refresh_token|expires_in|token_type)=/.test(url.hash);
+    if (!hadAuthQuery && !hadAuthHash) return;
+    var next = url.pathname + (url.searchParams.toString() ? "?" + url.searchParams.toString() : "");
+    window.history.replaceState(null, "", next);
+  }
+
+  function startApp(){
+    if (appStarted) return;
+    appStarted = true;
+    renderAll();
+    initDb();
+    initAssets();
+  }
+
+  function showAuthenticated(){
+    cleanAuthRedirectUrl();
+    document.getElementById("authGate").hidden = true;
+    document.getElementById("app").hidden = false;
+    startApp();
+  }
+
+  function showSignedOut(message){
+    cleanAuthRedirectUrl();
+    document.getElementById("app").hidden = true;
+    document.getElementById("authGate").hidden = false;
+    document.getElementById("kakaoLoginBtn").disabled = !supabaseClient;
+    document.getElementById("authStatus").textContent = message || "";
+  }
+
+  function initAuth(){
+    var config = window.BOOKTOKKI_AUTH_CONFIG || {};
+    var library = window.supabase;
+    if (!library || !library.createClient){
+      showSignedOut("로그인 연결을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+    if (!config.supabaseUrl || !config.supabaseAnonKey){
+      showSignedOut("Supabase 공개 설정값을 입력해 주세요.");
+      return;
+    }
+
+    supabaseClient = library.createClient(config.supabaseUrl, config.supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
+
+    supabaseClient.auth.onAuthStateChange(function(_event, session){
+      if (session) showAuthenticated();
+      else showSignedOut("");
+    });
+
+    supabaseClient.auth.getSession().then(function(result){
+      if (result.error){
+        showSignedOut("로그인 상태를 확인하지 못했어요. 다시 시도해 주세요.");
+        return;
+      }
+      if (result.data.session) showAuthenticated();
+      else showSignedOut("");
+    });
+  }
+
+  document.getElementById("kakaoLoginBtn").addEventListener("click", function(){
+    if (!supabaseClient) return;
+    var button = this;
+    button.disabled = true;
+    document.getElementById("authStatus").textContent = "카카오로 이동하고 있어요.";
+    supabaseClient.auth.signInWithOAuth({
+      provider: "kakao",
+      options: { redirectTo: authRedirectUrl() }
+    }).then(function(result){
+      if (result.error){
+        button.disabled = false;
+        document.getElementById("authStatus").textContent = "로그인을 시작하지 못했어요. 다시 시도해 주세요.";
+      }
+    });
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", function(){
+    if (!supabaseClient) return;
+    this.disabled = true;
+    supabaseClient.auth.signOut().then(function(result){
+      document.getElementById("logoutBtn").disabled = false;
+      if (result.error) window.alert("로그아웃하지 못했어요. 다시 시도해 주세요.");
+    });
+  });
+
   /* ---------------- boot ---------------- */
-  renderAll();
-  initDb();
-  initAssets();
+  initAuth();
 
   /* Catch the day rolling over to the next date while the page stays
      open, so the bunny resets to "오늘 기록 없음" without a reload. */
@@ -2741,7 +2876,7 @@
     var t = todayStr();
     if (t !== lastKnownDay){
       lastKnownDay = t;
-      renderAll();
+      if (appStarted) renderAll();
     }
   }, 60000);
 })();

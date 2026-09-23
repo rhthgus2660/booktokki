@@ -23,6 +23,28 @@ Python 3가 필요합니다. 이 컴퓨터의 기본 `python3`를 사용할 수 
 
 `dev_server.py`는 현재 프로젝트 폴더만 제공하고 브라우저 캐시를 사용하지 않도록 설정되어 있습니다.
 
+## Supabase Kakao 로그인 설정
+
+`auth-config.js`에 Supabase Dashboard의 공개 브라우저 설정값을 입력합니다.
+
+```js
+window.BOOKTOKKI_AUTH_CONFIG = {
+  supabaseUrl: "https://YOUR_PROJECT_REF.supabase.co",
+  supabaseAnonKey: "YOUR_PUBLISHABLE_OR_ANON_KEY"
+};
+```
+
+- Project URL: Supabase Dashboard의 **Project Settings → API → Project URL**
+- Publishable/anon key: 같은 화면의 **Publishable key** 또는 legacy **anon public key**
+- `service_role` key, DB password, Kakao REST API key, Kakao Client Secret은 이 파일에 넣지 않습니다.
+
+Supabase Dashboard의 **Authentication → URL Configuration**에서 다음 redirect URL을 허용해야 합니다.
+
+- `https://rhthgus2660.github.io/booktokki/`
+- `http://localhost:8000/`
+
+로컬에서도 `python3 dev_server.py` 실행 후 `http://localhost:8000/` 주소만 사용합니다.
+
 ## GitHub Pages와 홈 화면 실행
 
 이 프로젝트는 빌드 과정 없이 저장소 루트를 GitHub Pages로 배포할 수 있습니다. 배포 URL을 스마트폰 브라우저에서 연 뒤 iPhone은 공유 메뉴의 `홈 화면에 추가`, Android Chrome은 브라우저 메뉴의 `앱 설치` 또는 `홈 화면에 추가`를 사용합니다. 설치된 아이콘으로 실행하면 standalone 화면으로 열립니다.
