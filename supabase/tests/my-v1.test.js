@@ -16,7 +16,7 @@ assert.match(source, /이 기기에 이전에 저장한 기록이 있어요\./);
 assert.match(source, /var MY_RABBIT_ASSET = "assets\/bunny-sleep\.png"/);
 assert.match(source, /function openMyBooklogs\(\)[\s\S]*state\.statsArchivePanel = "notes"/);
 assert.match(source, /var statsBackTarget = state\.statsFrom === "my" \? "my" : "home"/);
-assert.match(source, /var BOOKTOKKI_GUIDE_URL = ""/);
+assert.match(source, /var BOOKTOKKI_GUIDE_URL = "https:\/\/desert-sandwich-d38\.notion\.site\/3e882ff9dce98105ab80f0dc599218a4\?pvs=73"/);
 assert.match(source, /window\.open\(BOOKTOKKI_GUIDE_URL, "_blank", "noopener"\)/);
 assert.match(source, /profileRepository\.updateNickname\(input\.value\)/);
 assert.match(source, /feedbackRepository\.submit\(activeAuthUserId, message\)/);

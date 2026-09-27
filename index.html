@@ -1282,7 +1282,7 @@
   /* Set after the Worker is deployed. This URL is public configuration;
      the Kakao key remains a Worker secret and is never shipped here. */
   var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
-  var BOOKTOKKI_GUIDE_URL = "";
+  var BOOKTOKKI_GUIDE_URL = "https://desert-sandwich-d38.notion.site/3e882ff9dce98105ab80f0dc599218a4?pvs=73";
   var MY_RABBIT_ASSET = "assets/bunny-sleep.png";
   document.getElementById("myNavRabbit").src = MY_RABBIT_ASSET;
 
@@ -3045,8 +3045,9 @@
 
   function openGuide(){
     if (BOOKTOKKI_GUIDE_URL){
-      window.open(BOOKTOKKI_GUIDE_URL, "_blank", "noopener");
-      return;
+      try {
+        if (window.open(BOOKTOKKI_GUIDE_URL, "_blank", "noopener")) return;
+      } catch (_error) {}
     }
     openModal('<div class="modal"><h2>북토끼 사용법</h2><p class="my-form-intro">사용법을 준비하고 있어.<br>조금만 기다려줘!</p><div class="modal-actions"><button class="btn btn-dark" type="button" id="guideClose">확인</button></div></div>');
     document.getElementById("guideClose").onclick = closeModal;
