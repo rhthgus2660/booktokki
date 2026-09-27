@@ -197,7 +197,7 @@ function createHarness(options){
   assert.equal(app.counters.bootstrap, 1);
   assert.equal(app.counters.indexedDbOpen, 1);
   assert.equal(app.el("app").hidden, false);
-  assert.equal(app.el("ownerMismatchDiagnostics").hidden, true);
+  assert.equal(app.el("ownerMismatchRecovery").hidden, true);
   assert.match(app.el("view-library").innerHTML, /코어 상태 확인용 책/);
 
   // 2) Logout from MY clears the authenticated session state.
@@ -245,7 +245,7 @@ function createHarness(options){
   assert.match(app.el("view-feedback").innerHTML, /의견 고마워/);
   assert.doesNotMatch(app.el("view-feedback").innerHTML, /보내지 못했어요/);
 
-  // 6) LOCAL_OWNER_MISMATCH exposes only the recovery sign-out path.
+  // 6) A real owner UUID mismatch exposes only the safe sign-out path.
   var blocked = createHarness({
     bootstrapResult:{
       state:"LOCAL_OWNER_MISMATCH", action:"blocked", canStart:false,
@@ -264,18 +264,10 @@ function createHarness(options){
   assert.equal(blocked.el("authGate").hidden, false);
   assert.equal(blocked.el("kakaoLoginBtn").hidden, true);
   assert.equal(blocked.el("ownerMismatchRecovery").hidden, false);
-  assert.equal(blocked.el("ownerMismatchDiagnostics").hidden, false);
-  assert.equal(blocked.el("ownerRelationshipCheck").hidden, true);
-  assert.equal(blocked.el("ownerMismatchDiagnostics").open, false, "details stays collapsed by default");
-  assert.equal(blocked.el("diagnosticCurrentUser").textContent, "11111111…1111");
-  assert.equal(blocked.el("diagnosticLocalOwner").textContent, "22222222…2222");
-  assert.equal(blocked.el("diagnosticOwnerState").textContent, "MISMATCH");
-  assert.equal(blocked.el("diagnosticCurrentJournal").textContent, "IN_PROGRESS");
-  assert.equal(blocked.el("diagnosticOwnerJournal").textContent, "COMPLETE");
-  assert.equal(blocked.el("diagnosticLocalBooks").textContent, "3");
-  assert.equal(blocked.el("diagnosticCloudBooks").textContent, "2");
-  assert.equal(blocked.el("diagnosticCloudLogs").textContent, "4");
-  assert.equal(blocked.el("diagnosticCloudNotes").textContent, "5");
+  assert.equal(blocked.el("ownerGuardTitle").textContent, "이 기기에 다른 계정으로 저장한 기록이 있어요.");
+  assert.equal(blocked.el("ownerGuardAccountHint").hidden, false);
+  assert.equal(blocked.el("ownerGuardLoginAction").hidden, false);
+  assert.equal(blocked.el("ownerRecoveryFlow").hidden, true);
   assert.equal(blocked.counters.signOut, 0);
 
   // The recovery button reuses signOut and returns to the normal Login First UI.
@@ -283,41 +275,33 @@ function createHarness(options){
   await wait();
   assert.equal(blocked.counters.signOut, 1);
   assert.equal(blocked.el("ownerMismatchRecovery").hidden, true);
-  assert.equal(blocked.el("ownerMismatchDiagnostics").hidden, true);
   assert.equal(blocked.el("kakaoLoginBtn").hidden, false);
   assert.equal(blocked.el("authGate").hidden, false);
   assert.equal(blocked.el("app").hidden, true);
 
-  // Required recovery copy is present; no automatic recovery actions are added.
+  // Account mismatch and legacy owner-missing copy remain distinct.
   assert.match(html, /이 기기에 다른 계정으로 저장한 기록이 있어요\./);
   assert.match(html, /기록이 섞이지 않도록 자동 연결하지 않았어요\./);
   assert.match(html, /기록을 사용했던 계정으로 다시 로그인해 주세요\./);
   assert.match(html, />다른 계정으로 로그인<\/button>/);
-  assert.doesNotMatch(html, />다시 확인<\/button>|>기록 복구 요청<\/button>/);
+  assert.match(html, /이 기기에 이전에 저장한 기록이 있어요\./);
+  assert.doesNotMatch(html, /진단 정보 보기|Cloud books|UNVERIFIED|일치한 책|충돌 항목|diagnosticCurrentUser|ownerRelationshipState/);
 
-  // Diagnostic owner classification remains read-only and distinguishes legacy/invalid metadata.
+  // Legacy data without owner metadata exposes the guarded recovery entry point.
   var missingOwner = createHarness({ bootstrapResult:{ state:"LOCAL_OWNER_MISMATCH", canStart:false, local:{ books:1 }, cloud:{ books:0, readingLogs:0, bookNotes:0 } } });
   await wait();
-  assert.equal(missingOwner.el("diagnosticOwnerState").textContent, "MISSING");
-  assert.equal(missingOwner.el("diagnosticLocalOwner").textContent, "소유자 정보 없음");
-  assert.equal(missingOwner.el("ownerRelationshipCheck").hidden, false);
-  missingOwner.clickSelector("[data-owner-relationship-check]");
-  await wait();
-  assert.equal(missingOwner.counters.ownerComparisons, 1);
-  assert.equal(missingOwner.el("ownerRelationshipResult").hidden, false);
-  assert.equal(missingOwner.el("ownerRelationshipState").textContent, "SAFE_TO_ADOPT");
-  assert.equal(missingOwner.el("ownerRelationshipBooks").textContent, "2 / 2");
-  assert.equal(missingOwner.el("ownerRelationshipLogs").textContent, "7 / 7");
-  assert.equal(missingOwner.el("ownerRelationshipNotes").textContent, "3 / 3");
-  assert.equal(missingOwner.el("ownerRelationshipLocalOnly").textContent, "5");
-  assert.equal(missingOwner.el("ownerRelationshipConflicts").textContent, "0");
+  assert.equal(missingOwner.el("ownerGuardTitle").textContent, "이 기기에 이전에 저장한 기록이 있어요.");
+  assert.equal(missingOwner.el("ownerGuardDescription").textContent, "기록의 연결 정보를 확인할 수 없어 자동으로 불러오지 않았어요.");
+  assert.equal(missingOwner.el("ownerGuardLoginAction").hidden, true);
+  assert.equal(missingOwner.el("ownerRecoveryFlow").hidden, false);
 
   var invalidOwner = createHarness({
     bootstrapResult:{ state:"LOCAL_OWNER_MISMATCH", canStart:false, local:{ books:1 }, cloud:{ books:0, readingLogs:0, bookNotes:0 } },
     localStorageData:{ "booktokki:local-owner:v1":"{invalid" }
   });
   await wait();
-  assert.equal(invalidOwner.el("diagnosticOwnerState").textContent, "INVALID");
+  assert.equal(invalidOwner.el("ownerRecoveryFlow").hidden, true);
+  assert.equal(invalidOwner.el("ownerGuardLoginAction").hidden, false);
 
   var matchingOwnerData = {};
   matchingOwnerData["booktokki:local-owner:v1"] = JSON.stringify({ version:1, userId:USER_ID });
@@ -326,7 +310,7 @@ function createHarness(options){
     localStorageData:matchingOwnerData
   });
   await wait();
-  assert.equal(matchingOwner.el("diagnosticOwnerState").textContent, "MATCH");
+  assert.equal(matchingOwner.el("ownerRecoveryFlow").hidden, true);
 
   console.log("PASS MY v1 auth lifecycle tests");
 })().catch(function(error){ console.error("FAIL MY v1 auth lifecycle tests", error); process.exitCode = 1; });

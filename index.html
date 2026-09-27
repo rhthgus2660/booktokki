@@ -118,17 +118,13 @@
     background:#171717; color:#fff; font-size:.82rem; font-weight:600; cursor:pointer;
   }
   .auth-owner-recovery-action:disabled{ opacity:.5; cursor:default; }
-  .auth-owner-diagnostics{ width:100%; margin-top:18px; border-top:1px solid #dedede; padding-top:14px; text-align:left; }
-  .auth-owner-diagnostics summary{ min-height:44px; display:flex; align-items:center; color:#737373; font-size:.74rem; cursor:pointer; }
-  .auth-owner-diagnostics dl{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:9px 14px; margin:10px 0 0; }
-  .auth-owner-diagnostics dt{ color:#909090; font-size:.67rem; line-height:1.45; }
-  .auth-owner-diagnostics dd{ margin:0; color:#454545; font-size:.67rem; line-height:1.45; text-align:right; overflow-wrap:anywhere; }
-  .auth-owner-compare{ margin-top:16px; border-top:1px solid #ececec; padding-top:14px; }
-  .auth-owner-compare button{ width:100%; min-height:44px; border:1px solid #bdbdbd; border-radius:4px; background:#fff; color:#454545; font-size:.74rem; cursor:pointer; }
-  .auth-owner-compare button:disabled{ opacity:.5; cursor:default; }
-  .auth-owner-compare-result{ margin-top:14px; }
-  .auth-owner-compare-state{ color:#171717; font-size:.74rem; font-weight:600; }
-  .auth-owner-compare-result dl{ margin-top:10px; }
+  .auth-owner-recovery-flow{ width:100%; margin-top:18px; border-top:1px solid #dedede; padding-top:18px; text-align:left; }
+  .auth-owner-recovery-flow button{ width:100%; min-height:48px; border:1px solid #171717; border-radius:4px; background:#171717; color:#fff; font-size:.82rem; font-weight:600; cursor:pointer; }
+  .auth-owner-recovery-flow button:disabled{ opacity:.5; cursor:default; }
+  .auth-owner-recovery-flow label{ display:block; margin-top:16px; color:#656565; font-size:.74rem; line-height:1.6; }
+  .auth-owner-recovery-flow input[type="file"]{ display:block; width:100%; margin-top:9px; color:#656565; font-size:.72rem; }
+  .auth-owner-recovery-flow input[type="checkbox"]{ margin-right:6px; }
+  .auth-owner-recovery-flow p{ min-height:20px; margin-top:12px; }
   .auth-logout{
     min-height:38px; padding:0 4px; border:0; background:none; color:#909090;
     font-size:.68rem; font-weight:400; cursor:pointer;
@@ -1172,45 +1168,19 @@
   <button class="auth-kakao" id="kakaoLoginBtn" type="button" disabled>카카오로 시작하기</button>
   <p class="auth-status" id="authStatus">로그인 상태를 확인하고 있어요.</p>
   <div class="auth-owner-recovery" id="ownerMismatchRecovery" hidden>
-    <strong>이 기기에 다른 계정으로 저장한 기록이 있어요.</strong>
-    <p>기록이 섞이지 않도록 자동 연결하지 않았어요.</p>
-    <p>기록을 사용했던 계정으로 다시 로그인해 주세요.</p>
-    <button class="auth-owner-recovery-action" type="button" data-logout>다른 계정으로 로그인</button>
-    <details class="auth-owner-diagnostics" id="ownerMismatchDiagnostics" hidden>
-      <summary>진단 정보 보기</summary>
-      <dl>
-        <dt>현재 계정</dt><dd id="diagnosticCurrentUser">확인 불가</dd>
-        <dt>기기 기록 소유자</dt><dd id="diagnosticLocalOwner">소유자 정보 없음</dd>
-        <dt>Local Owner 상태</dt><dd id="diagnosticOwnerState">MISSING</dd>
-        <dt>현재 사용자 journal</dt><dd id="diagnosticCurrentJournal">NONE</dd>
-        <dt>Local Owner journal</dt><dd id="diagnosticOwnerJournal">NONE</dd>
-        <dt>Local books</dt><dd id="diagnosticLocalBooks">0</dd>
-        <dt>Cloud books</dt><dd id="diagnosticCloudBooks">0</dd>
-        <dt>Cloud reading logs</dt><dd id="diagnosticCloudLogs">0</dd>
-        <dt>Cloud book notes</dt><dd id="diagnosticCloudNotes">0</dd>
-      </dl>
-      <div class="auth-owner-compare" id="ownerRelationshipCheck" hidden>
-        <button id="ownerRelationshipCheckBtn" type="button" data-owner-relationship-check>기록 관계 확인</button>
-        <div class="auth-owner-compare-result" id="ownerRelationshipResult" hidden>
-          <div class="auth-owner-compare-state" id="ownerRelationshipState">UNVERIFIED</div>
-          <dl>
-            <dt>일치한 책</dt><dd id="ownerRelationshipBooks">0 / 0</dd>
-            <dt>일치한 페이지 기록</dt><dd id="ownerRelationshipLogs">0 / 0</dd>
-            <dt>일치한 북로그</dt><dd id="ownerRelationshipNotes">0 / 0</dd>
-            <dt>Local 전용 책</dt><dd id="ownerRelationshipLocalOnly">0</dd>
-            <dt>충돌 항목</dt><dd id="ownerRelationshipConflicts">0</dd>
-          </dl>
-        </div>
-      </div>
-      <div class="auth-owner-recovery-flow" id="ownerRecoveryFlow" hidden>
-        <button type="button" id="ownerRecoveryCandidateBtn">복구 후보 확인</button>
-        <p id="ownerRecoveryStatus" aria-live="polite"></p>
-        <button type="button" id="ownerRecoveryBackupBtn" hidden>백업 파일 저장</button>
-        <label id="ownerRecoveryFileLabel" hidden>저장한 백업 파일 다시 선택<input id="ownerRecoveryFile" type="file" accept="application/json"></label>
-        <label id="ownerRecoveryConfirmLabel" hidden><input id="ownerRecoveryConfirm" type="checkbox"> 백업과 기록을 확인했고 복구를 진행합니다.</label>
-        <button type="button" id="ownerRecoveryExecuteBtn" hidden>복구 실행</button>
-      </div>
-    </details>
+    <strong id="ownerGuardTitle">이 기기에 이전에 저장한 기록이 있어요.</strong>
+    <p id="ownerGuardDescription">기록의 연결 정보를 확인할 수 없어 자동으로 불러오지 않았어요.</p>
+    <p id="ownerGuardAccountHint" hidden>기록을 사용했던 계정으로 다시 로그인해 주세요.</p>
+    <button class="auth-owner-recovery-action" id="ownerGuardLoginAction" type="button" data-logout hidden>다른 계정으로 로그인</button>
+    <div class="auth-owner-recovery-flow" id="ownerRecoveryFlow" hidden>
+      <p>현재 계정에 안전하게 연결하기 전에 기록을 확인할게요.</p>
+      <button type="button" id="ownerRecoveryCandidateBtn">기록 복구하기</button>
+      <p id="ownerRecoveryStatus" aria-live="polite"></p>
+      <button type="button" id="ownerRecoveryBackupBtn" hidden>백업 파일 저장</button>
+      <label id="ownerRecoveryFileLabel" hidden>저장한 백업 파일 다시 선택<input id="ownerRecoveryFile" type="file" accept="application/json"></label>
+      <label id="ownerRecoveryConfirmLabel" hidden><input id="ownerRecoveryConfirm" type="checkbox"> 백업과 기록을 확인했고 복구를 진행합니다.</label>
+      <button type="button" id="ownerRecoveryExecuteBtn" hidden>복구 실행</button>
+    </div>
   </div>
 </section>
 
@@ -1314,7 +1284,6 @@
   var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
   var BOOKTOKKI_GUIDE_URL = "";
   var MY_RABBIT_ASSET = "assets/bunny-sleep.png";
-  var BOOKTOKKI_OWNER_DIAGNOSTICS_ENABLED = true;
   document.getElementById("myNavRabbit").src = MY_RABBIT_ASSET;
 
   function uid(){
@@ -3112,9 +3081,6 @@
     t = e.target.closest("[data-logout]");
     if (t){ logout(t); return; }
 
-    t = e.target.closest("[data-owner-relationship-check]");
-    if (t){ checkOwnerRelationship(t); return; }
-
     t = e.target.closest("[data-stats-month]");
     if (t){
       var parts = (state.statsMonth || dateKey(new Date()).slice(0, 7)).split("-").map(Number);
@@ -3312,12 +3278,6 @@
     return "저장된 기록을 불러오지 못했어요. 네트워크를 확인하고 새로고침해 주세요.";
   }
 
-  function maskDiagnosticUuid(value){
-    return typeof value === "string" && value.length >= 12
-      ? value.slice(0, 8) + "…" + value.slice(-4)
-      : "확인 불가";
-  }
-
   function readDiagnosticLocalOwner(currentUserId){
     var raw = window.localStorage.getItem("booktokki:local-owner:v1");
     if (raw == null) return { state:"MISSING", userId:null };
@@ -3349,63 +3309,6 @@
     } catch (_error){
       return "INVALID";
     }
-  }
-
-  function renderOwnerMismatchDiagnostics(result){
-    var details = document.getElementById("ownerMismatchDiagnostics");
-    details.hidden = !BOOKTOKKI_OWNER_DIAGNOSTICS_ENABLED;
-    if (!BOOKTOKKI_OWNER_DIAGNOSTICS_ENABLED) return;
-    var owner = readDiagnosticLocalOwner(activeAuthUserId);
-    var local = result && result.local ? result.local : {};
-    var cloud = result && result.cloud ? result.cloud : {};
-    document.getElementById("diagnosticCurrentUser").textContent = maskDiagnosticUuid(activeAuthUserId);
-    document.getElementById("diagnosticLocalOwner").textContent = owner.userId ? maskDiagnosticUuid(owner.userId) : "소유자 정보 없음";
-    document.getElementById("diagnosticOwnerState").textContent = owner.state;
-    document.getElementById("diagnosticCurrentJournal").textContent = readDiagnosticJournalStatus(activeAuthUserId);
-    document.getElementById("diagnosticOwnerJournal").textContent = readDiagnosticJournalStatus(owner.userId);
-    document.getElementById("diagnosticLocalBooks").textContent = Number.isInteger(local.books) ? String(local.books) : "확인 불가";
-    document.getElementById("diagnosticCloudBooks").textContent = Number.isInteger(cloud.books) ? String(cloud.books) : "확인 불가";
-    document.getElementById("diagnosticCloudLogs").textContent = Number.isInteger(cloud.readingLogs) ? String(cloud.readingLogs) : "확인 불가";
-    document.getElementById("diagnosticCloudNotes").textContent = Number.isInteger(cloud.bookNotes) ? String(cloud.bookNotes) : "확인 불가";
-    document.getElementById("ownerRelationshipCheck").hidden = owner.state !== "MISSING";
-    document.getElementById("ownerRelationshipResult").hidden = true;
-    document.getElementById("ownerRelationshipCheckBtn").disabled = false;
-    document.getElementById("ownerRelationshipCheckBtn").textContent = "기록 관계 확인";
-  }
-
-  function renderOwnerRelationshipResult(result){
-    document.getElementById("ownerRelationshipState").textContent = result.state;
-    document.getElementById("ownerRelationshipBooks").textContent = result.matchedBooks + " / " + result.cloudBooks;
-    document.getElementById("ownerRelationshipLogs").textContent = result.matchedReadingLogs + " / " + result.cloudReadingLogs;
-    document.getElementById("ownerRelationshipNotes").textContent = result.matchedBookNotes + " / " + result.cloudBookNotes;
-    document.getElementById("ownerRelationshipLocalOnly").textContent = String(result.localOnlyBooks);
-    document.getElementById("ownerRelationshipConflicts").textContent = String(result.conflicts);
-    document.getElementById("ownerRelationshipResult").hidden = false;
-  }
-
-  function checkOwnerRelationship(button){
-    if (!BOOKTOKKI_OWNER_DIAGNOSTICS_ENABLED || button.disabled) return;
-    var owner = readDiagnosticLocalOwner(activeAuthUserId);
-    if (owner.state !== "MISSING" || !window.BooktokkiOwnerDiagnostics || !db || !supabaseClient || !activeAuthUserId) return;
-    button.disabled = true;
-    button.textContent = "확인 중...";
-    document.getElementById("ownerRelationshipResult").hidden = true;
-    window.BooktokkiOwnerDiagnostics.runReadOnlyComparison({
-      database:db,
-      client:supabaseClient,
-      userId:activeAuthUserId,
-      ownerState:owner.state
-    }).then(renderOwnerRelationshipResult).catch(function(){
-      renderOwnerRelationshipResult({
-        state:"UNVERIFIED", matchedBooks:0, cloudBooks:0,
-        matchedReadingLogs:0, cloudReadingLogs:0,
-        matchedBookNotes:0, cloudBookNotes:0,
-        localOnlyBooks:0, conflicts:0
-      });
-    }).finally(function(){
-      button.disabled = false;
-      button.textContent = "기록 관계 확인";
-    });
   }
 
   function recoveryStatus(text){ var node=document.getElementById("ownerRecoveryStatus"); if(node) node.textContent=text||""; }
@@ -3445,15 +3348,22 @@
 
   function showOwnerMismatchRecovery(visible, result){
     document.getElementById("ownerMismatchRecovery").hidden = !visible;
-    var details = document.getElementById("ownerMismatchDiagnostics");
     if (!visible){
-      details.hidden = true;
-      details.open = false;
+      setRecoveryVisible(false);
       return;
     }
-    renderOwnerMismatchDiagnostics(result);
-    setRecoveryVisible(visible && BOOKTOKKI_OWNER_DIAGNOSTICS_ENABLED);
-    if (visible) initLegacyRecoveryFlow();
+    var owner = readDiagnosticLocalOwner(activeAuthUserId);
+    var missing = owner.state === "MISSING";
+    document.getElementById("ownerGuardTitle").textContent = missing
+      ? "이 기기에 이전에 저장한 기록이 있어요."
+      : "이 기기에 다른 계정으로 저장한 기록이 있어요.";
+    document.getElementById("ownerGuardDescription").textContent = missing
+      ? "기록의 연결 정보를 확인할 수 없어 자동으로 불러오지 않았어요."
+      : "기록이 섞이지 않도록 자동 연결하지 않았어요.";
+    document.getElementById("ownerGuardAccountHint").hidden = missing;
+    document.getElementById("ownerGuardLoginAction").hidden = missing;
+    setRecoveryVisible(missing);
+    if (missing) initLegacyRecoveryFlow();
   }
 
   function showReadyApp(userId){
