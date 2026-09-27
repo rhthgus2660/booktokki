@@ -11,6 +11,7 @@ var vm = require("node:vm");
 
 var ROOT = path.join(__dirname, "../..");
 var USER_ID = "11111111-1111-4111-8111-111111111111";
+var OTHER_USER_ID = "22222222-2222-4222-8222-222222222222";
 var html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 var inlineScripts = html.match(/<script>([\s\S]*?)<\/script>/g);
 var appScript = inlineScripts[inlineScripts.length - 1].replace(/^<script>|<\/script>$/g, "");
@@ -39,6 +40,7 @@ function fakeElement(id){
 
 function createHarness(options){
   var harnessOptions = options || {};
+  var storageData = Object.assign({}, harnessOptions.localStorageData || {});
   var elements = {};
   var body = fakeElement("body");
   var topbarTitle = fakeElement("topbar-title");
@@ -117,7 +119,11 @@ function createHarness(options){
     console:{ log:function(){}, error:function(){}, warn:function(){} },
     document:documentStub,
     indexedDB:indexedDBStub,
-    localStorage:{ getItem:function(){ return null; }, setItem:function(){}, removeItem:function(){} },
+    localStorage:{
+      getItem:function(key){ return Object.prototype.hasOwnProperty.call(storageData, key) ? storageData[key] : null; },
+      setItem:function(){ throw new Error("diagnostic/auth lifecycle test must not write localStorage"); },
+      removeItem:function(){ throw new Error("diagnostic/auth lifecycle test must not remove localStorage"); }
+    },
     location:{ href:"http://localhost:8000/" },
     history:{ replaceState:function(){} },
     URL:URL, crypto:globalThis.crypto, structuredClone:structuredClone,
@@ -177,6 +183,7 @@ function createHarness(options){
   assert.equal(app.counters.bootstrap, 1);
   assert.equal(app.counters.indexedDbOpen, 1);
   assert.equal(app.el("app").hidden, false);
+  assert.equal(app.el("ownerMismatchDiagnostics").hidden, true);
   assert.match(app.el("view-library").innerHTML, /코어 상태 확인용 책/);
 
   // 2) Logout from MY clears the authenticated session state.
@@ -226,13 +233,34 @@ function createHarness(options){
 
   // 6) LOCAL_OWNER_MISMATCH exposes only the recovery sign-out path.
   var blocked = createHarness({
-    bootstrapResult:{ state:"LOCAL_OWNER_MISMATCH", action:"blocked", canStart:false, writes:{ local:0, cloud:0 } }
+    bootstrapResult:{
+      state:"LOCAL_OWNER_MISMATCH", action:"blocked", canStart:false,
+      local:{ books:3, images:1 }, cloud:{ books:2, readingLogs:4, bookNotes:5 }, writes:{ local:0, cloud:0 }
+    },
+    localStorageData:(function(){
+      var data = {};
+      data["booktokki:local-owner:v1"] = JSON.stringify({ version:1, userId:OTHER_USER_ID });
+      data["booktokki:migration:v1:" + USER_ID] = JSON.stringify({ version:1, userId:USER_ID, status:"in_progress" });
+      data["booktokki:migration:v1:" + OTHER_USER_ID] = JSON.stringify({ version:1, userId:OTHER_USER_ID, status:"complete" });
+      return data;
+    })()
   });
   await wait();
   assert.equal(blocked.el("app").hidden, true);
   assert.equal(blocked.el("authGate").hidden, false);
   assert.equal(blocked.el("kakaoLoginBtn").hidden, true);
   assert.equal(blocked.el("ownerMismatchRecovery").hidden, false);
+  assert.equal(blocked.el("ownerMismatchDiagnostics").hidden, false);
+  assert.equal(blocked.el("ownerMismatchDiagnostics").open, false, "details stays collapsed by default");
+  assert.equal(blocked.el("diagnosticCurrentUser").textContent, "11111111…1111");
+  assert.equal(blocked.el("diagnosticLocalOwner").textContent, "22222222…2222");
+  assert.equal(blocked.el("diagnosticOwnerState").textContent, "MISMATCH");
+  assert.equal(blocked.el("diagnosticCurrentJournal").textContent, "IN_PROGRESS");
+  assert.equal(blocked.el("diagnosticOwnerJournal").textContent, "COMPLETE");
+  assert.equal(blocked.el("diagnosticLocalBooks").textContent, "3");
+  assert.equal(blocked.el("diagnosticCloudBooks").textContent, "2");
+  assert.equal(blocked.el("diagnosticCloudLogs").textContent, "4");
+  assert.equal(blocked.el("diagnosticCloudNotes").textContent, "5");
   assert.equal(blocked.counters.signOut, 0);
 
   // The recovery button reuses signOut and returns to the normal Login First UI.
@@ -240,6 +268,7 @@ function createHarness(options){
   await wait();
   assert.equal(blocked.counters.signOut, 1);
   assert.equal(blocked.el("ownerMismatchRecovery").hidden, true);
+  assert.equal(blocked.el("ownerMismatchDiagnostics").hidden, true);
   assert.equal(blocked.el("kakaoLoginBtn").hidden, false);
   assert.equal(blocked.el("authGate").hidden, false);
   assert.equal(blocked.el("app").hidden, true);
@@ -250,6 +279,28 @@ function createHarness(options){
   assert.match(html, /기록을 사용했던 계정으로 다시 로그인해 주세요\./);
   assert.match(html, />다른 계정으로 로그인<\/button>/);
   assert.doesNotMatch(html, />다시 확인<\/button>|>기록 복구 요청<\/button>/);
+
+  // Diagnostic owner classification remains read-only and distinguishes legacy/invalid metadata.
+  var missingOwner = createHarness({ bootstrapResult:{ state:"LOCAL_OWNER_MISMATCH", canStart:false, local:{ books:1 }, cloud:{ books:0, readingLogs:0, bookNotes:0 } } });
+  await wait();
+  assert.equal(missingOwner.el("diagnosticOwnerState").textContent, "MISSING");
+  assert.equal(missingOwner.el("diagnosticLocalOwner").textContent, "소유자 정보 없음");
+
+  var invalidOwner = createHarness({
+    bootstrapResult:{ state:"LOCAL_OWNER_MISMATCH", canStart:false, local:{ books:1 }, cloud:{ books:0, readingLogs:0, bookNotes:0 } },
+    localStorageData:{ "booktokki:local-owner:v1":"{invalid" }
+  });
+  await wait();
+  assert.equal(invalidOwner.el("diagnosticOwnerState").textContent, "INVALID");
+
+  var matchingOwnerData = {};
+  matchingOwnerData["booktokki:local-owner:v1"] = JSON.stringify({ version:1, userId:USER_ID });
+  var matchingOwner = createHarness({
+    bootstrapResult:{ state:"LOCAL_OWNER_MISMATCH", canStart:false, local:{ books:1 }, cloud:{ books:0, readingLogs:0, bookNotes:0 } },
+    localStorageData:matchingOwnerData
+  });
+  await wait();
+  assert.equal(matchingOwner.el("diagnosticOwnerState").textContent, "MATCH");
 
   console.log("PASS MY v1 auth lifecycle tests");
 })().catch(function(error){ console.error("FAIL MY v1 auth lifecycle tests", error); process.exitCode = 1; });

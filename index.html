@@ -118,6 +118,11 @@
     background:#171717; color:#fff; font-size:.82rem; font-weight:600; cursor:pointer;
   }
   .auth-owner-recovery-action:disabled{ opacity:.5; cursor:default; }
+  .auth-owner-diagnostics{ width:100%; margin-top:18px; border-top:1px solid #dedede; padding-top:14px; text-align:left; }
+  .auth-owner-diagnostics summary{ min-height:44px; display:flex; align-items:center; color:#737373; font-size:.74rem; cursor:pointer; }
+  .auth-owner-diagnostics dl{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:9px 14px; margin:10px 0 0; }
+  .auth-owner-diagnostics dt{ color:#909090; font-size:.67rem; line-height:1.45; }
+  .auth-owner-diagnostics dd{ margin:0; color:#454545; font-size:.67rem; line-height:1.45; text-align:right; overflow-wrap:anywhere; }
   .auth-logout{
     min-height:38px; padding:0 4px; border:0; background:none; color:#909090;
     font-size:.68rem; font-weight:400; cursor:pointer;
@@ -1165,6 +1170,20 @@
     <p>기록이 섞이지 않도록 자동 연결하지 않았어요.</p>
     <p>기록을 사용했던 계정으로 다시 로그인해 주세요.</p>
     <button class="auth-owner-recovery-action" type="button" data-logout>다른 계정으로 로그인</button>
+    <details class="auth-owner-diagnostics" id="ownerMismatchDiagnostics" hidden>
+      <summary>진단 정보 보기</summary>
+      <dl>
+        <dt>현재 계정</dt><dd id="diagnosticCurrentUser">확인 불가</dd>
+        <dt>기기 기록 소유자</dt><dd id="diagnosticLocalOwner">소유자 정보 없음</dd>
+        <dt>Local Owner 상태</dt><dd id="diagnosticOwnerState">MISSING</dd>
+        <dt>현재 사용자 journal</dt><dd id="diagnosticCurrentJournal">NONE</dd>
+        <dt>Local Owner journal</dt><dd id="diagnosticOwnerJournal">NONE</dd>
+        <dt>Local books</dt><dd id="diagnosticLocalBooks">0</dd>
+        <dt>Cloud books</dt><dd id="diagnosticCloudBooks">0</dd>
+        <dt>Cloud reading logs</dt><dd id="diagnosticCloudLogs">0</dd>
+        <dt>Cloud book notes</dt><dd id="diagnosticCloudNotes">0</dd>
+      </dl>
+    </details>
   </div>
 </section>
 
@@ -1266,6 +1285,7 @@
   var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
   var BOOKTOKKI_GUIDE_URL = "";
   var MY_RABBIT_ASSET = "assets/bunny-sleep.png";
+  var BOOKTOKKI_OWNER_DIAGNOSTICS_ENABLED = true;
   document.getElementById("myNavRabbit").src = MY_RABBIT_ASSET;
 
   function uid(){
@@ -3260,8 +3280,68 @@
     return "저장된 기록을 불러오지 못했어요. 네트워크를 확인하고 새로고침해 주세요.";
   }
 
-  function showOwnerMismatchRecovery(visible){
+  function maskDiagnosticUuid(value){
+    return typeof value === "string" && value.length >= 12
+      ? value.slice(0, 8) + "…" + value.slice(-4)
+      : "확인 불가";
+  }
+
+  function readDiagnosticLocalOwner(currentUserId){
+    var raw = window.localStorage.getItem("booktokki:local-owner:v1");
+    if (raw == null) return { state:"MISSING", userId:null };
+    try {
+      var owner = JSON.parse(raw);
+      if (!owner || owner.version !== 1 || typeof owner.userId !== "string" || !owner.userId){
+        return { state:"INVALID", userId:null };
+      }
+      return { state:owner.userId === currentUserId ? "MATCH" : "MISMATCH", userId:owner.userId };
+    } catch (_error){
+      return { state:"INVALID", userId:null };
+    }
+  }
+
+  function readDiagnosticJournalStatus(userId){
+    if (!userId) return "NONE";
+    var raw = window.localStorage.getItem("booktokki:migration:v1:" + userId);
+    if (raw == null) return "NONE";
+    try {
+      var journal = JSON.parse(raw);
+      if (!journal || journal.version !== 1 || journal.userId !== userId) return "INVALID";
+      if (journal.status === "complete") return "COMPLETE";
+      if (journal.status === "in_progress") return "IN_PROGRESS";
+      return "INVALID";
+    } catch (_error){
+      return "INVALID";
+    }
+  }
+
+  function renderOwnerMismatchDiagnostics(result){
+    var details = document.getElementById("ownerMismatchDiagnostics");
+    details.hidden = !BOOKTOKKI_OWNER_DIAGNOSTICS_ENABLED;
+    if (!BOOKTOKKI_OWNER_DIAGNOSTICS_ENABLED) return;
+    var owner = readDiagnosticLocalOwner(activeAuthUserId);
+    var local = result && result.local ? result.local : {};
+    var cloud = result && result.cloud ? result.cloud : {};
+    document.getElementById("diagnosticCurrentUser").textContent = maskDiagnosticUuid(activeAuthUserId);
+    document.getElementById("diagnosticLocalOwner").textContent = owner.userId ? maskDiagnosticUuid(owner.userId) : "소유자 정보 없음";
+    document.getElementById("diagnosticOwnerState").textContent = owner.state;
+    document.getElementById("diagnosticCurrentJournal").textContent = readDiagnosticJournalStatus(activeAuthUserId);
+    document.getElementById("diagnosticOwnerJournal").textContent = readDiagnosticJournalStatus(owner.userId);
+    document.getElementById("diagnosticLocalBooks").textContent = Number.isInteger(local.books) ? String(local.books) : "확인 불가";
+    document.getElementById("diagnosticCloudBooks").textContent = Number.isInteger(cloud.books) ? String(cloud.books) : "확인 불가";
+    document.getElementById("diagnosticCloudLogs").textContent = Number.isInteger(cloud.readingLogs) ? String(cloud.readingLogs) : "확인 불가";
+    document.getElementById("diagnosticCloudNotes").textContent = Number.isInteger(cloud.bookNotes) ? String(cloud.bookNotes) : "확인 불가";
+  }
+
+  function showOwnerMismatchRecovery(visible, result){
     document.getElementById("ownerMismatchRecovery").hidden = !visible;
+    var details = document.getElementById("ownerMismatchDiagnostics");
+    if (!visible){
+      details.hidden = true;
+      details.open = false;
+      return;
+    }
+    renderOwnerMismatchDiagnostics(result);
   }
 
   function showReadyApp(userId){
@@ -3333,7 +3413,7 @@
       document.getElementById("authGate").hidden = false;
       document.getElementById("kakaoLoginBtn").hidden = true;
       var ownerMismatch = error && error.bootstrapResult && error.bootstrapResult.state === "LOCAL_OWNER_MISMATCH";
-      showOwnerMismatchRecovery(ownerMismatch);
+      showOwnerMismatchRecovery(ownerMismatch, error && error.bootstrapResult ? error.bootstrapResult : null);
       document.getElementById("authStatus").textContent = ownerMismatch ? "" : (error.message || "저장된 기록을 불러오지 못했어요.");
     }).finally(function(){
       bootstrapStarted = false;
