@@ -123,6 +123,12 @@
   .auth-owner-diagnostics dl{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:9px 14px; margin:10px 0 0; }
   .auth-owner-diagnostics dt{ color:#909090; font-size:.67rem; line-height:1.45; }
   .auth-owner-diagnostics dd{ margin:0; color:#454545; font-size:.67rem; line-height:1.45; text-align:right; overflow-wrap:anywhere; }
+  .auth-owner-compare{ margin-top:16px; border-top:1px solid #ececec; padding-top:14px; }
+  .auth-owner-compare button{ width:100%; min-height:44px; border:1px solid #bdbdbd; border-radius:4px; background:#fff; color:#454545; font-size:.74rem; cursor:pointer; }
+  .auth-owner-compare button:disabled{ opacity:.5; cursor:default; }
+  .auth-owner-compare-result{ margin-top:14px; }
+  .auth-owner-compare-state{ color:#171717; font-size:.74rem; font-weight:600; }
+  .auth-owner-compare-result dl{ margin-top:10px; }
   .auth-logout{
     min-height:38px; padding:0 4px; border:0; background:none; color:#909090;
     font-size:.68rem; font-weight:400; cursor:pointer;
@@ -1183,6 +1189,19 @@
         <dt>Cloud reading logs</dt><dd id="diagnosticCloudLogs">0</dd>
         <dt>Cloud book notes</dt><dd id="diagnosticCloudNotes">0</dd>
       </dl>
+      <div class="auth-owner-compare" id="ownerRelationshipCheck" hidden>
+        <button id="ownerRelationshipCheckBtn" type="button" data-owner-relationship-check>기록 관계 확인</button>
+        <div class="auth-owner-compare-result" id="ownerRelationshipResult" hidden>
+          <div class="auth-owner-compare-state" id="ownerRelationshipState">UNVERIFIED</div>
+          <dl>
+            <dt>일치한 책</dt><dd id="ownerRelationshipBooks">0 / 0</dd>
+            <dt>일치한 페이지 기록</dt><dd id="ownerRelationshipLogs">0 / 0</dd>
+            <dt>일치한 북로그</dt><dd id="ownerRelationshipNotes">0 / 0</dd>
+            <dt>Local 전용 책</dt><dd id="ownerRelationshipLocalOnly">0</dd>
+            <dt>충돌 항목</dt><dd id="ownerRelationshipConflicts">0</dd>
+          </dl>
+        </div>
+      </div>
     </details>
   </div>
 </section>
@@ -1239,6 +1258,7 @@
 <script src="./supabase/migration-executor.js"></script>
 <script src="./supabase/cloud-restore.js"></script>
 <script src="./supabase/cloud-bootstrap.js"></script>
+<script src="./owner-diagnostics.js"></script>
 <script>
 (function(){
   "use strict";
@@ -3083,6 +3103,9 @@
     t = e.target.closest("[data-logout]");
     if (t){ logout(t); return; }
 
+    t = e.target.closest("[data-owner-relationship-check]");
+    if (t){ checkOwnerRelationship(t); return; }
+
     t = e.target.closest("[data-stats-month]");
     if (t){
       var parts = (state.statsMonth || dateKey(new Date()).slice(0, 7)).split("-").map(Number);
@@ -3331,6 +3354,45 @@
     document.getElementById("diagnosticCloudBooks").textContent = Number.isInteger(cloud.books) ? String(cloud.books) : "확인 불가";
     document.getElementById("diagnosticCloudLogs").textContent = Number.isInteger(cloud.readingLogs) ? String(cloud.readingLogs) : "확인 불가";
     document.getElementById("diagnosticCloudNotes").textContent = Number.isInteger(cloud.bookNotes) ? String(cloud.bookNotes) : "확인 불가";
+    document.getElementById("ownerRelationshipCheck").hidden = owner.state !== "MISSING";
+    document.getElementById("ownerRelationshipResult").hidden = true;
+    document.getElementById("ownerRelationshipCheckBtn").disabled = false;
+    document.getElementById("ownerRelationshipCheckBtn").textContent = "기록 관계 확인";
+  }
+
+  function renderOwnerRelationshipResult(result){
+    document.getElementById("ownerRelationshipState").textContent = result.state;
+    document.getElementById("ownerRelationshipBooks").textContent = result.matchedBooks + " / " + result.cloudBooks;
+    document.getElementById("ownerRelationshipLogs").textContent = result.matchedReadingLogs + " / " + result.cloudReadingLogs;
+    document.getElementById("ownerRelationshipNotes").textContent = result.matchedBookNotes + " / " + result.cloudBookNotes;
+    document.getElementById("ownerRelationshipLocalOnly").textContent = String(result.localOnlyBooks);
+    document.getElementById("ownerRelationshipConflicts").textContent = String(result.conflicts);
+    document.getElementById("ownerRelationshipResult").hidden = false;
+  }
+
+  function checkOwnerRelationship(button){
+    if (!BOOKTOKKI_OWNER_DIAGNOSTICS_ENABLED || button.disabled) return;
+    var owner = readDiagnosticLocalOwner(activeAuthUserId);
+    if (owner.state !== "MISSING" || !window.BooktokkiOwnerDiagnostics || !db || !supabaseClient || !activeAuthUserId) return;
+    button.disabled = true;
+    button.textContent = "확인 중...";
+    document.getElementById("ownerRelationshipResult").hidden = true;
+    window.BooktokkiOwnerDiagnostics.runReadOnlyComparison({
+      database:db,
+      client:supabaseClient,
+      userId:activeAuthUserId,
+      ownerState:owner.state
+    }).then(renderOwnerRelationshipResult).catch(function(){
+      renderOwnerRelationshipResult({
+        state:"UNVERIFIED", matchedBooks:0, cloudBooks:0,
+        matchedReadingLogs:0, cloudReadingLogs:0,
+        matchedBookNotes:0, cloudBookNotes:0,
+        localOnlyBooks:0, conflicts:0
+      });
+    }).finally(function(){
+      button.disabled = false;
+      button.textContent = "기록 관계 확인";
+    });
   }
 
   function showOwnerMismatchRecovery(visible, result){

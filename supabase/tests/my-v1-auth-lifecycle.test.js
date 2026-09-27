@@ -57,7 +57,7 @@ function createHarness(options){
     notes:[], pageLogs:[], createdAt:"2026-09-20T00:00:00.000Z", updatedAt:"2026-09-20T00:00:00.000Z",
     completedAt:null, lastPageLogDate:null, dayStartPage:null, coverId:null, coverUrl:null
   }];
-  var counters = { indexedDbOpen:0, dbClose:0, bootstrap:0, cloudRepositoryCreate:0, updateUser:[], feedbackInsert:[], signOut:0 };
+  var counters = { indexedDbOpen:0, dbClose:0, bootstrap:0, cloudRepositoryCreate:0, ownerComparisons:0, updateUser:[], feedbackInsert:[], signOut:0 };
   function fakeDatabase(){
     return {
       close:function(){ counters.dbClose++; },
@@ -147,6 +147,20 @@ function createHarness(options){
       create:function(){
         counters.cloudRepositoryCreate++;
         return { loadSnapshot:function(){ return Promise.resolve({ books:[], refs:{} }); } };
+      }
+    },
+    BooktokkiOwnerDiagnostics:{
+      runReadOnlyComparison:function(options){
+        counters.ownerComparisons++;
+        assert.equal(options.client, client);
+        assert.equal(options.userId, USER_ID);
+        assert.equal(options.ownerState, "MISSING");
+        return Promise.resolve({
+          state:"SAFE_TO_ADOPT", matchedBooks:2, cloudBooks:2,
+          matchedReadingLogs:7, cloudReadingLogs:7,
+          matchedBookNotes:3, cloudBookNotes:3,
+          localOnlyBooks:5, conflicts:0
+        });
       }
     }
   };
@@ -251,6 +265,7 @@ function createHarness(options){
   assert.equal(blocked.el("kakaoLoginBtn").hidden, true);
   assert.equal(blocked.el("ownerMismatchRecovery").hidden, false);
   assert.equal(blocked.el("ownerMismatchDiagnostics").hidden, false);
+  assert.equal(blocked.el("ownerRelationshipCheck").hidden, true);
   assert.equal(blocked.el("ownerMismatchDiagnostics").open, false, "details stays collapsed by default");
   assert.equal(blocked.el("diagnosticCurrentUser").textContent, "11111111…1111");
   assert.equal(blocked.el("diagnosticLocalOwner").textContent, "22222222…2222");
@@ -285,6 +300,17 @@ function createHarness(options){
   await wait();
   assert.equal(missingOwner.el("diagnosticOwnerState").textContent, "MISSING");
   assert.equal(missingOwner.el("diagnosticLocalOwner").textContent, "소유자 정보 없음");
+  assert.equal(missingOwner.el("ownerRelationshipCheck").hidden, false);
+  missingOwner.clickSelector("[data-owner-relationship-check]");
+  await wait();
+  assert.equal(missingOwner.counters.ownerComparisons, 1);
+  assert.equal(missingOwner.el("ownerRelationshipResult").hidden, false);
+  assert.equal(missingOwner.el("ownerRelationshipState").textContent, "SAFE_TO_ADOPT");
+  assert.equal(missingOwner.el("ownerRelationshipBooks").textContent, "2 / 2");
+  assert.equal(missingOwner.el("ownerRelationshipLogs").textContent, "7 / 7");
+  assert.equal(missingOwner.el("ownerRelationshipNotes").textContent, "3 / 3");
+  assert.equal(missingOwner.el("ownerRelationshipLocalOnly").textContent, "5");
+  assert.equal(missingOwner.el("ownerRelationshipConflicts").textContent, "0");
 
   var invalidOwner = createHarness({
     bootstrapResult:{ state:"LOCAL_OWNER_MISMATCH", canStart:false, local:{ books:1 }, cloud:{ books:0, readingLogs:0, bookNotes:0 } },
