@@ -688,7 +688,14 @@
   .book-search-modal .modal-actions{ border-top:1px solid #e9e9e9; padding-top:14px; }
   .book-search-modal .modal-actions .btn{ border-radius:3px; font-weight:500; }
   .page-log-modal, .completion-modal{ background:#fff; color:#171717; border-radius:12px 12px 0 0; }
-  .page-log-modal h2{ font-size:1.12rem; font-weight:600; letter-spacing:-.02em; }
+  .page-log-modal{ position:relative; }
+  .page-log-modal h2{ padding-right:34px; font-size:1.12rem; font-weight:600; letter-spacing:-.02em; }
+  .page-log-close{
+    position:absolute; top:13px; right:13px; width:34px; height:34px; display:grid; place-items:center;
+    border:0; border-radius:50%; background:transparent; color:#737373; font:inherit; font-size:1.25rem;
+    line-height:1; cursor:pointer;
+  }
+  .page-log-close:hover{ background:#f5f5f5; color:#171717; }
   .page-log-book{ margin-top:-8px; color:#737373; font-size:.76rem; line-height:1.5; }
   .page-log-modal .field{ margin-top:8px; }
   .page-log-modal .field label{ color:#737373; font-weight:400; }
@@ -698,8 +705,18 @@
   }
   .page-log-modal .field input:focus{ outline:0; border-color:#171717; }
   .page-log-modal .field-hint{ color:#909090; font-weight:400; }
+  .page-log-note{ margin-top:20px; padding-top:17px; border-top:1px solid #ededed; }
+  .page-log-note-label{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; color:#333; font-size:.82rem; }
+  .page-log-note-optional{ flex:none; color:#999; font-size:.7rem; font-weight:400; }
+  .page-log-note textarea{
+    width:100%; min-height:58px; max-height:150px; margin-top:8px; padding:10px 2px; resize:vertical;
+    border:0; border-bottom:1px solid #d7d7d7; border-radius:0; background:#fff; color:#171717;
+    font:inherit; font-size:.86rem; line-height:1.55;
+  }
+  .page-log-note textarea:focus{ outline:0; border-color:#171717; }
   .page-log-modal .modal-actions, .completion-modal .modal-actions{ border-top:1px solid #e9e9e9; padding-top:14px; }
   .page-log-modal .btn, .completion-modal .btn{ border-radius:3px; font-weight:500; }
+  .page-log-modal .modal-actions .btn{ width:100%; flex:1; }
   .completion-modal{ align-items:center; text-align:center; gap:10px; }
   .completion-modal .speech-bubble{ max-width:220px; border:1px solid #e9e9e9; border-radius:7px; background:#fff; font-size:.84rem; font-weight:500; }
   .completion-modal .bunny-figure{ width:132px; height:150px; margin:0 auto; }
@@ -1123,6 +1140,7 @@
 
 <script src="./auth-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./reading-record-flow.js"></script>
 <script src="./cloud-repository.js"></script>
 <script src="./supabase/migration-adapter.js"></script>
 <script src="./supabase/migration-dry-run.js"></script>
@@ -1684,10 +1702,11 @@
     rabbitEventTimer = setTimeout(hideReadingReaction, 4000);
   }
 
-  function addNote(bookId, text, page){
+  function addNote(bookId, text, page, seed){
     var b = state.books[bookId];
     if (!b) return Promise.resolve(false);
-    var note = { id: uid(), bookId: bookId, text: text, page: Number.isFinite(page) ? page : null, createdAt: nowIso() };
+    seed = seed || {};
+    var note = { id: seed.id || uid(), bookId: bookId, text: text, page: Number.isFinite(page) ? page : null, createdAt: seed.createdAt || nowIso() };
     /* Notes never touch lastPageLogDate/dayStartPage/pageLogs — the
        home bunny and the page-history trail only react to an actual
        page record, never to a 북로그. */
@@ -2705,8 +2724,10 @@
   function modalLogPage(bookId){
     var b = state.books[bookId];
     if (!b) return;
+    var noteSeed = { id:uid(), createdAt:nowIso() };
     openModal('' +
       '<div class="modal page-log-modal">' +
+        '<button type="button" class="page-log-close" id="logPageClose" aria-label="닫기">×</button>' +
         '<h2>어디까지 읽었어?</h2>' +
         '<div class="page-log-book">' + esc(b.title) + '</div>' +
         '<div class="field">' +
@@ -2714,32 +2735,62 @@
           '<input id="f-page" type="number" inputmode="numeric" min="0" max="' + b.totalPages + '" value="' + b.currentPage + '">' +
           '<div class="field-hint">전체 ' + b.totalPages + 'p · 진행률 <span id="pageLivePct">' + pct(b.currentPage, b.totalPages) + '</span>%</div>' +
         '</div>' +
+        '<div class="page-log-note">' +
+          '<label class="page-log-note-label" for="f-page-note"><span>읽으면서 어떤 생각이 들었어?</span><span class="page-log-note-optional">선택</span></label>' +
+          '<textarea id="f-page-note" rows="2" placeholder="자유롭게 남겨봐"></textarea>' +
+        '</div>' +
         '<div class="modal-error" id="logPageErr" hidden></div>' +
         '<div class="modal-actions">' +
-          '<button class="btn btn-outline" id="logPageCancel">취소</button>' +
-          '<button class="btn btn-dark" id="logPageSave">저장</button>' +
+          '<button class="btn btn-dark" id="logPageSave">기록하기</button>' +
         '</div>' +
       '</div>');
     var input = document.getElementById("f-page");
+    var noteInput = document.getElementById("f-page-note");
+    var firstPageEdit = b.currentPage === 0;
+    input.addEventListener("focus", function(){
+      if (firstPageEdit && input.value === "0") input.select();
+    });
     input.addEventListener("input", function(){
+      var normalized = BooktokkiReadingRecord.normalizePageDraft(input.value, b.currentPage, firstPageEdit);
+      if (normalized !== input.value) input.value = normalized;
+      if (input.value !== "" && input.value !== "0") firstPageEdit = false;
       var v = parseInt(input.value, 10);
       if (isNaN(v)) v = 0;
       document.getElementById("pageLivePct").textContent = pct(v, b.totalPages);
     });
-    document.getElementById("logPageCancel").onclick = closeModal;
+    noteInput.addEventListener("input", function(){
+      noteInput.style.height = "auto";
+      noteInput.style.height = Math.min(noteInput.scrollHeight, 150) + "px";
+    });
+    document.getElementById("logPageClose").onclick = closeModal;
     document.getElementById("logPageSave").onclick = function(){
       var v = parseInt(input.value, 10);
       var err = document.getElementById("logPageErr");
       if (isNaN(v) || v < 0){ err.textContent = "0 이상의 숫자를 입력해 주세요."; err.hidden = false; return; }
+      v = BooktokkiReadingRecord.clampPage(v, b.totalPages);
       var save = document.getElementById("logPageSave");
       save.disabled = true;
-      logPage(bookId, v).then(function(saved){
-        if (saved) closeModal();
-        else {
+      BooktokkiReadingRecord.saveReadingRecord({
+        page:v,
+        thought:noteInput.value,
+        savePage:function(page){ return logPage(bookId, page); },
+        saveNote:function(text, page){ return addNote(bookId, text, page, noteSeed); }
+      }).then(function(result){
+        if (result.pageSaved && !result.partial) closeModal();
+        else if (!result.pageSaved) {
           err.textContent = "기록을 저장하지 못했어요. 다시 시도해 주세요.";
           err.hidden = false;
           save.disabled = false;
+        } else {
+          input.value = state.books[bookId] ? state.books[bookId].currentPage : v;
+          err.textContent = "페이지는 저장됐지만 북로그를 남기지 못했어요. 다시 시도해 주세요.";
+          err.hidden = false;
+          save.disabled = false;
         }
+      }).catch(function(){
+        err.textContent = "기록을 저장하지 못했어요. 다시 시도해 주세요.";
+        err.hidden = false;
+        save.disabled = false;
       });
     };
   }
