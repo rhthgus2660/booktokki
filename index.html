@@ -1144,6 +1144,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./reading-record-flow.js"></script>
 <script src="./cloud-repository.js"></script>
+<script src="./analytics-repository.js"></script>
 <script src="./supabase/migration-adapter.js"></script>
 <script src="./supabase/migration-dry-run.js"></script>
 <script src="./supabase/migration-executor.js"></script>
@@ -1175,6 +1176,7 @@
   var localSeq = 0;
   var supabaseClient = null;
   var cloudRepository = null;
+  var analyticsRepository = null;
   var cloudMutationQueues = {};
   var pendingBookCreates = {};
   var appStarted = false;
@@ -1487,6 +1489,18 @@
     cloudMutationQueues[bookId] = queued;
     return queued;
   }
+  function trackAnalyticsEvent(buildEvent){
+    try {
+      if (!window.BooktokkiAnalyticsRepository) return Promise.resolve(false);
+      var event = typeof buildEvent === "function" ? buildEvent() : buildEvent;
+      return window.BooktokkiAnalyticsRepository.trackSafely(analyticsRepository, activeAuthUserId, event, function(error){
+        console.error("북토끼 analytics 저장 실패", { code:error && error.code ? error.code : null });
+      });
+    } catch (error) {
+      console.error("북토끼 analytics 준비 실패", { code:error && error.code ? error.code : null });
+      return Promise.resolve(false);
+    }
+  }
   function localBookFromCloudRow(candidate, row){
     var next = Object.assign({}, candidate, {
       currentPage:row.current_page,
@@ -1539,12 +1553,14 @@
       coverId: (cover && cover.id) || null,
       coverUrl: (cover && cover.url) || null
     };
+    var cloudBookId = null;
     ["isbn13", "publisher", "publishedAt", "sourceProvider", "sourceId"].forEach(function(key){
       if (metadata[key]) data[key] = metadata[key];
     });
     pendingBookCreates[createKey] = { id:id, data:data };
     if (!cloudRepository || !activeAuthUserId) return Promise.reject(new Error("Cloud repository is unavailable"));
     return cloudRepository.createBook(activeAuthUserId, Object.assign({ id:id }, data)).then(function(row){
+      cloudBookId = row.id;
       data.updatedAt = row.updated_at;
       data.createdAt = row.created_at;
       return persistBookData(Object.assign({ id:id }, data));
@@ -1552,6 +1568,11 @@
       applyDoc(id, data);
       renderAll();
       delete pendingBookCreates[createKey];
+      if (window.BooktokkiAnalyticsRepository){
+        trackAnalyticsEvent(function(){
+          return window.BooktokkiAnalyticsRepository.bookAddedEvent("book_added:" + id, cloudBookId, data.createdAt);
+        });
+      }
       return id;
     }).catch(function(error){ cloudSaveFailed(error); throw error; });
   }
@@ -2472,11 +2493,19 @@
 
   /* ---------------- modals ---------------- */
   var overlay = document.getElementById("modalOverlay");
+  var modalBeforeClose = null;
   function closeModal(){
+    var beforeClose = modalBeforeClose;
+    modalBeforeClose = null;
+    if (beforeClose){
+      try { beforeClose(); }
+      catch (error) { console.error("북토끼 modal close 처리 실패"); }
+    }
     overlay.hidden = true;
     overlay.innerHTML = "";
   }
   function openModal(html){
+    modalBeforeClose = null;
     overlay.innerHTML = html;
     overlay.hidden = false;
     var first = overlay.querySelector("input, textarea");
@@ -2717,6 +2746,15 @@
     var b = state.books[bookId];
     if (!b) return;
     var noteSeed = { id:uid(), createdAt:nowIso() };
+    var analyticsOccurredAt = null;
+    var analyticsRef = cloudRepository && cloudRepository.getRef(bookId);
+    var analyticsSession = analyticsRef && window.BooktokkiAnalyticsRepository
+      ? window.BooktokkiAnalyticsRepository.createReadingRecordSession({
+          eventId:uid(),
+          bookId:analyticsRef.cloudId,
+          send:function(event){ trackAnalyticsEvent(event); }
+        })
+      : null;
     openModal('' +
       '<div class="modal page-log-modal">' +
         '<button type="button" class="page-log-close" id="logPageClose" aria-label="닫기">×</button>' +
@@ -2736,6 +2774,7 @@
           '<button class="btn btn-dark" id="logPageSave">기록하기</button>' +
         '</div>' +
       '</div>');
+    modalBeforeClose = function(){ if (analyticsSession) analyticsSession.close(); };
     var input = document.getElementById("f-page");
     var noteInput = document.getElementById("f-page-note");
     var firstPageEdit = b.currentPage === 0;
@@ -2762,12 +2801,14 @@
       v = BooktokkiReadingRecord.clampPage(v, b.totalPages);
       var save = document.getElementById("logPageSave");
       save.disabled = true;
+      if (!analyticsOccurredAt) analyticsOccurredAt = nowIso();
       BooktokkiReadingRecord.saveReadingRecord({
         page:v,
         thought:noteInput.value,
         savePage:function(page){ return logPage(bookId, page); },
         saveNote:function(text, page){ return addNote(bookId, text, page, noteSeed); }
       }).then(function(result){
+        if (analyticsSession) analyticsSession.handleResult(result, analyticsOccurredAt);
         if (result.pageSaved && !result.partial) closeModal();
         else if (!result.pageSaved) {
           err.textContent = "기록을 저장하지 못했어요. 다시 시도해 주세요.";
@@ -3012,6 +3053,14 @@
       if (!result.canStart) throw Object.assign(new Error(bootstrapMessage(result)), { bootstrapResult:result });
       if (!window.BooktokkiCloudRepository) throw new Error("Cloud repository module is unavailable");
       cloudRepository = window.BooktokkiCloudRepository.create(supabaseClient);
+      try {
+        analyticsRepository = window.BooktokkiAnalyticsRepository
+          ? window.BooktokkiAnalyticsRepository.create(supabaseClient)
+          : null;
+      } catch (analyticsError) {
+        analyticsRepository = null;
+        console.error("북토끼 analytics 초기화 실패", { code:analyticsError && analyticsError.code ? analyticsError.code : null });
+      }
       return cloudRepository.loadSnapshot(userId).then(loadLocalState).then(function(){ showReadyApp(userId); });
     }).catch(function(error){
       console.error("북토끼 Cloud bootstrap 실패", error && error.bootstrapResult ? error.bootstrapResult : error);
@@ -3038,6 +3087,7 @@
     appStarted = false;
     bootstrappedUserId = null;
     cloudRepository = null;
+    analyticsRepository = null;
     cloudMutationQueues = {};
     pendingBookCreates = {};
     state.books = {};
