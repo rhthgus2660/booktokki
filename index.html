@@ -790,6 +790,8 @@
     background:none; text-align:left; font-size:.8rem; font-weight:400; color:#737373;
   }
   #view-home .btn-dashed:hover{ color:#171717; }
+  #view-home .home-empty-reading{ display:flex; flex-direction:column; align-items:flex-start; gap:14px; }
+  #view-home .home-empty-title{ font-size:1rem; font-weight:600; letter-spacing:-.02em; }
   #view-home .empty-state{
     background:none; border:0; border-radius:0; padding:20px 0 0; gap:16px; align-items:flex-start; text-align:left;
   }
@@ -2027,19 +2029,10 @@
      처리, page history) lives in the book's own detail screen now. */
   function currentBookMini(){
     var books = getRecentReadingBooks();
-    if (!books.length){
-      return '' +
-        '<div>' +
-          '<div class="section-title">요즘 읽는 책</div>' +
-          '<div class="card empty-state" style="margin-top:10px;">' +
-            '<button class="btn btn-dark" style="flex:none;" id="emptyAddBookBtn">+ 읽을 책 추가</button>' +
-          '</div>' +
-        '</div>';
-    }
     return '' +
       '<div>' +
         '<div class="section-title">요즘 읽는 책</div>' +
-        '<div class="recent-reading-list">' + books.map(function(b){
+        (books.length ? '<div class="recent-reading-list">' + books.map(function(b){
           var p = pct(b.currentPage, b.totalPages);
           return '<div class="recent-book">' +
           '<button type="button" class="recent-book-info" data-open="' + b.id + '" data-open-from="home" aria-label="' + esc(b.title) + ' 상세 보기">' +
@@ -2056,18 +2049,17 @@
           '</button>' +
           '<button type="button" class="recent-page-action" data-log="' + b.id + '" aria-label="' + esc(b.title) + ' 읽은 페이지 남기기">+ 읽은 페이지</button>' +
           '</div>';
-        }).join("") +
-        '</div>' +
+        }).join("") + '</div>' : '') +
       '</div>';
   }
 
   function renderHome(){
     var el = document.getElementById("view-home");
-    el.innerHTML = '' +
-      bunnyHero() +
-      statLine() +
-      currentBookMini() +
-      '<button class="btn-dashed" id="addBookBtnHome">+ 읽을 책 추가</button>';
+    var hasBooks = getBooks().length > 0;
+    el.innerHTML = bunnyHero() + (hasBooks
+      ? currentBookMini() + '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button>'
+      : '<div class="home-empty-reading"><div class="home-empty-title">요즘 무슨 책 읽어?</div>' +
+          '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button></div>');
   }
 
   function statusBadge(status){
