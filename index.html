@@ -110,6 +110,14 @@
   }
   .auth-kakao:disabled{ opacity:.5; cursor:default; }
   .auth-status{ min-height:20px; margin-top:12px; color:#737373; font-size:.72rem; line-height:1.5; }
+  .auth-owner-recovery{ width:100%; margin-top:26px; }
+  .auth-owner-recovery strong{ display:block; color:#171717; font-size:.88rem; font-weight:600; line-height:1.55; }
+  .auth-owner-recovery p{ margin-top:7px; color:#737373; font-size:.76rem; line-height:1.65; }
+  .auth-owner-recovery-action{
+    width:100%; min-height:48px; margin-top:24px; border:1px solid #171717; border-radius:4px;
+    background:#171717; color:#fff; font-size:.82rem; font-weight:600; cursor:pointer;
+  }
+  .auth-owner-recovery-action:disabled{ opacity:.5; cursor:default; }
   .auth-logout{
     min-height:38px; padding:0 4px; border:0; background:none; color:#909090;
     font-size:.68rem; font-weight:400; cursor:pointer;
@@ -1093,6 +1101,55 @@
   #view-stats .stats-note-text{ display:-webkit-box; overflow:hidden; color:#4f4f4f; font-size:.78rem; line-height:1.55; overflow-wrap:anywhere; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
   #view-stats .stats-empty{ padding:22px 0; color:#909090; font-size:.78rem; }
   @media (max-width:350px){ body.stats-prototype .app{ padding-inline:16px; } }
+
+  /* ---------- MY ---------- */
+  .profile-nav-btn{ width:44px; height:44px; overflow:hidden; border:0; border-radius:3px; background:transparent; }
+  .profile-nav-btn:hover{ background:#f5f5f5; }
+  .profile-nav-btn img{ width:31px; height:27px; object-fit:contain; image-rendering:pixelated; }
+  body.my-prototype .app{ padding-inline:24px; gap:24px; }
+  body.my-prototype .topbar h1{ color:#909090; font-size:.8rem; font-weight:500; }
+  body.my-prototype .icon-nav-btn{ border:0; border-radius:3px; background:transparent; }
+  body.my-prototype .icon-nav-btn:hover{ background:#f5f5f5; }
+  #view-my, #view-feedback, #view-data-info{ min-width:0; color:#171717; }
+  .my-header{ gap:8px; }
+  .my-header h2{ font-size:.95rem; font-weight:600; }
+  .my-profile{ display:flex; flex-direction:column; align-items:center; padding:36px 0 34px; }
+  .my-profile img{ width:104px; height:82px; object-fit:contain; image-rendering:pixelated; }
+  .my-nickname{ margin-top:17px; font-size:1.05rem; font-weight:600; }
+  .my-edit-nickname{ min-height:44px; padding:8px 12px; border:0; background:none; color:#737373; font-size:.75rem; cursor:pointer; }
+  .my-section{ padding:22px 0; border-top:1px solid #e9e9e9; }
+  .my-section-title{ margin-bottom:8px; color:#909090; font-size:.68rem; font-weight:500; }
+  .my-menu{ display:flex; align-items:center; justify-content:space-between; gap:14px; width:100%; min-height:48px; padding:11px 0; border:0; background:none; color:#171717; font:inherit; text-align:left; cursor:pointer; }
+  .my-menu:hover .my-menu-label{ color:#737373; }
+  .my-menu-copy{ min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .my-menu-label{ font-size:.87rem; font-weight:500; }
+  .my-menu-note{ color:#909090; font-size:.7rem; font-weight:400; }
+  .my-menu-arrow{ flex:none; color:#a0a0a0; font-size:1rem; }
+  .my-booklog{ min-height:70px; }
+  .my-booklog .my-menu-label{ font-size:.96rem; font-weight:600; }
+  .my-logout{ color:#737373; }
+  .my-version{ padding:22px 0 8px; border-top:1px solid #e9e9e9; color:#a0a0a0; font-size:.68rem; text-align:center; }
+  .nickname-modal{ background:#fff; color:#171717; }
+  .nickname-modal h2{ font-size:1.05rem; font-weight:600; }
+  .nickname-modal .btn{ border-radius:4px; font-weight:500; }
+  .my-form{ margin-top:30px; }
+  .my-form-intro{ color:#171717; font-size:.92rem; line-height:1.75; white-space:pre-line; }
+  .my-form textarea{ width:100%; min-height:160px; margin-top:22px; padding:14px; border:1px solid #d9d9d9; border-radius:4px; background:#fff; color:#171717; font:inherit; font-size:.86rem; line-height:1.65; resize:vertical; }
+  .my-form textarea:focus{ outline:0; border-color:#171717; }
+  .my-form-hint{ margin-top:11px; color:#737373; font-size:.7rem; line-height:1.65; }
+  .my-form-error{ margin-top:10px; color:#b04f4f; font-size:.74rem; line-height:1.5; }
+  .my-form .btn{ width:100%; min-height:46px; margin-top:22px; border-radius:4px; font-weight:500; }
+  .feedback-success{ margin-top:30px; padding:30px 0; border-block:1px solid #e9e9e9; }
+  .feedback-success strong{ display:block; font-size:1rem; font-weight:600; }
+  .feedback-success p{ margin-top:8px; color:#737373; font-size:.78rem; line-height:1.6; }
+  .data-guide{ margin-top:26px; }
+  .data-guide section{ padding:20px 0; border-bottom:1px solid #e9e9e9; }
+  .data-guide section:first-child{ border-top:1px solid #e9e9e9; }
+  .data-guide h3{ font-size:.88rem; font-weight:600; }
+  .data-guide p, .data-guide li{ color:#656565; font-size:.76rem; line-height:1.75; }
+  .data-guide p{ margin-top:9px; }
+  .data-guide ul{ margin:9px 0 0; padding-left:18px; }
+  @media (max-width:350px){ body.my-prototype .app{ padding-inline:16px; } }
 </style>
 </head>
 <body>
@@ -1103,6 +1160,12 @@
   <p class="auth-gate-copy">읽던 책과 남긴 기록을 이어서 봅니다.</p>
   <button class="auth-kakao" id="kakaoLoginBtn" type="button" disabled>카카오로 시작하기</button>
   <p class="auth-status" id="authStatus">로그인 상태를 확인하고 있어요.</p>
+  <div class="auth-owner-recovery" id="ownerMismatchRecovery" hidden>
+    <strong>이 기기에 다른 계정으로 저장한 기록이 있어요.</strong>
+    <p>기록이 섞이지 않도록 자동 연결하지 않았어요.</p>
+    <p>기록을 사용했던 계정으로 다시 로그인해 주세요.</p>
+    <button class="auth-owner-recovery-action" type="button" data-logout>다른 계정으로 로그인</button>
+  </div>
 </section>
 
 <div class="app" id="app" hidden>
@@ -1124,7 +1187,9 @@
           <rect x="3" y="20" width="18" height="1.6"/>
         </svg>
       </button>
-      <button class="auth-logout" id="logoutBtn" type="button">로그아웃</button>
+      <button class="icon-nav-btn profile-nav-btn" id="myNavBtn" data-nav="my" type="button" title="MY" aria-label="MY로 이동">
+        <img id="myNavRabbit" alt="">
+      </button>
     </div>
   </div>
   <div id="offlineNotice"></div>
@@ -1134,6 +1199,9 @@
     <section id="view-library" class="view" hidden></section>
     <section id="view-detail" class="view" hidden></section>
     <section id="view-stats" class="view" hidden></section>
+    <section id="view-my" class="view" hidden></section>
+    <section id="view-feedback" class="view" hidden></section>
+    <section id="view-data-info" class="view" hidden></section>
   </main>
 </div>
 
@@ -1145,6 +1213,8 @@
 <script src="./reading-record-flow.js"></script>
 <script src="./cloud-repository.js"></script>
 <script src="./analytics-repository.js"></script>
+<script src="./profile-repository.js"></script>
+<script src="./feedback-repository.js"></script>
 <script src="./supabase/migration-adapter.js"></script>
 <script src="./supabase/migration-dry-run.js"></script>
 <script src="./supabase/migration-executor.js"></script>
@@ -1166,8 +1236,12 @@
     completionReflectionOpenBookId: null,
     completionReflectionDrafts: {},
     statsArchivePanel: null,
+    statsFrom: "home",
     statsSelectedDate: null, /* selected day (YYYY-MM-DD) on the 통계 calendar; null = today */
     statsMonth: null, /* selected stats month (YYYY-MM); null = current month */
+    feedbackDraft: "",
+    feedbackStatus: null,
+    feedbackSubmitting: false,
     dbMode: null /* 'db' | 'local' */
   };
   var db = null;
@@ -1177,6 +1251,8 @@
   var supabaseClient = null;
   var cloudRepository = null;
   var analyticsRepository = null;
+  var profileRepository = null;
+  var feedbackRepository = null;
   var cloudMutationQueues = {};
   var pendingBookCreates = {};
   var appStarted = false;
@@ -1184,9 +1260,13 @@
   var bootstrapPromise = null;
   var bootstrappedUserId = null;
   var activeAuthUserId = null;
+  var activeAuthUser = null;
   /* Set after the Worker is deployed. This URL is public configuration;
      the Kakao key remains a Worker secret and is never shipped here. */
   var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
+  var BOOKTOKKI_GUIDE_URL = "";
+  var MY_RABBIT_ASSET = "assets/bunny-sleep.png";
+  document.getElementById("myNavRabbit").src = MY_RABBIT_ASSET;
 
   function uid(){
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -1893,11 +1973,22 @@
     if (view === "stats" && state.view !== "stats"){
       state.statsMonth = null;
       state.statsArchivePanel = null;
+      state.statsFrom = "home";
     }
+    if (view === "feedback" && state.view !== "feedback") state.feedbackStatus = null;
     state.view = view;
     if (typeof bookId !== "undefined") state.selectedBookId = bookId;
     state.editingNoteId = null; /* leaving/entering a screen always drops any open 북로그 edit */
     state.statsSelectedDate = null; /* re-entering 통계 always starts back on today */
+    renderAll();
+  }
+  function openMyBooklogs(){
+    state.statsFrom = "my";
+    state.statsMonth = null;
+    state.statsSelectedDate = null;
+    state.statsArchivePanel = "notes";
+    state.view = "stats";
+    state.editingNoteId = null;
     renderAll();
   }
   function openBook(bookId, from){
@@ -1917,6 +2008,7 @@
     document.body.classList.toggle("detail-prototype", state.view === "detail");
     document.body.classList.toggle("library-prototype", state.view === "library");
     document.body.classList.toggle("stats-prototype", state.view === "stats");
+    document.body.classList.toggle("my-prototype", state.view === "my" || state.view === "feedback" || state.view === "data-info");
     document.querySelector(".topbar h1").textContent = state.view === "home" ? "BOOKTOKKI" : "내 독서 기록";
     // Keep unsaved inputs only when the same book/input survives the render.
     var detail = document.getElementById("view-detail");
@@ -1939,14 +2031,21 @@
     document.getElementById("view-library").hidden = state.view !== "library";
     document.getElementById("view-detail").hidden = state.view !== "detail";
     document.getElementById("view-stats").hidden = state.view !== "stats";
+    document.getElementById("view-my").hidden = state.view !== "my";
+    document.getElementById("view-feedback").hidden = state.view !== "feedback";
+    document.getElementById("view-data-info").hidden = state.view !== "data-info";
     document.getElementById("libraryNavBtn").hidden = state.view === "library";
     document.getElementById("statsNavBtn").hidden = state.view === "stats";
+    document.getElementById("myNavBtn").hidden = state.view === "my" || state.view === "feedback" || state.view === "data-info";
 
     renderOffline();
     renderHome();
     renderLibrary();
     renderDetail();
     renderStats();
+    renderMy();
+    renderFeedback();
+    renderDataInfo();
     if (draftBookId === state.selectedBookId){
       drafts.forEach(function(draft){
         var input = detail.querySelector(draft.selector);
@@ -2409,9 +2508,10 @@
   }
   function renderStats(){
     var el = document.getElementById("view-stats");
+    var statsBackTarget = state.statsFrom === "my" ? "my" : "home";
     var header = '' +
       '<div class="sub-topbar">' +
-        '<button class="back-btn" data-nav="home" title="홈으로" aria-label="홈으로">' +
+        '<button class="back-btn" data-nav="' + statsBackTarget + '" title="뒤로" aria-label="뒤로">' +
           '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
         '</button>' +
         '<h2 class="stats-title">독서 캘린더</h2>' +
@@ -2489,6 +2589,70 @@
         '</div>' +
       '</section>' : '') +
       archiveHtml;
+  }
+
+  function myHeader(title, backTarget){
+    return '<div class="sub-topbar my-header">' +
+      '<button class="back-btn" data-nav="' + backTarget + '" title="뒤로" aria-label="뒤로">' +
+        '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
+      '</button><h2>' + esc(title) + '</h2></div>';
+  }
+
+  function renderMy(){
+    var el = document.getElementById("view-my");
+    var nickname = window.BooktokkiProfileRepository
+      ? window.BooktokkiProfileRepository.displayNickname(activeAuthUser)
+      : "닉네임을 정해줘";
+    el.innerHTML = myHeader("MY", "home") +
+      '<section class="my-profile">' +
+        '<img src="' + esc(MY_RABBIT_ASSET) + '" alt="북토끼">' +
+        '<div class="my-nickname">' + esc(nickname) + '</div>' +
+        '<button class="my-edit-nickname" type="button" data-edit-nickname>수정 &gt;</button>' +
+      '</section>' +
+      '<section class="my-section">' +
+        '<button class="my-menu my-booklog" type="button" data-my-booklogs><span class="my-menu-copy"><span class="my-menu-label">내 북로그</span><span class="my-menu-note">월별로 남긴 기록 보기</span></span><span class="my-menu-arrow">›</span></button>' +
+      '</section>' +
+      '<section class="my-section"><div class="my-section-title">도움</div>' +
+        '<button class="my-menu" type="button" data-guide><span class="my-menu-label">북토끼 사용법</span><span class="my-menu-arrow">↗</span></button>' +
+        '<button class="my-menu" type="button" data-nav="feedback"><span class="my-menu-label">의견 보내기</span><span class="my-menu-arrow">›</span></button>' +
+      '</section>' +
+      '<section class="my-section"><div class="my-section-title">계정</div>' +
+        '<button class="my-menu" type="button" data-nav="data-info"><span class="my-menu-label">개인정보 · 데이터 안내</span><span class="my-menu-arrow">›</span></button>' +
+        '<button class="my-menu my-logout" type="button" data-logout><span class="my-menu-label">로그아웃</span></button>' +
+      '</section>' +
+      '<div class="my-version">Booktokki Alpha</div>';
+  }
+
+  function renderFeedback(){
+    var el = document.getElementById("view-feedback");
+    var status = state.feedbackStatus;
+    el.innerHTML = myHeader("의견 보내기", "my") +
+      (status === "success"
+        ? '<div class="feedback-success"><strong>의견 고마워! 🐰</strong><p>북토끼를 더 좋게 만드는 데 참고할게.</p></div>'
+        : '<form class="my-form" id="feedbackForm">' +
+            '<p class="my-form-intro">북토끼를 쓰면서 어땠어?\n불편했던 점이나 있었으면 하는 기능을\n자유롭게 알려줘.</p>' +
+            '<textarea id="feedbackInput" placeholder="자유롭게 남겨줘">' + esc(state.feedbackDraft) + '</textarea>' +
+            '<p class="my-form-hint">의견은 로그인한 계정과 함께 전달돼요.<br>비밀번호나 민감한 개인정보는 적지 말아줘.</p>' +
+            (status === "error" ? '<p class="my-form-error">의견을 보내지 못했어요. 내용을 유지했으니 다시 시도해 주세요.</p>' : '') +
+            (status === "invalid" ? '<p class="my-form-error">1자 이상 2000자 이하로 입력해 주세요.</p>' : '') +
+            '<button class="btn btn-dark" id="feedbackSubmit" type="submit"' + (state.feedbackSubmitting ? ' disabled' : '') + '>' + (state.feedbackSubmitting ? '보내는 중...' : '의견 보내기') + '</button>' +
+          '</form>');
+  }
+
+  function renderDataInfo(){
+    var el = document.getElementById("view-data-info");
+    el.innerHTML = myHeader("개인정보 · 데이터 안내", "my") +
+      '<div class="data-guide">' +
+        '<section><h3>북토끼가 저장하는 정보</h3><p>로그인 식별 정보, 직접 설정한 닉네임, 등록한 책과 읽은 페이지 기록, 북로그, 완독 상태와 소감, 서비스 이용 중 남긴 의견을 저장할 수 있어요.</p></section>' +
+        '<section><h3>왜 사용하는지</h3><p>기기에서 읽던 책과 기록을 이어서 보여주고, 독서 캘린더와 북로그를 구성하며, Public Alpha를 개선하기 위해 사용해요.</p></section>' +
+        '<section><h3>클라우드에 저장되는 정보</h3><ul><li>Supabase Auth의 사용자 UUID와 Kakao 로그인 과정에서 Kakao가 전달한 계정 정보(metadata)</li><li>MY에서 직접 설정한 북토끼 닉네임: Kakao 계정 정보와 구분된 별도 항목으로 Supabase Auth user metadata에 저장돼요</li><li>책 정보, 페이지 기록, 북로그, 완독 상태와 소감</li><li>책 추가·독서 기록 저장 여부와 시각 등 Minimal Analytics</li><li>의견 보내기로 직접 작성한 내용과 접수 시각</li></ul></section>' +
+        '<section><h3>현재 기기에 저장되는 정보</h3><p>IndexedDB에는 책과 독서 기록, 북로그, 직접 올린 표지 이미지가 남을 수 있어요. localStorage에는 로그인 세션, Local Owner 정보와 안전한 이전·복원을 위한 진행 정보가 저장될 수 있어요.</p></section>' +
+        '<section><h3>Minimal Analytics</h3><p>책 추가와 독서 기록 저장 같은 최소 행동을 사용자 UUID와 연결해 기록해요. 익명 통계가 아니며, 책 제목·검색어·실제 페이지 숫자·북로그 본문은 Analytics event에 넣지 않아요.</p></section>' +
+        '<section><h3>의견 보내기</h3><p>보낸 의견은 로그인한 사용자 UUID와 함께 저장돼요. 의견 확인과 Public Alpha 개선에 사용하며, 비밀번호나 민감한 개인정보는 적지 말아줘.</p></section>' +
+        '<section><h3>로그아웃과 데이터 삭제</h3><p>로그아웃은 계정 삭제가 아니에요. 로그아웃 후에도 현재 기기의 로컬 데이터가 남을 수 있고, 서버 데이터와 기기 데이터는 별도로 관리될 수 있어요. 현재 앱에는 자동 회원탈퇴나 전체 데이터 삭제 기능이 없어요.</p></section>' +
+        '<section><h3>외부 서비스</h3><p>Kakao Login과 Kakao Book Search, Supabase, GitHub Pages, Cloudflare Worker를 사용해 로그인, 책 검색, 데이터 저장과 앱 제공 기능을 운영해요.</p></section>' +
+        '<section><h3>데이터 삭제 요청</h3><p>데이터 삭제를 원한다면 MY → 의견 보내기를 통해 요청해줘. 확인 후 계정과 연결된 데이터 삭제를 진행할게. 외부 서비스의 로그나 백업까지 즉시 삭제된다는 의미는 아니에요.</p></section>' +
+      '</div>';
   }
 
   /* ---------------- modals ---------------- */
@@ -2828,10 +2992,76 @@
     };
   }
 
+  function modalEditNickname(){
+    var current = window.BooktokkiProfileRepository
+      ? window.BooktokkiProfileRepository.nicknameFromUser(activeAuthUser)
+      : "";
+    openModal('<div class="modal nickname-modal">' +
+      '<h2>닉네임 수정</h2>' +
+      '<div class="field"><label for="nicknameInput">닉네임</label><input id="nicknameInput" maxlength="20" value="' + esc(current) + '" placeholder="닉네임을 정해줘"></div>' +
+      '<div class="modal-error" id="nicknameError" hidden></div>' +
+      '<div class="modal-actions"><button class="btn btn-outline" type="button" id="nicknameCancel">취소</button><button class="btn btn-dark" type="button" id="nicknameSave">저장</button></div>' +
+    '</div>');
+    document.getElementById("nicknameCancel").onclick = closeModal;
+    document.getElementById("nicknameSave").onclick = function(){
+      var button = this;
+      var input = document.getElementById("nicknameInput");
+      var error = document.getElementById("nicknameError");
+      error.hidden = true;
+      if (!profileRepository){ error.textContent = "닉네임을 저장할 수 없어요. 다시 시도해 주세요."; error.hidden = false; return; }
+      button.disabled = true;
+      profileRepository.updateNickname(input.value).then(function(result){
+        if (result.user) activeAuthUser = result.user;
+        else if (activeAuthUser){
+          activeAuthUser.user_metadata = Object.assign({}, activeAuthUser.user_metadata || {}, { booktokki_nickname:result.nickname });
+        }
+        closeModal();
+        renderAll();
+      }).catch(function(saveError){
+        error.textContent = saveError && saveError.message ? saveError.message : "닉네임을 저장하지 못했어요. 다시 시도해 주세요.";
+        error.hidden = false;
+        button.disabled = false;
+      });
+    };
+  }
+
+  function openGuide(){
+    if (BOOKTOKKI_GUIDE_URL){
+      window.open(BOOKTOKKI_GUIDE_URL, "_blank", "noopener");
+      return;
+    }
+    openModal('<div class="modal"><h2>북토끼 사용법</h2><p class="my-form-intro">사용법을 준비하고 있어.<br>조금만 기다려줘!</p><div class="modal-actions"><button class="btn btn-dark" type="button" id="guideClose">확인</button></div></div>');
+    document.getElementById("guideClose").onclick = closeModal;
+  }
+
+  function logout(triggerButton){
+    if (!supabaseClient) return;
+    var button = triggerButton || document.querySelector("[data-logout]");
+    if (button) button.disabled = true;
+    supabaseClient.auth.signOut().then(function(result){
+      if (result.error){
+        if (button) button.disabled = false;
+        window.alert("로그아웃하지 못했어요. 다시 시도해 주세요.");
+      }
+    });
+  }
+
   /* ---------------- event delegation ---------------- */
   document.body.addEventListener("click", function(e){
     var t = e.target.closest("[data-nav]");
     if (t){ goTo(t.getAttribute("data-nav")); return; }
+
+    t = e.target.closest("[data-edit-nickname]");
+    if (t){ modalEditNickname(); return; }
+
+    t = e.target.closest("[data-my-booklogs]");
+    if (t){ openMyBooklogs(); return; }
+
+    t = e.target.closest("[data-guide]");
+    if (t){ openGuide(); return; }
+
+    t = e.target.closest("[data-logout]");
+    if (t){ logout(t); return; }
 
     t = e.target.closest("[data-stats-month]");
     if (t){
@@ -2966,12 +3196,40 @@
 
   document.body.addEventListener("input", function(e){
     var t = e.target;
+    if (t && t.id === "feedbackInput"){
+      state.feedbackDraft = t.value;
+      if (state.feedbackStatus) state.feedbackStatus = null;
+    }
     if (t && t.hasAttribute("data-composedraft")){
       state.noteComposeDrafts[t.getAttribute("data-composedraft")] = t.value;
     }
     if (t && t.hasAttribute("data-reflectiondraft")){
       state.completionReflectionDrafts[t.getAttribute("data-reflectiondraft")] = t.value;
     }
+  });
+
+  document.body.addEventListener("submit", function(e){
+    if (e.target.id !== "feedbackForm") return;
+    e.preventDefault();
+    if (state.feedbackSubmitting) return;
+    var input = document.getElementById("feedbackInput");
+    var message = input ? input.value : state.feedbackDraft;
+    try { message = window.BooktokkiFeedbackRepository.normalizeMessage(message); }
+    catch (_error){ state.feedbackStatus = "invalid"; renderFeedback(); return; }
+    if (!feedbackRepository || !activeAuthUserId){ state.feedbackStatus = "error"; renderFeedback(); return; }
+    state.feedbackDraft = message;
+    state.feedbackSubmitting = true;
+    state.feedbackStatus = null;
+    renderFeedback();
+    feedbackRepository.submit(activeAuthUserId, message).then(function(){
+      state.feedbackDraft = "";
+      state.feedbackStatus = "success";
+    }).catch(function(){
+      state.feedbackStatus = "error";
+    }).finally(function(){
+      state.feedbackSubmitting = false;
+      if (state.view === "feedback") renderFeedback();
+    });
   });
 
   /* ---------------- auth ---------------- */
@@ -2996,16 +3254,21 @@
 
   function bootstrapMessage(result){
     if (!result) return "저장된 기록을 확인하지 못했어요. 새로고침해 주세요.";
-    if (result.state === "LOCAL_OWNER_MISMATCH") return "이 기기의 기록은 다른 계정에 연결되어 있어 자동으로 불러올 수 없습니다.";
+    if (result.state === "LOCAL_OWNER_MISMATCH") return "이 기기에 다른 계정으로 저장한 기록이 있어요.";
     if (result.state === "CONFLICT") return "이 기기의 기록과 저장된 기록이 달라 확인이 필요합니다.";
     if (result.state === "INVALID_CLOUD_STATE") return "저장된 기록을 안전하게 확인하지 못했습니다.";
     return "저장된 기록을 불러오지 못했어요. 네트워크를 확인하고 새로고침해 주세요.";
+  }
+
+  function showOwnerMismatchRecovery(visible){
+    document.getElementById("ownerMismatchRecovery").hidden = !visible;
   }
 
   function showReadyApp(userId){
     if (activeAuthUserId !== userId) return;
     appStarted = true;
     bootstrappedUserId = userId;
+    showOwnerMismatchRecovery(false);
     document.getElementById("authGate").hidden = true;
     document.getElementById("app").hidden = false;
     document.getElementById("app").inert = false;
@@ -3030,6 +3293,7 @@
     }
 
     bootstrapStarted = true;
+    showOwnerMismatchRecovery(false);
     document.getElementById("authGate").hidden = false;
     document.getElementById("app").hidden = true;
     document.getElementById("kakaoLoginBtn").hidden = true;
@@ -3068,7 +3332,9 @@
       document.getElementById("app").hidden = true;
       document.getElementById("authGate").hidden = false;
       document.getElementById("kakaoLoginBtn").hidden = true;
-      document.getElementById("authStatus").textContent = error.message || "저장된 기록을 불러오지 못했어요.";
+      var ownerMismatch = error && error.bootstrapResult && error.bootstrapResult.state === "LOCAL_OWNER_MISMATCH";
+      showOwnerMismatchRecovery(ownerMismatch);
+      document.getElementById("authStatus").textContent = ownerMismatch ? "" : (error.message || "저장된 기록을 불러오지 못했어요.");
     }).finally(function(){
       bootstrapStarted = false;
       bootstrapPromise = null;
@@ -3076,25 +3342,50 @@
     return bootstrapPromise;
   }
 
+  /* MY repositories only wrap the shared Supabase client, so they live for
+     the authenticated session: showSignedOut drops them and every return to
+     an authenticated session (including re-login without a reload) restores
+     them here, without touching bootstrap or IndexedDB. */
+  function ensureAccountRepositories(){
+    if (!supabaseClient || (profileRepository && feedbackRepository)) return;
+    try {
+      profileRepository = window.BooktokkiProfileRepository.create(supabaseClient);
+      feedbackRepository = window.BooktokkiFeedbackRepository.create(supabaseClient);
+    } catch (repositoryError) {
+      profileRepository = null;
+      feedbackRepository = null;
+      console.error("북토끼 MY 연결 초기화 실패", { code:repositoryError && repositoryError.code ? repositoryError.code : null });
+    }
+  }
+
   function showAuthenticated(session){
     cleanAuthRedirectUrl();
     activeAuthUserId = session && session.user ? session.user.id : null;
+    activeAuthUser = session && session.user ? session.user : null;
+    ensureAccountRepositories();
     startApp(session);
   }
 
   function showSignedOut(message){
     activeAuthUserId = null;
+    activeAuthUser = null;
     appStarted = false;
     bootstrappedUserId = null;
     cloudRepository = null;
     analyticsRepository = null;
+    profileRepository = null;
+    feedbackRepository = null;
     cloudMutationQueues = {};
     pendingBookCreates = {};
     state.books = {};
+    state.feedbackDraft = "";
+    state.feedbackStatus = null;
+    state.feedbackSubmitting = false;
     if (db) db.close();
     db = null;
     storageReady = null;
     cleanAuthRedirectUrl();
+    showOwnerMismatchRecovery(false);
     document.getElementById("app").hidden = true;
     document.getElementById("authGate").hidden = false;
     document.getElementById("kakaoLoginBtn").hidden = false;
@@ -3150,15 +3441,6 @@
         button.disabled = false;
         document.getElementById("authStatus").textContent = "로그인을 시작하지 못했어요. 다시 시도해 주세요.";
       }
-    });
-  });
-
-  document.getElementById("logoutBtn").addEventListener("click", function(){
-    if (!supabaseClient) return;
-    this.disabled = true;
-    supabaseClient.auth.signOut().then(function(result){
-      document.getElementById("logoutBtn").disabled = false;
-      if (result.error) window.alert("로그아웃하지 못했어요. 다시 시도해 주세요.");
     });
   });
 
