@@ -780,7 +780,7 @@
   #view-home .recent-book .cover{ width:44px; height:62px; font-size:1.1rem; }
   #view-home .recent-book .book-meta{ gap:3px; }
   #view-home .recent-book .book-title{ font-size:.95rem; }
-  #view-home .recent-book .book-author, #view-home .recent-book .book-pages{ font-size:.7rem; }
+  #view-home .recent-book .book-author, #view-home .recent-book .book-pages, #view-home .recent-book .book-resume{ font-size:.7rem; }
   #view-home .recent-book .progress-row{ gap:6px; margin-top:4px; }
   #view-home .recent-book .progress-pct{ width:28px; font-size:.65rem; }
   #view-home .recent-page-action{
@@ -1290,6 +1290,34 @@
     return reading[0] || null;
   }
 
+  function latestPositivePageLog(book){
+    var latest = null;
+    var latestTime = -Infinity;
+    (book.pageLogs || []).forEach(function(log){
+      if (!(log.delta > 0)) return;
+      var time = Date.parse(log.at);
+      if (Number.isFinite(time) && time > latestTime){ latest = log; latestTime = time; }
+    });
+    return latest;
+  }
+  function calendarDaysSince(dateStr, now){
+    var parts = typeof dateStr === "string" && dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!parts) return null;
+    var recorded = new Date(Date.UTC(+parts[1], +parts[2]-1, +parts[3]));
+    if (recorded.getUTCFullYear() !== +parts[1] || recorded.getUTCMonth() !== +parts[2]-1 || recorded.getUTCDate() !== +parts[3]) return null;
+    var current = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    var days = (current - recorded.getTime()) / 86400000;
+    return Number.isInteger(days) && days >= 0 ? days : null;
+  }
+  function resumeContextForBook(book, now){
+    var latest = latestPositivePageLog(book);
+    if (!latest) return null;
+    var days = calendarDaysSince(latest.date, now || new Date());
+    var base = book.currentPage + "p";
+    if (days == null) return base;
+    return base + " · " + (days === 0 ? "오늘" : (days === 1 ? "어제" : days + "일 전"));
+  }
+
   // Home-only: actual positive page history first, then unstarted books.
   // No age cutoff in v0.4; the meaning of "recent" remains a validation topic.
   function getRecentReadingBooks(){
@@ -1731,13 +1759,7 @@
         if (time === latestTime) latestBookIds[b.id] = true;
       });
     });
-    if (previous){
-      // Compare calendar dates, avoiding timezone/DST hour differences.
-      var parts = previous.date && previous.date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      var now = new Date();
-      if (parts && (Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) -
-          Date.UTC(+parts[1], +parts[2]-1, +parts[3])) / 86400000 >= 3) return "B";
-    }
+    if (previous && calendarDaysSince(previous.date, new Date()) > 0) return "B";
     var latestIds = Object.keys(latestBookIds);
     if (latestIds.length === 1 && latestIds[0] !== book.id) return "C";
     // Integer cross-multiplication keeps the 15% boundary exact.
@@ -2151,13 +2173,16 @@
         '<div class="section-title">요즘 읽는 책</div>' +
         (books.length ? '<div class="recent-reading-list">' + books.map(function(b){
           var p = pct(b.currentPage, b.totalPages);
+          var resumeContext = resumeContextForBook(b);
           return '<div class="recent-book">' +
           '<button type="button" class="recent-book-info" data-open="' + b.id + '" data-open-from="home" aria-label="' + esc(b.title) + ' 상세 보기">' +
             coverEl(b) +
             '<div class="book-meta">' +
               '<div class="book-title">' + esc(b.title) + '</div>' +
               '<div class="book-author">' + esc(b.author) + '</div>' +
-              '<div class="book-pages">' + b.currentPage + ' / ' + b.totalPages + ' p</div>' +
+              (resumeContext
+                ? '<div class="book-resume">' + resumeContext + '</div>'
+                : '<div class="book-pages">' + b.currentPage + ' / ' + b.totalPages + ' p</div>') +
               '<div class="progress-row">' +
             '<div class="progress-track"><div class="progress-fill" style="width:' + p + '%"></div></div>' +
             '<div class="progress-pct">' + p + '%</div>' +
