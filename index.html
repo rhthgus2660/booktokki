@@ -860,6 +860,13 @@
     background:transparent; color:#737373; font-size:.74rem; font-weight:400;
   }
   #view-detail .completion-action .btn:hover{ color:#171717; }
+  #view-detail .reading-memory{ margin-top:30px; padding:18px 0; border-block:1px solid #e9e9e9; }
+  #view-detail .reading-memory-label{ color:#737373; font-size:.72rem; font-weight:500; }
+  #view-detail .reading-memory-meta{ display:block; margin-top:10px; color:#909090; font-size:.7rem; }
+  #view-detail .reading-memory-text{
+    display:-webkit-box; margin-top:7px; overflow:hidden; color:#171717; font-size:.88rem; line-height:1.65;
+    overflow-wrap:anywhere; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+  }
   #view-detail .traces-section{ margin-top:46px; }
   #view-detail .traces-heading{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
   #view-detail .traces-heading .section-title{ padding:0; font-size:1rem; font-weight:600; }
@@ -1213,6 +1220,8 @@
     view: "home",
     selectedBookId: null,
     detailFrom: "library", /* which screen "back" from the detail view returns to */
+    detailEntryBookId: null,
+    detailEntryNoteIds: [], /* note IDs that already existed when this Detail visit began */
     editingNoteId: null, /* which 북로그 is currently in its inline edit mode, if any */
     noteComposerOpenBookId: null,
     noteComposeDrafts: {},
@@ -2012,6 +2021,10 @@
   }
   function openBook(bookId, from){
     state.detailFrom = (from === "home") ? "home" : (from === "stats" ? "stats" : "library");
+    state.detailEntryBookId = bookId;
+    state.detailEntryNoteIds = state.books[bookId]
+      ? (state.books[bookId].notes || []).map(function(note){ return note.id; })
+      : [];
     goTo("detail", bookId);
   }
 
@@ -2353,6 +2366,26 @@
       '</div>';
   }
 
+  function readingMemoryForBook(book, entryBookId, entryNoteIds){
+    if (!book || book.id !== entryBookId || !Array.isArray(entryNoteIds) || entryNoteIds.length === 0) return null;
+    var eligible = {};
+    entryNoteIds.forEach(function(id){ eligible[id] = true; });
+    return (book.notes || []).filter(function(note){
+      return eligible[note.id] && Number.isFinite(Date.parse(note.createdAt));
+    }).sort(function(a, b){
+      return Date.parse(b.createdAt) - Date.parse(a.createdAt) || b.id.localeCompare(a.id);
+    })[0] || null;
+  }
+  function readingMemoryHtml(note){
+    if (!note) return "";
+    var meta = (note.page != null ? "p." + note.page + " · " : "") + fmtMonthDay(note.createdAt);
+    return '<section class="reading-memory" aria-label="지난 북로그">' +
+      '<div class="reading-memory-label">지난 북로그</div>' +
+      '<span class="reading-memory-meta">' + meta + '</span>' +
+      '<div class="reading-memory-text">' + esc(note.text) + '</div>' +
+    '</section>';
+  }
+
   function renderDetail(){
     var el = document.getElementById("view-detail");
     var id = state.selectedBookId;
@@ -2377,6 +2410,7 @@
     }
     var b = state.books[id];
     var p = pct(b.currentPage, b.totalPages);
+    var readingMemory = readingMemoryForBook(b, state.detailEntryBookId, state.detailEntryNoteIds);
     /* oldest first - reads like the thread of thought actually
        unfolded while working through the book */
     var notes = (b.notes || []).slice().sort(function(a,c){ return new Date(a.createdAt) - new Date(c.createdAt); });
@@ -2424,6 +2458,7 @@
             : '<button class="btn btn-outline" data-done="' + b.id + '" style="width:100%;">다 읽었어!</button>') +
         '</div>' +
       '</div>' +
+      readingMemoryHtml(readingMemory) +
       (b.status === "done" ? '<div class="completion-reflection">' +
         '<div class="completion-reflection-title">이 책을 다 읽고 든 생각</div>' +
         (reflectionOpen
