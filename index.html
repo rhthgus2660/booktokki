@@ -935,6 +935,12 @@
   #view-library .back-btn{ width:32px; height:32px; border:0; border-radius:3px; background:transparent; }
   #view-library .back-btn:hover{ background:#f5f5f5; }
   #view-library .library-shelves{ display:flex; flex-direction:column; margin-top:30px; }
+  #view-library .library-zone + .library-zone{ margin-top:42px; }
+  #view-library .library-zone-title{ color:#171717; font-size:.78rem; font-weight:600; }
+  #view-library .library-zone-empty{ margin-top:18px; color:#909090; font-size:.75rem; }
+  #view-library .library-zone-waiting .library-zone-title{ color:#909090; font-weight:500; }
+  #view-library .library-zone-waiting .library-shelves{ margin-top:20px; opacity:.62; }
+  #view-library .library-zone-waiting .shelf-row{ border-bottom-color:#e9e4d8; }
   #view-library .shelf-row{
     display:flex; flex-wrap:nowrap; align-items:flex-end; gap:2px;
     min-height:166px; padding:42px 2px 13px; border:0; border-bottom:1px solid #cfcfcf;
@@ -2275,6 +2281,27 @@
     return latestId;
   }
 
+  function isLivedBook(book){
+    return (book.pageLogs || []).some(function(log){ return log.delta > 0; }) ||
+      (book.notes || []).length > 0 ||
+      book.status === "done" || !!book.completedAt;
+  }
+
+  function libraryShelfHtml(books, rowSize, latestBookIdValue, bookPositions){
+    var rows = [];
+    for (var i = 0; i < books.length; i += rowSize){ rows.push(books.slice(i, i + rowSize)); }
+    return '<div class="library-shelves">' +
+      rows.map(function(row, rowIndex){
+        return '<div class="shelf-row">' + row.map(function(book, columnIndex){
+          var fallbackIndex = rowIndex * rowSize + columnIndex;
+          var stableIndex = bookPositions && Object.prototype.hasOwnProperty.call(bookPositions, book.id)
+            ? bookPositions[book.id] : fallbackIndex;
+          return spineEl(book, stableIndex, latestBookIdValue);
+        }).join("") + '</div>';
+      }).join("") +
+    '</div>';
+  }
+
   /* Reading history stays derived from pageLogs/notes; no trace is stored. */
   function spineEl(b, index, latestBookId){
     var p = pct(b.currentPage, b.totalPages);
@@ -2321,23 +2348,26 @@
         '</div>';
       return;
     }
-    /* Oldest first, so a newly added book takes the next open spot —
-       the shelf fills left-to-right, row by row, as a timeline. */
+    /* Keep the existing registration order inside each area. Reading
+       behavior decides which area a book belongs to; users never sort it. */
     all.sort(function(a, b){ return new Date(a.createdAt) - new Date(b.createdAt); });
+    var bookPositions = {};
+    all.forEach(function(book, index){ bookPositions[book.id] = index; });
+    var lived = all.filter(isLivedBook);
+    var waiting = all.filter(function(book){ return !isLivedBook(book); });
     var shelfWidth = Math.max(280, Math.min((window.innerWidth || 390) - 48, 600));
     var ROW_SIZE = Math.max(1, Math.floor((shelfWidth + 2) / 34));
-    var rows = [];
-    for (var i = 0; i < all.length; i += ROW_SIZE){ rows.push(all.slice(i, i + ROW_SIZE)); }
     var latestBookId = latestPositiveBookId();
 
     el.innerHTML = header +
-      '<div class="library-shelves">' +
-        rows.map(function(row, rowIndex){
-          return '<div class="shelf-row">' + row.map(function(book, columnIndex){
-            return spineEl(book, rowIndex * ROW_SIZE + columnIndex, latestBookId);
-          }).join("") + '</div>';
-        }).join("") +
-      '</div>' +
+      '<section class="library-zone library-zone-lived" aria-labelledby="libraryLivedTitle">' +
+        '<h3 class="library-zone-title" id="libraryLivedTitle">읽어온 책</h3>' +
+        (lived.length ? libraryShelfHtml(lived, ROW_SIZE, latestBookId, bookPositions) : '<p class="library-zone-empty">아직 읽어온 책이 없어요.</p>') +
+      '</section>' +
+      (waiting.length ? '<section class="library-zone library-zone-waiting" aria-labelledby="libraryWaitingTitle">' +
+        '<h3 class="library-zone-title" id="libraryWaitingTitle">기다리는 책</h3>' +
+        libraryShelfHtml(waiting, ROW_SIZE, latestBookId, bookPositions) +
+      '</section>' : '') +
       '<button class="btn-dashed library-add" id="addBookBtnLib">+ 읽을 책 추가</button>';
   }
 
