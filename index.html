@@ -1222,6 +1222,7 @@
     statsFrom: "home",
     statsSelectedDate: null, /* selected day (YYYY-MM-DD) on the 통계 calendar; null = today */
     statsMonth: null, /* selected stats month (YYYY-MM); null = current month */
+    feedbackFrom: "my",
     feedbackDraft: "",
     feedbackStatus: null,
     feedbackSubmitting: false,
@@ -1248,6 +1249,7 @@
      the Kakao key remains a Worker secret and is never shipped here. */
   var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
   var BOOKTOKKI_GUIDE_URL = "https://desert-sandwich-d38.notion.site/3e882ff9dce98105ab80f0dc599218a4?pvs=73";
+  var FEEDBACK_PROMPT_FLAG_PREFIX = "booktokki:feedback-prompt:v1:";
   var MY_RABBIT_ASSET = "assets/bunny-sleep.png";
   document.getElementById("myNavRabbit").src = MY_RABBIT_ASSET;
 
@@ -1685,12 +1687,15 @@
     if (!state.books[bookId]) return Promise.resolve(false);
     return queueCloudMutation(bookId, function(){
       var b = state.books[bookId];
+      var hadPageRecords = getBooks().some(function(book){ return (book.pageLogs || []).length > 0; });
+      var shouldPromptForFeedback = false;
       var patch = buildPageLogPatch(b, page);
       var reaction = readingReaction(b, patch.currentPage);
       var reactionSeed = b.id + "|" + todayStr() + "|" + patch.currentPage;
       var log = patch.pageLogs && patch.pageLogs[patch.pageLogs.length - 1];
       var operation = { logId:log ? log.id : uid(), newPage:patch.currentPage, date:todayStr(), at:log ? log.at : patch.updatedAt };
       return cloudRepository.recordPage(activeAuthUserId, bookId, operation).then(function(result){
+        shouldPromptForFeedback = !hadPageRecords && result.logCreated === true;
         var candidate = localBookFromCloudRow(Object.assign({}, b, patch, { pageLogs:result.logs }), result.book);
         if (result.logCreated && !log){ throw new Error("Unexpected Cloud page log"); }
         return commitLocalBook(candidate);
@@ -1698,6 +1703,7 @@
         var pageInput = document.querySelector('[data-pageinput="' + bookId + '"]');
         if (pageInput){ pageInput.value = patch.currentPage; pageInput.defaultValue = patch.currentPage; }
         if (reaction && !options.suppressReaction) showReadingReaction(reaction, reactionSeed);
+        if (shouldPromptForFeedback) queueFirstRecordFeedbackPrompt(activeAuthUserId);
         return true;
       });
     }).catch(function(error){
@@ -1963,7 +1969,10 @@
       state.statsArchivePanel = null;
       state.statsFrom = "home";
     }
-    if (view === "feedback" && state.view !== "feedback") state.feedbackStatus = null;
+    if (view === "feedback" && state.view !== "feedback"){
+      state.feedbackFrom = state.view;
+      state.feedbackStatus = null;
+    }
     state.view = view;
     if (typeof bookId !== "undefined") state.selectedBookId = bookId;
     state.editingNoteId = null; /* leaving/entering a screen always drops any open 북로그 edit */
@@ -2580,8 +2589,9 @@
   }
 
   function myHeader(title, backTarget){
+    var backAttr = backTarget === "feedback-return" ? "data-feedback-back" : 'data-nav="' + backTarget + '"';
     return '<div class="sub-topbar my-header">' +
-      '<button class="back-btn" data-nav="' + backTarget + '" title="뒤로" aria-label="뒤로">' +
+      '<button class="back-btn" ' + backAttr + ' title="뒤로" aria-label="뒤로">' +
         '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
       '</button><h2>' + esc(title) + '</h2></div>';
   }
@@ -2614,7 +2624,7 @@
   function renderFeedback(){
     var el = document.getElementById("view-feedback");
     var status = state.feedbackStatus;
-    el.innerHTML = myHeader("의견 보내기", "my") +
+    el.innerHTML = myHeader("의견 보내기", "feedback-return") +
       (status === "success"
         ? '<div class="feedback-success"><strong>의견 고마워! 🐰</strong><p>북토끼를 더 좋게 만드는 데 참고할게.</p></div>'
         : '<form class="my-form" id="feedbackForm">' +
@@ -2669,6 +2679,59 @@
   document.addEventListener("keydown", function(e){
     if (e.key === "Escape" && !overlay.hidden) closeModal();
   });
+
+  var pendingFirstRecordFeedbackUserId = null;
+  var feedbackPromptWaitTimer = null;
+  function feedbackPromptFlagKey(userId){ return FEEDBACK_PROMPT_FLAG_PREFIX + userId; }
+  function feedbackPromptWasShown(userId){
+    try { return window.localStorage.getItem(feedbackPromptFlagKey(userId)) === "shown"; }
+    catch (_error) { return true; }
+  }
+  function feedbackPromptSafeToShow(){
+    var rabbit = document.getElementById("rabbitEvent");
+    var active = document.activeElement;
+    var typing = active && typeof active.matches === "function" && active.matches("input, textarea, select, [contenteditable]");
+    return appStarted && overlay.hidden && (!rabbit || rabbit.hidden) &&
+      Object.keys(cloudMutationQueues).length === 0 && !state.feedbackSubmitting && !typing;
+  }
+  function showFirstRecordFeedbackPrompt(userId){
+    if (!userId || userId !== activeAuthUserId || feedbackPromptWasShown(userId)) return false;
+    try { window.localStorage.setItem(feedbackPromptFlagKey(userId), "shown"); }
+    catch (_error) { return false; }
+    var feedbackOrigin = state.view;
+    openModal('<div class="modal"><h2>북토끼는 아직 자라는 중이에요 🐰</h2>' +
+      '<p class="my-form-intro">쓰다가 이상하거나 아쉬운 점이 있었다면 편하게 알려주세요.</p>' +
+      '<div class="modal-actions"><button class="btn btn-outline" type="button" id="feedbackPromptLater">나중에</button>' +
+      '<button class="btn btn-dark" type="button" id="feedbackPromptSend">의견 보내기</button></div></div>');
+    document.getElementById("feedbackPromptLater").onclick = closeModal;
+    document.getElementById("feedbackPromptSend").onclick = function(){
+      closeModal();
+      state.feedbackFrom = feedbackOrigin;
+      goTo("feedback");
+    };
+    return true;
+  }
+  function tryShowFirstRecordFeedbackPrompt(){
+    var userId = pendingFirstRecordFeedbackUserId;
+    if (!userId) return;
+    if (userId !== activeAuthUserId || feedbackPromptWasShown(userId)){
+      pendingFirstRecordFeedbackUserId = null;
+      return;
+    }
+    if (feedbackPromptSafeToShow()){
+      pendingFirstRecordFeedbackUserId = null;
+      showFirstRecordFeedbackPrompt(userId);
+      return;
+    }
+    feedbackPromptWaitTimer = setTimeout(tryShowFirstRecordFeedbackPrompt, 250);
+  }
+  function queueFirstRecordFeedbackPrompt(userId){
+    if (!userId || feedbackPromptWasShown(userId) || pendingFirstRecordFeedbackUserId) return false;
+    pendingFirstRecordFeedbackUserId = userId;
+    clearTimeout(feedbackPromptWaitTimer);
+    feedbackPromptWaitTimer = setTimeout(tryShowFirstRecordFeedbackPrompt, 250);
+    return true;
+  }
 
   function bookSearchCover(book){
     return '<div class="book-search-cover">' +
@@ -3038,7 +3101,15 @@
 
   /* ---------------- event delegation ---------------- */
   document.body.addEventListener("click", function(e){
-    var t = e.target.closest("[data-nav]");
+    var t = e.target.closest("[data-feedback-back]");
+    if (t){
+      state.view = state.feedbackFrom || "my";
+      state.feedbackFrom = "my";
+      state.editingNoteId = null;
+      renderAll();
+      return;
+    }
+    t = e.target.closest("[data-nav]");
     if (t){ goTo(t.getAttribute("data-nav")); return; }
 
     t = e.target.closest("[data-edit-nickname]");
