@@ -697,6 +697,11 @@
   .completion-modal .bunny-figure{ width:132px; height:150px; margin:0 auto; }
   .completion-modal .done-reflection-link{ margin-top:2px; }
   @media (min-width:480px){ .page-log-modal, .completion-modal{ border-radius:12px; } }
+  .share-card-modal{ background:#fff; color:#171717; gap:14px; }
+  .share-card-modal h2{ font-size:1.05rem; font-weight:600; }
+  .share-card-preview{ width:min(100%,300px); max-height:56vh; margin:0 auto; border:1px solid #e9e9e9; background:#fff; object-fit:contain; }
+  .share-card-status{ min-height:18px; color:#737373; font-size:.72rem; line-height:1.5; text-align:center; }
+  .share-card-modal .modal-actions .btn{ border-radius:3px; font-weight:500; }
 
   [hidden]{ display:none !important; }
 
@@ -1209,6 +1214,7 @@
 <script src="./analytics-repository.js"></script>
 <script src="./profile-repository.js"></script>
 <script src="./feedback-repository.js"></script>
+<script src="./share-card.js"></script>
 <script src="./supabase/migration-adapter.js"></script>
 <script src="./supabase/migration-dry-run.js"></script>
 <script src="./supabase/migration-executor.js"></script>
@@ -2394,6 +2400,7 @@
         '<div class="note-text">' + esc(n.text) + '</div>' +
         '<div class="note-top">' +
           '<span class="note-actions">' +
+            '<button class="note-action-btn" data-sharenote="' + bookId + '|' + n.id + '">공유</button>' +
             '<button class="note-action-btn" data-editnote="' + bookId + '|' + n.id + '">수정</button>' +
             '<button class="note-action-btn" data-delnote="' + bookId + '|' + n.id + '">삭제</button>' +
           '</span>' +
@@ -3171,6 +3178,42 @@
     };
   }
 
+  function modalShareNote(bookId, noteId){
+    var book = state.books[bookId];
+    var note = book && (book.notes || []).find(function(item){ return item.id === noteId; });
+    if (!book || !note || !window.BooktokkiShareCard) return;
+    var payload = window.BooktokkiShareCard.buildPayload(book, note);
+    var pngBlob = null;
+    openModal('<div class="modal share-card-modal">' +
+      '<h2>북로그 공유</h2>' +
+      '<canvas class="share-card-preview" id="shareCardPreview" width="720" height="960" aria-label="공유할 북로그 이미지 미리보기"></canvas>' +
+      '<p class="share-card-status" id="shareCardStatus">카드를 만드는 중...</p>' +
+      '<div class="modal-actions"><button class="btn btn-outline" type="button" id="shareCardCancel">취소</button>' +
+      '<button class="btn btn-dark" type="button" id="shareCardSend" disabled>공유하기</button></div></div>');
+    var canvas = document.getElementById("shareCardPreview");
+    var status = document.getElementById("shareCardStatus");
+    var send = document.getElementById("shareCardSend");
+    document.getElementById("shareCardCancel").onclick = closeModal;
+    window.BooktokkiShareCard.createPng(canvas, payload).then(function(result){
+      pngBlob = result.blob;
+      status.textContent = result.truncated ? "글이 길어 일부만 담겼어요. 이미지를 확인해 주세요." : "공유할 이미지를 확인해 주세요.";
+      send.disabled = false;
+    }).catch(function(){
+      status.textContent = "이미지를 만들지 못했어요. 잠시 후 다시 시도해 주세요.";
+    });
+    send.onclick = function(){
+      if (!pngBlob || send.disabled) return;
+      send.disabled = true;
+      window.BooktokkiShareCard.sharePng(pngBlob, payload).then(function(result){
+        if (!result.cancelled) closeModal();
+        else send.disabled = false;
+      }).catch(function(){
+        status.textContent = "공유하지 못했어요. 다시 시도해 주세요.";
+        send.disabled = false;
+      });
+    };
+  }
+
   function openGuide(){
     if (BOOKTOKKI_GUIDE_URL){
       try {
@@ -3289,6 +3332,12 @@
       var editParts = t.getAttribute("data-editnote").split("|");
       state.editingNoteId = editParts[1];
       renderAll();
+      return;
+    }
+    t = e.target.closest("[data-sharenote]");
+    if (t){
+      var shareParts = t.getAttribute("data-sharenote").split("|");
+      modalShareNote(shareParts[0], shareParts[1]);
       return;
     }
 
