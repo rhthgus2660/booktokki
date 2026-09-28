@@ -1,5 +1,7 @@
 "use strict";
 var assert = require("node:assert/strict");
+var fs = require("node:fs");
+var path = require("node:path");
 var flow = require("../../reading-record-flow.js");
 
 (async function(){
@@ -78,5 +80,119 @@ var flow = require("../../reading-record-flow.js");
     saveNote:function(){ calls.push(["note"]); return true; }
   }), /offline/);
   assert.deepEqual(calls, [["page"]]);
+
+  var html = fs.readFileSync(path.join(__dirname, "../../index.html"), "utf8");
+  assert.match(html, /class=\"page-inline-input\" data-pageinput=\"/);
+  assert.match(html, /closest\(\"\[data-pageinput\]\"\)/);
+  assert.match(html, /logPage\(bookId, v\)\.then\(function\(saved\)/);
+  assert.match(html, /readingRecordEvent\([\s\S]*analyticsEventId[\s\S]*noteSaved:false/);
+  assert.match(html, /if \(t\)\{ modalLogPage\(t\.getAttribute\(\"data-log\"\)\); return; \}/);
+  assert.match(html, /<h2>어디까지 읽었어\?<\/h2>/);
+  assert.match(html, /읽으면서 어떤 생각이 들었어\?/);
+  assert.match(html, /id=\"logPageSave\">기록하기<\/button>/);
+  assert.match(html, /addNote\(composeBookId, composeText, null, null, \{ useCommittedPage:true \}\)/);
+  assert.match(html, /var meta = \(n\.page != null \? 'p\.' \+ n\.page \+ ' · ' : ''\) \+ fmtMonthDay\(n\.createdAt\)/);
+  assert.match(html, /E: \{ img:"assets\/bunny-done\.png", text:"인간이 끈질기네\.\.<br>방해 실패\." \}/);
+  assert.match(html, /var COMPLETION_REACTIONS = \["인간이 끈질기네\.\.<br>방해 실패\."\]/);
+  assert.match(html, /TODO\(brand\): bunny-done\.png/);
+
+  /* Execute the production addNote() body with the same serialized book
+     queue used by the app. The page is resolved only when the note action
+     starts, after an earlier page action has either committed or failed. */
+  var addNoteSource = html.slice(html.indexOf("function addNote("), html.indexOf("function saveCompletionReflection("));
+  function createQueuedNoteHarness(){
+    var state = { books:{ book:{ id:"book", currentPage:10, notes:[] } }, noteComposeDrafts:{}, noteComposerOpenBookId:"book" };
+    var queues = {};
+    var captured = [];
+    function queueCloudMutation(bookId, action){
+      var previous = queues[bookId] || Promise.resolve();
+      var next = previous.catch(function(){}).then(action);
+      var queued = next.finally(function(){ if (queues[bookId] === queued) delete queues[bookId]; });
+      queues[bookId] = queued;
+      return next;
+    }
+    var factory = new Function(
+      "state", "uid", "nowIso", "queueCloudMutation", "cloudRepository",
+      "activeAuthUserId", "commitLocalBook", "localBookFromCloudRow", "cloudSaveFailed",
+      addNoteSource + "; return addNote;"
+    );
+    var addNote = factory(
+      state,
+      function(){ return "note-id"; },
+      function(){ return "2026-09-28T00:00:00.000Z"; },
+      queueCloudMutation,
+      { createNote:function(_user, _book, note){ captured.push(note); return Promise.resolve({ book:{} }); } },
+      "user",
+      function(book){ state.books.book = book; return Promise.resolve(book); },
+      function(candidate){ return candidate; },
+      function(){ return false; }
+    );
+    return { state:state, captured:captured, queue:queueCloudMutation, addNote:addNote };
+  }
+  var pendingResolve;
+  var queued = createQueuedNoteHarness();
+  var pageSave = queued.queue("book", function(){
+    return new Promise(function(resolve){
+      pendingResolve = function(){
+        queued.state.books.book = Object.assign({}, queued.state.books.book, { currentPage:30 });
+        resolve(true);
+      };
+    });
+  });
+  var racedNote = queued.addNote("book", "생각", null, null, { useCommittedPage:true });
+  await new Promise(function(resolve){ setImmediate(resolve); });
+  pendingResolve();
+  await Promise.all([pageSave, racedNote]);
+  assert.equal(queued.captured[0].page, 30);
+
+  queued = createQueuedNoteHarness();
+  var failedPage = queued.queue("book", function(){ return Promise.reject(new Error("offline")); });
+  var noteAfterFailure = queued.addNote("book", "생각", null, null, { useCommittedPage:true });
+  await assert.rejects(failedPage, /offline/);
+  assert.equal(await noteAfterFailure, true);
+  assert.equal(queued.captured[0].page, 10);
+
+  /* Execute the production Detail change handler, rather than only checking
+     its source text, for forward/backward/same-page and analytics outcomes. */
+  var handlerSource = html.slice(
+    html.indexOf("/* Detail owns direct page-position editing."),
+    html.indexOf('document.body.addEventListener("input"', html.indexOf("/* Detail owns direct page-position editing."))
+  );
+  function detailHandlerHarness(pageResult){
+    var handler;
+    var logged = [];
+    var analytics = [];
+    var input = {
+      value:"10",
+      getAttribute:function(){ return "book"; },
+      closest:function(selector){ return selector === "[data-pageinput]" ? input : null; }
+    };
+    var execute = new Function(
+      "document", "state", "cloudRepository", "uid", "nowIso", "logPage",
+      "trackAnalyticsEvent", "window", handlerSource
+    );
+    execute(
+      { body:{ addEventListener:function(type, callback){ if (type === "change") handler = callback; } } },
+      { books:{ book:{ currentPage:10 } } },
+      { getRef:function(){ return { cloudId:"cloud-book" }; } },
+      function(){ return "event-id"; },
+      function(){ return "2026-09-28T01:00:00.000Z"; },
+      function(bookId, page){ logged.push([bookId, page]); return Promise.resolve(pageResult); },
+      function(build){ analytics.push(build()); return Promise.resolve(true); },
+      { BooktokkiAnalyticsRepository:{ readingRecordEvent:function(eventId, bookId, at, result){ return { eventId:eventId, bookId:bookId, at:at, result:result }; } } }
+    );
+    return { run:async function(value){ input.value=String(value); handler({ target:input }); await Promise.resolve(); await Promise.resolve(); }, logged:logged, analytics:analytics };
+  }
+  for (var detailPage of [30, 5, 10]){
+    var detailSuccess = detailHandlerHarness(true);
+    await detailSuccess.run(detailPage);
+    assert.deepEqual(detailSuccess.logged, [["book", detailPage]]);
+    assert.equal(detailSuccess.analytics.length, 1);
+    assert.deepEqual(detailSuccess.analytics[0].result, { pageSaved:true, noteSaved:false });
+  }
+  var detailFailure = detailHandlerHarness(false);
+  await detailFailure.run(30);
+  assert.deepEqual(detailFailure.logged, [["book", 30]]);
+  assert.equal(detailFailure.analytics.length, 0);
   console.log("PASS reading record flow tests");
 })().catch(function(error){ console.error("FAIL reading record flow tests", error); process.exitCode = 1; });

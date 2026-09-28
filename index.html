@@ -11,20 +11,20 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;900&display=swap">
-<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#171717}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <style>
   :root{
-    --bg:#F3EEE1;
+    --bg:#FFFFFF;
     --surface:#FFFFFF;
-    --surface-muted:#FAF5E8;
-    --ink:#221E17;
-    --ink-soft:#756B5A;
-    --ink-faint:#A79C86;
-    --border:#E6DFC8;
+    --surface-muted:#F7F7F7;
+    --ink:#171717;
+    --ink-soft:#737373;
+    --ink-faint:#909090;
+    --border:#E9E9E9;
     --accent:#D97D74;
     --accent-soft:#F6DCDA;
-    --track:#ECE4D0;
-    --fill:#221E17;
+    --track:#EEEEEE;
+    --fill:#171717;
     --success:#3E7A52;
     --success-soft:#DEEBE1;
     --danger:#B8483A;
@@ -32,47 +32,6 @@
     --cover-1:#E7B8AE; --cover-2:#AFC3A0; --cover-3:#A6BED2; --cover-4:#D9C093; --cover-5:#C1AAC5;
     --shelf-plank:#D8C7A0;
   }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#17140F;
-      --surface:#221D16;
-      --surface-muted:#2A241B;
-      --ink:#F2ECDD;
-      --ink-soft:#B7AC96;
-      --ink-faint:#7C7362;
-      --border:#3A3324;
-      --accent:#E2938A;
-      --accent-soft:#3C2723;
-      --track:#3A3324;
-      --fill:#F2ECDD;
-      --success:#7FBE95;
-      --success-soft:#223A2B;
-      --danger:#E1786A;
-      --danger-soft:#3E2621;
-      --cover-1:#6B4B41; --cover-2:#43503C; --cover-3:#37495A; --cover-4:#584A34; --cover-5:#4C3A4F;
-      --shelf-plank:#4A3B25;
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#17140F;
-    --surface:#221D16;
-    --surface-muted:#2A241B;
-    --ink:#F2ECDD;
-    --ink-soft:#B7AC96;
-    --ink-faint:#7C7362;
-    --border:#3A3324;
-    --accent:#E2938A;
-    --accent-soft:#3C2723;
-    --track:#3A3324;
-    --fill:#F2ECDD;
-    --success:#7FBE95;
-    --success-soft:#223A2B;
-    --danger:#E1786A;
-    --danger-soft:#3E2621;
-    --cover-1:#6B4B41; --cover-2:#43503C; --cover-3:#37495A; --cover-4:#584A34; --cover-5:#4C3A4F;
-    --shelf-plank:#4A3B25;
-  }
-
   *{box-sizing:border-box;}
   body{
     background:var(--bg);
@@ -118,12 +77,13 @@
     background:#171717; color:#fff; font-size:.82rem; font-weight:600; cursor:pointer;
   }
   .auth-owner-recovery-action:disabled{ opacity:.5; cursor:default; }
-  .auth-owner-recovery-flow{ width:100%; margin-top:18px; border-top:1px solid #dedede; padding-top:18px; text-align:left; }
+  .auth-owner-recovery-flow{ width:100%; margin-top:22px; border-top:1px solid #e9e9e9; padding-top:22px; text-align:left; }
   .auth-owner-recovery-flow button{ width:100%; min-height:48px; border:1px solid #171717; border-radius:4px; background:#171717; color:#fff; font-size:.82rem; font-weight:600; cursor:pointer; }
   .auth-owner-recovery-flow button:disabled{ opacity:.5; cursor:default; }
-  .auth-owner-recovery-flow label{ display:block; margin-top:16px; color:#656565; font-size:.74rem; line-height:1.6; }
-  .auth-owner-recovery-flow input[type="file"]{ display:block; width:100%; margin-top:9px; color:#656565; font-size:.72rem; }
-  .auth-owner-recovery-flow input[type="checkbox"]{ margin-right:6px; }
+  .auth-owner-recovery-flow label{ display:block; margin-top:18px; color:#656565; font-size:.74rem; line-height:1.6; }
+  .auth-owner-recovery-flow input[type="file"]{ display:block; width:100%; margin-top:10px; padding:10px; border:1px solid #e9e9e9; border-radius:4px; background:#fff; color:#656565; font-size:.72rem; }
+  .auth-owner-recovery-flow label:has(input[type="checkbox"]){ display:flex; align-items:flex-start; gap:8px; }
+  .auth-owner-recovery-flow input[type="checkbox"]{ flex:none; width:18px; height:18px; margin:2px 0 0; }
   .auth-owner-recovery-flow p{ min-height:20px; margin-top:12px; }
   .auth-logout{
     min-height:38px; padding:0 4px; border:0; background:none; color:#909090;
@@ -1784,13 +1744,12 @@
     ],
     C: { img:"assets/bunny-kick.png", text:"인간 또 딴 책 폄.<br>또 시작됨." },
     D: { img:"assets/bunny-sleep.png", text:"이건 좀 많이 읽는데.<br>작전 수정 필요." },
-    E: { img:"assets/bunny-done.png", text:"인간이 책 한 권을 끝냄<br>제법인데." }
+    E: { img:"assets/bunny-done.png", text:"인간이 끈질기네..<br>방해 실패." }
   };
-  var COMPLETION_REACTIONS = [
-    "인간이 책 한 권을 끝냄.<br>제법인데.",
-    "끝까지 읽었네.<br>예상 밖임.",
-    "인간 완독 확인.<br>방해 실패."
-  ];
+  /* TODO(brand): bunny-done.png reads more triumphant than this dry,
+     frustrated line. Replace the asset only after the next character
+     pose is approved; keep the current Character Identity meanwhile. */
+  var COMPLETION_REACTIONS = ["인간이 끈질기네..<br>방해 실패."];
   function hideReadingReaction(){
     clearTimeout(rabbitEventTimer);
     var el = document.getElementById("rabbitEvent");
@@ -1823,16 +1782,22 @@
     rabbitEventTimer = setTimeout(hideReadingReaction, 4000);
   }
 
-  function addNote(bookId, text, page, seed){
+  function addNote(bookId, text, page, seed, options){
     var b = state.books[bookId];
     if (!b) return Promise.resolve(false);
     seed = seed || {};
-    var note = { id: seed.id || uid(), bookId: bookId, text: text, page: Number.isFinite(page) ? page : null, createdAt: seed.createdAt || nowIso() };
+    options = options || {};
+    var noteId = seed.id || uid();
+    var noteCreatedAt = seed.createdAt || nowIso();
     /* Notes never touch lastPageLogDate/dayStartPage/pageLogs — the
        home bunny and the page-history trail only react to an actual
        page record, never to a 북로그. */
     return queueCloudMutation(bookId, function(){
       var current = state.books[bookId];
+      /* Detail notes resolve their page only after earlier page writes in
+         this book's queue have settled, so the snapshot is never stale. */
+      var notePage = options.useCommittedPage ? current.currentPage : page;
+      var note = { id:noteId, bookId:bookId, text:text, page:Number.isFinite(notePage) ? notePage : null, createdAt:noteCreatedAt };
       var notes = (current.notes || []).concat([note]);
       return cloudRepository.createNote(activeAuthUserId, bookId, note).then(function(result){
         return commitLocalBook(localBookFromCloudRow(Object.assign({}, current, { notes:notes }), result.book), function(){
@@ -3046,7 +3011,8 @@
   function openGuide(){
     if (BOOKTOKKI_GUIDE_URL){
       try {
-        if (window.open(BOOKTOKKI_GUIDE_URL, "_blank", "noopener")) return;
+        window.open(BOOKTOKKI_GUIDE_URL, "_blank", "noopener");
+        return;
       } catch (_error) {}
     }
     openModal('<div class="modal"><h2>북토끼 사용법</h2><p class="my-form-intro">사용법을 준비하고 있어.<br>조금만 기다려줘!</p><div class="modal-actions"><button class="btn btn-dark" type="button" id="guideClose">확인</button></div></div>');
@@ -3128,7 +3094,7 @@
       var composeBook = state.books[composeBookId];
       var composeInput = document.getElementById("noteComposeInput");
       var composeText = composeInput ? composeInput.value.trim() : "";
-      if (composeBook && composeText){ addNote(composeBookId, composeText, composeBook.currentPage); }
+      if (composeBook && composeText){ addNote(composeBookId, composeText, null, null, { useCommittedPage:true }); }
       return;
     }
 
@@ -3200,8 +3166,9 @@
     }
   });
 
-  /* Committing the inline current-page field - fires on blur/Enter,
-     same underlying page-log write as the old modal used. */
+  /* Detail owns direct page-position editing. It uses the same cloud-first
+     page mutation as Reading Record, but does not open the optional 북로그
+     sheet. Analytics remains fire-and-forget after the core save succeeds. */
   document.body.addEventListener("change", function(e){
     var t = e.target.closest("[data-pageinput]");
     if (!t) return;
@@ -3210,7 +3177,25 @@
     if (!b) return;
     var v = parseInt(t.value, 10);
     if (isNaN(v) || v < 0){ t.value = b.currentPage; return; }
-    logPage(bookId, v);
+    var analyticsRef = cloudRepository && cloudRepository.getRef(bookId);
+    var analyticsEventId = uid();
+    var analyticsOccurredAt = nowIso();
+    logPage(bookId, v).then(function(saved){
+      if (!saved){
+        if (state.books[bookId]) t.value = state.books[bookId].currentPage;
+        return;
+      }
+      if (analyticsRef && window.BooktokkiAnalyticsRepository){
+        trackAnalyticsEvent(function(){
+          return window.BooktokkiAnalyticsRepository.readingRecordEvent(
+            analyticsEventId,
+            analyticsRef.cloudId,
+            analyticsOccurredAt,
+            { pageSaved:true, noteSaved:false }
+          );
+        });
+      }
+    });
   });
 
   document.body.addEventListener("input", function(e){

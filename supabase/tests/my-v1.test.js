@@ -18,6 +18,24 @@ assert.match(source, /function openMyBooklogs\(\)[\s\S]*state\.statsArchivePanel
 assert.match(source, /var statsBackTarget = state\.statsFrom === "my" \? "my" : "home"/);
 assert.match(source, /var BOOKTOKKI_GUIDE_URL = "https:\/\/desert-sandwich-d38\.notion\.site\/3e882ff9dce98105ab80f0dc599218a4\?pvs=73"/);
 assert.match(source, /window\.open\(BOOKTOKKI_GUIDE_URL, "_blank", "noopener"\)/);
+var openGuide = source.slice(source.indexOf("function openGuide("), source.indexOf("function logout("));
+assert.match(openGuide, /window\.open\(BOOKTOKKI_GUIDE_URL, "_blank", "noopener"\);\s*return;/);
+assert.doesNotMatch(openGuide, /if \(window\.open/);
+assert.match(source, /--bg:#FFFFFF/);
+assert.doesNotMatch(source, /prefers-color-scheme:\s*dark|data-theme="dark"/);
+function guideFixture(url, openImpl){
+  var modalOpened = false;
+  var closeNode = {};
+  var factory = new Function("window", "BOOKTOKKI_GUIDE_URL", "openModal", "document", "closeModal", openGuide + "; return openGuide;");
+  var run = factory({ open:openImpl }, url, function(){ modalOpened = true; }, {
+    getElementById:function(){ return closeNode; }
+  }, function(){});
+  run();
+  return modalOpened;
+}
+assert.equal(guideFixture("https://example.com", function(){ return null; }), false);
+assert.equal(guideFixture("", function(){ throw new Error("must not open"); }), true);
+assert.equal(guideFixture("https://example.com", function(){ throw new Error("blocked"); }), true);
 assert.match(source, /profileRepository\.updateNickname\(input\.value\)/);
 assert.match(source, /feedbackRepository\.submit\(activeAuthUserId, message\)/);
 assert.match(source, /supabaseClient\.auth\.signOut\(\)/);
