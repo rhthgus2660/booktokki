@@ -127,6 +127,12 @@
   .back-btn:hover{ border-color:var(--ink-faint); }
   .sub-topbar{ display:flex; align-items:center; gap:10px; }
   .sub-topbar h2{ font-size:1.05rem; font-weight:900; }
+  body.detail-prototype .topbar h1,
+  body.library-prototype .topbar h1,
+  body.stats-prototype .topbar h1{ display:none; }
+  body.detail-prototype .topbar,
+  body.library-prototype .topbar,
+  body.stats-prototype .topbar{ justify-content:flex-end; }
 
   .offline-pill{
     font-size:.72rem;
@@ -835,7 +841,8 @@
   }
   #view-detail .sub-topbar{ gap:8px; }
   #view-detail .sub-topbar h2{ font-size:.95rem; font-weight:600; }
-  #view-detail .back-btn{ width:32px; height:32px; border:0; border-radius:3px; background:transparent; }
+  #view-detail .back-btn{ width:auto; min-width:32px; height:32px; gap:5px; padding:0; border:0; border-radius:3px; background:transparent; }
+  #view-detail .back-context{ color:#737373; font-size:.72rem; font-weight:500; }
   #view-detail .back-btn:hover{ background:#f5f5f5; }
   #view-detail .detail-overview{ margin-top:28px; }
   #view-detail .detail-header{ gap:16px; }
@@ -943,20 +950,22 @@
   #view-library .sub-topbar h2{ font-size:1.1rem; font-weight:600; letter-spacing:-.02em; }
   #view-library .back-btn{ width:32px; height:32px; border:0; border-radius:3px; background:transparent; }
   #view-library .back-btn:hover{ background:#f5f5f5; }
-  #view-library .library-shelves{ display:flex; flex-direction:column; margin-top:30px; }
-  #view-library .library-zone + .library-zone{ margin-top:42px; }
-  #view-library .library-zone-title{ color:#171717; font-size:.78rem; font-weight:600; }
+  #view-library .library-shelves{ display:flex; flex-direction:column; margin-top:6px; }
+  #view-library .library-zone:first-of-type{ margin-top:14px; }
+  #view-library .library-zone + .library-zone{ margin-top:18px; }
+  #view-library .library-zone-title{ color:#737373; font-size:.68rem; font-weight:500; line-height:1.4; }
   #view-library .library-zone-empty{ margin-top:18px; color:#909090; font-size:.75rem; }
-  #view-library .library-zone-unread .library-zone-title{ color:#909090; font-weight:500; }
-  #view-library .library-zone-unread .library-shelves{ margin-top:20px; opacity:.62; }
+  #view-library .library-zone-unread .library-zone-title{ color:#a3a3a3; }
+  #view-library .library-zone-unread .library-shelves{ margin-top:6px; }
+  #view-library .library-zone-unread .spine-wrap{ opacity:.62; }
   #view-library .library-zone-unread .shelf-row{ border-bottom-color:#e9e4d8; }
   #view-library .shelf-row{
     display:flex; flex-wrap:nowrap; align-items:flex-end; gap:2px;
-    min-height:166px; padding:42px 2px 13px; border:0; border-bottom:1px solid #cfcfcf;
+    min-height:0; padding:8px 2px 0; border:0; border-bottom:1px solid #cfcfcf;
     border-radius:0; box-shadow:none;
   }
   #view-library .spine-wrap{
-    width:auto !important; height:110px; display:flex; align-items:flex-end; justify-content:flex-start;
+    width:auto !important; height:auto; display:flex; align-items:flex-end; justify-content:flex-start;
     position:relative; min-width:0;
   }
   #view-library .book-object{
@@ -998,11 +1007,14 @@
     color:#737373; font-size:8px; line-height:1; font-weight:600; pointer-events:none; transform:translateX(-50%);
   }
   #view-library .completion-mark::before{ content:"✓"; }
+  /* The sleeping rabbit lies on the shelf line beside the latest book
+     (its open book rests on the plank) instead of hovering above a spine. */
+  #view-library .library-rabbit-spot{
+    flex:none; display:flex; align-items:flex-end; width:54px; margin-left:3px; pointer-events:none;
+  }
   #view-library .library-rabbit{
-    position:absolute; z-index:8; width:48px; height:38px; left:50%; right:auto; top:-36px;
-    transform:translateX(-50%);
-    object-fit:contain; image-rendering:pixelated; pointer-events:none;
-    filter:drop-shadow(0 1px 0 rgba(23,23,23,.08));
+    display:block; width:100%; max-width:none; height:auto; margin-bottom:-1px;
+    object-fit:contain; image-rendering:pixelated;
   }
   #view-library .library-empty{ margin-top:28px; padding:28px 0; border:0; background:none; }
   #view-library .library-empty p{ color:#737373; font-size:.8rem; font-weight:400; }
@@ -1025,7 +1037,7 @@
   @media (max-width:350px){
     body.library-prototype .app{ padding-inline:16px; }
     #view-library .shelf-row{ gap:1px; }
-    #view-library .library-rabbit{ width:44px; right:auto; }
+    #view-library .library-rabbit-spot{ width:46px; }
   }
 
   /* v0.7: Stats uses the same quiet editorial surface as the other views. */
@@ -1066,11 +1078,19 @@
   #view-stats .cal-day{ min-width:0; min-height:40px; border:0; border-radius:0; color:#737373; font-weight:400; }
   #view-stats .cal-day.cal-today{ color:#171717; box-shadow:inset 0 0 0 1px #d5d5d5; }
   #view-stats .cal-day.cal-selected{ margin:0; border:0; border-radius:3px; background:#171717; color:#fff; box-shadow:none; }
-  #view-stats .cal-dot{ width:4px; height:4px; bottom:5px; margin-left:-2px; background:#c99e9c; }
+  #view-stats .cal-indicators{ position:absolute; left:50%; bottom:3px; display:flex; align-items:center; gap:3px; transform:translateX(-50%); }
+  #view-stats .cal-dot{ position:static; width:4px; height:4px; margin:0; background:#c99e9c; }
+  #view-stats .cal-note-mark{ width:9px; height:9px; color:#737373; }
   #view-stats .cal-day.cal-selected .cal-dot{ background:#fff; }
+  #view-stats .cal-day.cal-selected .cal-note-mark{ color:#fff; }
   #view-stats .stats-day-list{ margin-top:10px; }
   #view-stats .stats-day-row{ display:flex; align-items:center; gap:12px; width:100%; min-height:58px; margin:0; padding:9px 0; border:0; border-bottom:1px solid #e9e9e9; border-radius:0; background:none; color:#171717; font-size:.84rem; font-weight:400; text-align:left; overflow-wrap:anywhere; }
   #view-stats .stats-day-row:hover{ background:none; color:#737373; }
+  #view-stats .stats-day-subheading{ margin-top:18px; color:#737373; font-size:.72rem; font-weight:500; }
+  #view-stats .stats-day-note{ display:flex; flex-direction:column; gap:5px; width:100%; padding:14px 0; border:0; border-bottom:1px solid #e9e9e9; background:none; color:inherit; text-align:left; cursor:pointer; }
+  #view-stats .stats-day-note-title{ color:#171717; font-size:.82rem; font-weight:600; }
+  #view-stats .stats-day-note-meta{ color:#909090; font-size:.68rem; }
+  #view-stats .stats-day-note-text{ color:#4f4f4f; font-size:.8rem; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
   #view-stats .stats-archive-panel{ margin-top:0; padding:22px 0 26px; border-bottom:1px solid #e9e9e9; }
   #view-stats .stats-archive-heading{ color:#171717; font-size:.86rem; font-weight:600; }
   #view-stats .stats-archive-books, #view-stats .stats-note-groups{ margin-top:10px; }
@@ -2298,15 +2318,26 @@
   }
 
   function libraryShelfHtml(books, rowSize, latestBookIdValue, bookPositions){
-    var rows = [];
-    for (var i = 0; i < books.length; i += rowSize){ rows.push(books.slice(i, i + rowSize)); }
+    /* The sleeping rabbit takes about two spine slots on the shelf line
+       right after the latest book, so that row wraps a little earlier. */
+    var RABBIT_SLOTS = 2;
+    var rows = [], row = [], used = 0;
+    books.forEach(function(book){
+      var cost = book.id === latestBookIdValue ? 1 + RABBIT_SLOTS : 1;
+      if (row.length && used + cost > rowSize){ rows.push(row); row = []; used = 0; }
+      row.push(book);
+      used += cost;
+    });
+    if (row.length) rows.push(row);
+    var fallbackIndex = 0;
     return '<div class="library-shelves">' +
-      rows.map(function(row, rowIndex){
-        return '<div class="shelf-row">' + row.map(function(book, columnIndex){
-          var fallbackIndex = rowIndex * rowSize + columnIndex;
+      rows.map(function(shelfRow){
+        return '<div class="shelf-row">' + shelfRow.map(function(book){
           var stableIndex = bookPositions && Object.prototype.hasOwnProperty.call(bookPositions, book.id)
             ? bookPositions[book.id] : fallbackIndex;
-          return spineEl(book, stableIndex, latestBookIdValue);
+          fallbackIndex += 1;
+          return spineEl(book, stableIndex, latestBookIdValue) +
+            (book.id === latestBookIdValue ? '<span class="library-rabbit-spot"><img class="library-rabbit" src="assets/bunny-sleep.png" alt="최근 읽은 책 옆에서 자는 북토끼"></span>' : '');
         }).join("") + '</div>';
       }).join("") +
     '</div>';
@@ -2328,7 +2359,6 @@
     return '' +
       '<div class="spine-wrap">' +
         '<div class="book-object' + leanClass + '" style="--spine-width:' + widthPx + 'px;--spine-height:' + heightPx + 'px;">' +
-          (trace.isLatest ? '<img class="library-rabbit" src="assets/bunny-sleep.png" alt="최근 읽은 책 위에서 자는 북토끼">' : '') +
           (trace.returnCount ? '<span class="wear-trace' + (trace.returnCount > 1 ? ' is-returned-more' : '') + '"></span>' : '') +
           (trace.noteTabs ? '<span class="note-tabs">' + noteTabs + '</span>' : '') +
           (completed ? '<span class="completion-mark"></span>' : '') +
@@ -2440,10 +2470,12 @@
       if (fallback){ state.selectedBookId = fallback.id; id = fallback.id; }
     }
     var backTarget = state.detailFrom === "home" ? "home" : (state.detailFrom === "stats" ? "stats" : "library");
+    var backLabel = backTarget === "stats" ? "독서 캘린더" : (backTarget === "library" ? "내 서재" : "홈");
     var header = '' +
       '<div class="sub-topbar">' +
-        '<button class="back-btn" data-nav="' + backTarget + '" title="뒤로" aria-label="뒤로">' +
+        '<button class="back-btn" data-nav="' + backTarget + '" title="' + backLabel + '로" aria-label="' + backLabel + '로">' +
           '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
+          '<span class="back-context">' + backLabel + '</span>' +
         '</button>' +
       '</div>';
     if (!id || !state.books[id]){
@@ -2541,6 +2573,7 @@
   function statsMonthData(monthKey){
     var prefix = monthKey + "-";
     var days = {};
+    var notesByDate = {};
     var books = [];
     getBooks().forEach(function(book){
       var activeDates = {};
@@ -2574,6 +2607,11 @@
       if (monthNotes.length){
         allNotes += monthNotes.length;
         noteGroups.push({ book:book, notes:monthNotes });
+        monthNotes.forEach(function(note){
+          var noteDate = dateKey(new Date(Date.parse(note.createdAt)));
+          notesByDate[noteDate] = notesByDate[noteDate] || [];
+          notesByDate[noteDate].push({ book:book, note:note });
+        });
       }
     });
     noteGroups.sort(function(a, b){
@@ -2586,9 +2624,12 @@
       var time = Date.parse(book.completedAt);
       return Number.isFinite(time) && dateKey(new Date(time)).indexOf(prefix) === 0;
     }).length;
-    return { books:books, days:days, readDays:Object.keys(days).length, notes:allNotes, completed:completed, noteGroups:noteGroups };
+    Object.keys(notesByDate).forEach(function(key){
+      notesByDate[key].sort(function(a, b){ return Date.parse(a.note.createdAt) - Date.parse(b.note.createdAt); });
+    });
+    return { books:books, days:days, notesByDate:notesByDate, readDays:Object.keys(days).length, notes:allNotes, completed:completed, noteGroups:noteGroups };
   }
-  function statsMonthCalendar(monthKey, activeDays){
+  function statsMonthCalendar(monthKey, activeDays, noteDays){
     var parts = monthKey.split("-").map(Number);
     var year = parts[0], month = parts[1] - 1;
     var first = new Date(year, month, 1);
@@ -2597,7 +2638,7 @@
     var cells = [];
     for (var day = 1; day <= count; day++){
       var key = dateKey(new Date(year, month, day));
-      cells.push({ date:key, day:day, isToday:key === dateKey(new Date()), hasRead:!!activeDays[key] });
+      cells.push({ date:key, day:day, isToday:key === dateKey(new Date()), hasRead:!!activeDays[key], hasNote:!!noteDays[key] });
     }
     return { label:(month + 1) + "월", leadBlanks:blanks, cells:cells };
   }
@@ -2622,13 +2663,14 @@
 
     var monthKey = state.statsMonth || dateKey(new Date()).slice(0, 7);
     var data = statsMonthData(monthKey);
-    var cal = statsMonthCalendar(monthKey, data.days);
-    var recordedDates = Object.keys(data.days).sort();
+    var cal = statsMonthCalendar(monthKey, data.days, data.notesByDate);
+    var recordedDates = Array.from(new Set(Object.keys(data.days).concat(Object.keys(data.notesByDate)))).sort();
     var selDate = state.statsSelectedDate || recordedDates[recordedDates.length - 1] ||
       (monthKey === dateKey(new Date()).slice(0, 7) ? dateKey(new Date()) : null);
     var dayIds = (selDate && data.days[selDate]) || {};
     var dayBooks = getBooks().filter(function(book){ return !!dayIds[book.id]; });
     dayBooks.sort(function(a, b){ return a.title.localeCompare(b.title, "ko") || a.id.localeCompare(b.id); });
+    var dayNotes = (selDate && data.notesByDate[selDate]) || [];
 
     var weekdayNames = ["월","화","수","목","금","토","일"];
     var weekdaysHtml = weekdayNames.map(function(w){ return '<div class="cal-weekday">' + w + '</div>'; }).join("");
@@ -2636,9 +2678,13 @@
     for (var i = 0; i < cal.leadBlanks; i++){ leadHtml += '<div class="cal-day cal-empty"></div>'; }
     var daysHtml = cal.cells.map(function(c){
       var cls = "cal-day" + (c.isToday ? " cal-today" : "") + (c.date === selDate ? " cal-selected" : "");
-      return '<button class="' + cls + '" data-selectday="' + c.date + '">' +
+      var dayAria = statsDateLabel(c.date) + (c.hasRead ? ', 읽은 기록 있음' : '') + (c.hasNote ? ', 북로그 있음' : '');
+      return '<button class="' + cls + '" data-selectday="' + c.date + '" aria-label="' + dayAria + '">' +
         c.day +
-        (c.hasRead ? '<span class="cal-dot"></span>' : '') +
+        ((c.hasRead || c.hasNote) ? '<span class="cal-indicators">' +
+          (c.hasRead ? '<span class="cal-dot" aria-hidden="true"></span>' : '') +
+          (c.hasNote ? '<svg class="cal-note-mark" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-label="북로그 있음"><path d="M2 10l2.2-.5L10 3.7 8.3 2 2.5 7.8 2 10z"/><path d="M7.7 2.6l1.7 1.7"/></svg>' : '') +
+        '</span>' : '') +
         '</button>';
     }).join("");
 
@@ -2654,7 +2700,7 @@
             (reflection ? '<span class="stats-reflection">“' + esc(reflection.text) + '”</span>' : '') +
             '</span></button>';
         }).join("") + '</div>' : '<p class="stats-empty">기록 없음</p>') + '</section>';
-    } else if (state.statsArchivePanel === "notes"){
+    } else if (state.statsArchivePanel === "notes" && state.statsFrom === "my"){
       archiveHtml = '<section class="stats-archive-panel"><div class="stats-archive-heading">' + cal.label + ' 북로그</div>' +
         (data.noteGroups.length ? '<div class="stats-note-groups">' + data.noteGroups.map(function(group){
           return '<div class="stats-note-group"><button type="button" class="stats-note-book" data-open="' + group.book.id + '" data-open-from="stats">' +
@@ -2673,7 +2719,7 @@
         '<div class="stats-summary">' +
           '<button type="button" class="stats-summary-item stats-summary-entry" data-stats-panel="books" aria-expanded="' + (state.statsArchivePanel === "books") + '"><span class="stats-summary-label">읽은 책</span><span class="stats-summary-value">' + data.books.length + '<small>권</small></span><span class="stats-entry-arrow">›</span></button>' +
           '<div class="stats-summary-item"><span class="stats-summary-label">읽은 날</span><span class="stats-summary-value">' + data.readDays + '<small>일</small></span></div>' +
-          '<button type="button" class="stats-summary-item stats-summary-entry" data-stats-panel="notes" aria-expanded="' + (state.statsArchivePanel === "notes") + '"><span class="stats-summary-label">북로그</span><span class="stats-summary-value">' + data.notes + '<small>개</small></span><span class="stats-entry-arrow">›</span></button>' +
+          '<div class="stats-summary-item"><span class="stats-summary-label">북로그</span><span class="stats-summary-value">' + data.notes + '<small>개</small></span></div>' +
         '</div>' +
         (data.completed ? '<div class="stats-completed">완독 ' + data.completed + '권</div>' : '') +
       '</section>' +
@@ -2686,9 +2732,17 @@
       (selDate ? '<section class="stats-day-section">' +
         '<div class="stats-heading">' + statsDateLabel(selDate) + '</div>' +
         '<div class="stats-day-list">' +
-          (dayBooks.length ? dayBooks.map(function(book){
+          (dayBooks.length ? '<div class="stats-day-subheading">읽은 책</div>' + dayBooks.map(function(book){
             return '<button type="button" class="stats-day-row" data-open="' + book.id + '" data-open-from="stats">' + statsCover(book) + '<span>' + esc(book.title) + '</span></button>';
-          }).join("") : '<p class="stats-empty">기록 없음</p>') +
+          }).join("") : '') +
+          (dayNotes.length ? '<div class="stats-day-subheading">북로그</div>' + dayNotes.map(function(entry){
+            var noteMeta = entry.note.page != null ? 'p.' + entry.note.page : '';
+            return '<button type="button" class="stats-day-note" data-open="' + entry.book.id + '" data-open-from="stats">' +
+              '<span class="stats-day-note-title">' + esc(entry.book.title) + '</span>' +
+              (noteMeta ? '<span class="stats-day-note-meta">' + noteMeta + '</span>' : '') +
+              '<span class="stats-day-note-text">' + esc(entry.note.text) + '</span></button>';
+          }).join("") : '') +
+          (!dayBooks.length && !dayNotes.length ? '<p class="stats-empty">기록 없음</p>' : '') +
         '</div>' +
       '</section>' : '') +
       archiveHtml;

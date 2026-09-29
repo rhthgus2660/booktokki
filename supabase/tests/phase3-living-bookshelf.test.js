@@ -98,8 +98,18 @@ assert.deepEqual(capturedIndexes, [
   ["waiting", 0], ["correction", 4]
 ]);
 
+/* The sleeping rabbit sits on the shelf beside the latest book and reserves space in that row. */
+var rabbitShelf = new Function("spineEl", shelfSource + "; return libraryShelfHtml;")(function(item){ return "[" + item.id + "]"; });
+var rabbitRows = rabbitShelf([waiting, positive, noteOnly, completed, correctionOnly], 4, "positive", positions);
+assert.equal((rabbitRows.match(/class="shelf-row"/g) || []).length, 2, "latest book + rabbit use three of four slots");
+assert.match(rabbitRows, /\[positive\]<span class="library-rabbit-spot">/);
+assert.equal((rabbitRows.match(/library-rabbit-spot/g) || []).length, 1);
+assert.equal(rabbitShelf([waiting, correctionOnly], 4, "positive", positions).indexOf("library-rabbit"), -1, "shelves without the latest book have no rabbit");
+assert.equal((rabbitShelf([positive], 1, "positive", positions).match(/class="shelf-row"/g) || []).length, 1, "tiny rows never create an empty row");
+
 /* The actual Library renderer keeps all established trace and navigation semantics. */
-assert.match(html, /trace\.isLatest \? '<img class="library-rabbit"/);
+assert.match(html, /book\.id === latestBookIdValue \? '<span class="library-rabbit-spot"><img class="library-rabbit" src="assets\/bunny-sleep\.png"/);
+assert.doesNotMatch(html, /trace\.isLatest \? '<img class="library-rabbit"/, "rabbit no longer hovers above a spine");
 assert.match(html, /trace\.returnCount \? '<span class="wear-trace/);
 assert.match(html, /trace\.noteTabs \? '<span class="note-tabs/);
 assert.match(html, /completed \? '<span class="completion-mark/);
