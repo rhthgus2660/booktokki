@@ -210,6 +210,10 @@ async function run(){
   assert.match(html, /id="shareCardClose" aria-label="닫기">×</);
   assert.doesNotMatch(html, /id="shareCardCancel"/, "cancel button is replaced by the close icon");
   assert.match(html, /shareCard\.savePng\(pngBlob\)/);
+  assert.match(html, /if \(isIosDevice\(\)\) save\.textContent = "이미지 열기"/);
+  assert.match(html, /window\.open\(previewUrl, "_blank", "noopener"\)/);
+  assert.match(html, /열린 이미지를 길게 눌러 사진에 저장해 주세요/);
+  assert.match(html, /이미지 다운로드를 시작했어요/);
   assert.match(html, /shareCard\.canShareFiles\(pngBlob, payload\)/);
   assert.match(html, /URL\.revokeObjectURL\(previewUrl\)/);
   assert.match(html, /result\.truncated \? "글이 길어 일부만 담겼어요/);

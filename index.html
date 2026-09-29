@@ -3223,6 +3223,7 @@
         send.hidden = true;
         save.className = "btn btn-dark";
       }
+      if (isIosDevice()) save.textContent = "이미지 열기";
       readyText = result.truncated ? "글이 길어 일부만 담겼어요." : "";
       if (isIosDevice()) readyText = (readyText ? readyText + " " : "") + "이미지를 길게 눌러 사진에 바로 저장할 수도 있어요.";
       status.textContent = readyText;
@@ -3232,9 +3233,18 @@
     });
     save.onclick = function(){
       if (!pngBlob || busy) return;
+      if (isIosDevice()){
+        try {
+          window.open(previewUrl, "_blank", "noopener");
+          status.textContent = "열린 이미지를 길게 눌러 사진에 저장해 주세요.";
+        } catch (_error){
+          status.textContent = "이미지를 길게 눌러 사진에 저장해 주세요.";
+        }
+        return;
+      }
       setBusy(true);
       shareCard.savePng(pngBlob).then(function(){
-        status.textContent = "이미지를 저장했어요.";
+        status.textContent = "이미지 다운로드를 시작했어요.";
       }).catch(function(){
         status.textContent = "저장하지 못했어요. 이미지를 길게 눌러 저장해 주세요.";
       }).then(function(){ setBusy(false); });
