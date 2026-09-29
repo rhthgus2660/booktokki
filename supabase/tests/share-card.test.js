@@ -131,6 +131,41 @@ async function run(){
   assert.deepEqual(taintedResult.blob, { png:"no-cover" });
   assert.equal(taintedResult.coverDrawn, false, "tainted cover falls back to no-cover card");
 
+  var requested = [];
+  function ProxyFirstImage(){ this.naturalWidth=100; this.naturalHeight=150; }
+  Object.defineProperty(ProxyFirstImage.prototype, "src", { set:function(value){ var self=this; requested.push(value); setTimeout(function(){ self.onload(); }, 0); } });
+  var viaProxy = await shareCard.loadCover("https://search1.kakaocdn.net/thumb/R120x174/?fname=a&b=1", { Image:ProxyFirstImage, coverProxy:"https://worker.example/cover" });
+  assert.equal(viaProxy instanceof ProxyFirstImage, true);
+  assert.deepEqual(requested, ["https://worker.example/cover?url=" + encodeURIComponent("https://search1.kakaocdn.net/thumb/R120x174/?fname=a&b=1")], "remote cover goes through the CORS proxy first");
+  assert.equal(viaProxy.crossOrigin, "anonymous");
+
+  var attempts = [];
+  function ProxyFailsImage(){ this.naturalWidth=100; this.naturalHeight=150; }
+  Object.defineProperty(ProxyFailsImage.prototype, "src", { set:function(value){ var self=this; attempts.push(value); setTimeout(function(){ if (value.indexOf("worker.example") >= 0) self.onerror(); else self.onload(); }, 0); } });
+  var directAfterProxy = await shareCard.loadCover("https://search1.kakaocdn.net/c.jpg", { Image:ProxyFailsImage, coverProxy:"https://worker.example/cover" });
+  assert.equal(directAfterProxy instanceof ProxyFailsImage, true, "proxy failure falls back to the direct URL");
+  assert.equal(attempts.length, 2);
+
+  var blobAttempts = [];
+  function BlobImage(){ this.naturalWidth=1; this.naturalHeight=1; }
+  Object.defineProperty(BlobImage.prototype, "src", { set:function(value){ var self=this; blobAttempts.push(value); setTimeout(function(){ self.onload(); }, 0); } });
+  await shareCard.loadCover("blob:https://app/abc", { Image:BlobImage, coverProxy:"https://worker.example/cover" });
+  assert.deepEqual(blobAttempts, ["blob:https://app/abc"], "local uploaded covers never go to the proxy");
+  assert.equal(shareCard.coverProxyUrl("https://x/y.jpg", ""), null);
+
+  assert.equal(shareCard.canShareFiles({ png:true }, payload, { navigator:{ canShare:function(){ return true; }, share:function(){} }, File:FileMock }), true);
+  assert.equal(shareCard.canShareFiles({ png:true }, payload, { navigator:{}, File:FileMock }), false, "no Web Share means save only");
+  assert.equal(shareCard.canShareFiles({ png:true }, payload, { navigator:{ canShare:function(){ throw new Error("x"); }, share:function(){} }, File:FileMock }), false);
+  var savedClicks = 0, appended = 0;
+  var saved = await shareCard.savePng({ png:true }, {
+    document:{ body:{ appendChild:function(){ appended += 1; }, removeChild:function(){} }, createElement:function(){ return { click:function(){ savedClicks += 1; } }; } },
+    URL:{ createObjectURL:function(){ return "blob:save"; }, revokeObjectURL:function(){} },
+    revokeDelayMs:0
+  });
+  assert.equal(saved.method, "download");
+  assert.equal(savedClicks, 1);
+  assert.equal(appended, 1, "download link is attached before click");
+
   function FailedImage(){}
   Object.defineProperty(FailedImage.prototype, "src", { set:function(){ var self=this; setTimeout(function(){ self.onerror(); }, 0); } });
   assert.equal(await shareCard.loadCover("https://example.com/broken.jpg", { Image:FailedImage }), null);
@@ -148,7 +183,8 @@ async function run(){
     navigator:{ canShare:function(){ return false; }, share:function(){ throw new Error("must not run"); } },
     File:FileMock,
     document:{ createElement:function(){ return { click:function(){ clicked += 1; } }; } },
-    URL:{ createObjectURL:function(){ return "blob:test"; }, revokeObjectURL:function(){ revoked += 1; } }
+    URL:{ createObjectURL:function(){ return "blob:test"; }, revokeObjectURL:function(){ revoked += 1; } },
+    revokeDelayMs:0
   });
   assert.equal(fallbackResult.method, "download");
   assert.equal(clicked, 1);
@@ -166,8 +202,16 @@ async function run(){
   assert.match(html, /data-sharenote=/);
   assert.match(html, /data-editnote=/);
   assert.match(html, /data-delnote=/);
-  assert.match(html, /window\.BooktokkiShareCard\.buildPayload\(book, note\)/);
-  assert.match(html, /window\.BooktokkiShareCard\.createPng\(canvas, payload\)/);
+  assert.match(html, /shareCard\.buildPayload\(book, note\)/);
+  assert.match(html, /shareCard\.createPng\(canvas, payload, \{ coverProxy:SHARE_COVER_PROXY \}\)/);
+  assert.match(html, /BOOK_SEARCH_ENDPOINT\.replace\(\/\\\/books\$\/, "\/cover"\)/);
+  assert.match(html, /id="shareCardSave"[^>]*>이미지 저장</);
+  assert.match(html, /id="shareCardSend"[^>]*>공유하기</);
+  assert.match(html, /id="shareCardClose" aria-label="닫기">×</);
+  assert.doesNotMatch(html, /id="shareCardCancel"/, "cancel button is replaced by the close icon");
+  assert.match(html, /shareCard\.savePng\(pngBlob\)/);
+  assert.match(html, /shareCard\.canShareFiles\(pngBlob, payload\)/);
+  assert.match(html, /URL\.revokeObjectURL\(previewUrl\)/);
   assert.match(html, /result\.truncated \? "글이 길어 일부만 담겼어요/);
   assert.doesNotMatch(fs.readFileSync(path.join(__dirname, "../../share-card.js"), "utf8"), /analytics|supabase|book_notes/);
   console.log("PASS Public Logs Share Image Card tests");

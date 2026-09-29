@@ -696,10 +696,11 @@
   .completion-modal .speech-bubble{ max-width:220px; border:1px solid #e9e9e9; border-radius:7px; background:#fff; font-size:.84rem; font-weight:500; }
   .completion-modal .bunny-figure{ width:132px; height:150px; margin:0 auto; }
   .completion-modal .done-reflection-link{ margin-top:2px; }
-  @media (min-width:480px){ .page-log-modal, .completion-modal{ border-radius:12px; } }
-  .share-card-modal{ background:#fff; color:#171717; gap:14px; }
-  .share-card-modal h2{ font-size:1.05rem; font-weight:600; }
-  .share-card-preview{ width:min(100%,300px); max-height:56vh; margin:0 auto; border:1px solid #e9e9e9; background:#fff; object-fit:contain; }
+  @media (min-width:480px){ .page-log-modal, .completion-modal, .share-card-modal{ border-radius:12px; } }
+  .share-card-modal{ position:relative; background:#fff; color:#171717; gap:14px; border-radius:12px 12px 0 0; }
+  .share-card-modal h2{ padding-right:34px; font-size:1.05rem; font-weight:600; }
+  .share-card-modal .modal-actions .btn{ flex:1; }
+  .share-card-preview{ display:block; width:min(100%,300px); max-height:56vh; margin:0 auto; border:1px solid #e9e9e9; background:#fff; object-fit:contain; }
   .share-card-status{ min-height:18px; color:#737373; font-size:.72rem; line-height:1.5; text-align:center; }
   .share-card-modal .modal-actions .btn{ border-radius:3px; font-weight:500; }
 
@@ -3178,39 +3179,74 @@
     };
   }
 
+  var SHARE_COVER_PROXY = BOOK_SEARCH_ENDPOINT ? BOOK_SEARCH_ENDPOINT.replace(/\/books$/, "/cover") : "";
+
+  function isIosDevice(){
+    var ua = navigator.userAgent || "";
+    return /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  }
+
   function modalShareNote(bookId, noteId){
     var book = state.books[bookId];
     var note = book && (book.notes || []).find(function(item){ return item.id === noteId; });
     if (!book || !note || !window.BooktokkiShareCard) return;
-    var payload = window.BooktokkiShareCard.buildPayload(book, note);
-    var pngBlob = null;
+    var shareCard = window.BooktokkiShareCard;
+    var payload = shareCard.buildPayload(book, note);
+    var pngBlob = null, previewUrl = null, busy = false;
     openModal('<div class="modal share-card-modal">' +
+      '<button type="button" class="page-log-close" id="shareCardClose" aria-label="닫기">×</button>' +
       '<h2>북로그 공유</h2>' +
-      '<canvas class="share-card-preview" id="shareCardPreview" width="720" height="960" aria-label="공유할 북로그 이미지 미리보기"></canvas>' +
+      '<canvas class="share-card-preview" id="shareCardCanvas" width="720" height="960" aria-hidden="true"></canvas>' +
+      '<img class="share-card-preview" id="shareCardPreview" alt="북로그 카드 미리보기" hidden>' +
       '<p class="share-card-status" id="shareCardStatus">카드를 만드는 중...</p>' +
-      '<div class="modal-actions"><button class="btn btn-outline" type="button" id="shareCardCancel">취소</button>' +
-      '<button class="btn btn-dark" type="button" id="shareCardSend" disabled>공유하기</button></div></div>');
-    var canvas = document.getElementById("shareCardPreview");
+      '<div class="modal-actions">' +
+        '<button class="btn btn-outline" type="button" id="shareCardSave" disabled>이미지 저장</button>' +
+        '<button class="btn btn-dark" type="button" id="shareCardSend" disabled>공유하기</button>' +
+      '</div></div>');
+    modalBeforeClose = function(){ if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; };
+    var canvas = document.getElementById("shareCardCanvas");
+    var preview = document.getElementById("shareCardPreview");
     var status = document.getElementById("shareCardStatus");
+    var save = document.getElementById("shareCardSave");
     var send = document.getElementById("shareCardSend");
-    document.getElementById("shareCardCancel").onclick = closeModal;
-    window.BooktokkiShareCard.createPng(canvas, payload).then(function(result){
+    var readyText = "";
+    document.getElementById("shareCardClose").onclick = closeModal;
+    function setBusy(value){ busy = value; save.disabled = value; send.disabled = value; }
+    shareCard.createPng(canvas, payload, { coverProxy:SHARE_COVER_PROXY }).then(function(result){
       pngBlob = result.blob;
-      status.textContent = result.truncated ? "글이 길어 일부만 담겼어요. 이미지를 확인해 주세요." : "공유할 이미지를 확인해 주세요.";
-      send.disabled = false;
+      if (overlay.hidden || !document.body.contains(preview)) return;
+      previewUrl = URL.createObjectURL(pngBlob);
+      preview.src = previewUrl;
+      preview.hidden = false;
+      canvas.hidden = true;
+      if (!shareCard.canShareFiles(pngBlob, payload)){
+        send.hidden = true;
+        save.className = "btn btn-dark";
+      }
+      readyText = result.truncated ? "글이 길어 일부만 담겼어요." : "";
+      if (isIosDevice()) readyText = (readyText ? readyText + " " : "") + "이미지를 길게 눌러 사진에 바로 저장할 수도 있어요.";
+      status.textContent = readyText;
+      setBusy(false);
     }).catch(function(){
       status.textContent = "이미지를 만들지 못했어요. 잠시 후 다시 시도해 주세요.";
     });
+    save.onclick = function(){
+      if (!pngBlob || busy) return;
+      setBusy(true);
+      shareCard.savePng(pngBlob).then(function(){
+        status.textContent = "이미지를 저장했어요.";
+      }).catch(function(){
+        status.textContent = "저장하지 못했어요. 이미지를 길게 눌러 저장해 주세요.";
+      }).then(function(){ setBusy(false); });
+    };
     send.onclick = function(){
-      if (!pngBlob || send.disabled) return;
-      send.disabled = true;
-      window.BooktokkiShareCard.sharePng(pngBlob, payload).then(function(result){
+      if (!pngBlob || busy) return;
+      setBusy(true);
+      shareCard.sharePng(pngBlob, payload).then(function(result){
         if (!result.cancelled) closeModal();
-        else send.disabled = false;
       }).catch(function(){
         status.textContent = "공유하지 못했어요. 다시 시도해 주세요.";
-        send.disabled = false;
-      });
+      }).then(function(){ setBusy(false); });
     };
   }
 

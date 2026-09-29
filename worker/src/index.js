@@ -7,6 +7,11 @@ const ALLOWED_ORIGINS = new Set([
 const KAKAO_BOOK_SEARCH_URL = "https://dapi.kakao.com/v3/search/book";
 const MAX_QUERY_LENGTH = 100;
 const RESULT_LIMIT = 10;
+/* Share cards draw covers on a canvas, which needs a CORS-enabled image.
+   Only Kakao book-cover hosts are proxied, so this is not an open proxy. */
+const COVER_HOSTS = new Set(["search1.kakaocdn.net", "t1.daumcdn.net"]);
+const COVER_TYPES = /^image\/(jpeg|jpg|pjpeg|png|gif|webp)\b/i;
+const MAX_COVER_BYTES = 2 * 1024 * 1024;
 
 function corsHeaders(request) {
   const origin = request.headers.get("Origin");
@@ -55,6 +60,55 @@ function normalizeBook(document) {
   };
 }
 
+function coverSource(value) {
+  let source;
+  try { source = new URL(String(value || "")); } catch (_error) { return null; }
+  if (source.protocol !== "https:" && source.protocol !== "http:") return null;
+  if (!COVER_HOSTS.has(source.hostname) || source.username || source.password || source.port) return null;
+  source.protocol = "https:";
+  if (source.hostname === "t1.daumcdn.net") return source.pathname.startsWith("/lbook/") ? source : null;
+  /* Kakao's thumbnail service fetches `fname`; only book images may be resized through it. */
+  if (!source.pathname.startsWith("/thumb/")) return null;
+  let original;
+  try { original = new URL(source.searchParams.get("fname") || ""); } catch (_error) { return null; }
+  if (original.hostname !== "t1.daumcdn.net" || !original.pathname.startsWith("/lbook/")) return null;
+  return source;
+}
+
+async function coverResponse(request, url) {
+  const origin = request.headers.get("Origin");
+  if (!origin || !ALLOWED_ORIGINS.has(origin)) {
+    return json(request, { error: { code: "ORIGIN_NOT_ALLOWED", message: "Origin not allowed." } }, 403);
+  }
+  const source = coverSource(url.searchParams.get("url"));
+  if (!source) {
+    return json(request, { error: { code: "INVALID_COVER_URL", message: "Cover URL is not allowed." } }, 400);
+  }
+  try {
+    const upstream = await fetch(source.toString(), { redirect: "manual", cf: { cacheTtl: 86400, cacheEverything: true } });
+    const type = upstream.headers.get("Content-Type") || "";
+    const declared = Number(upstream.headers.get("Content-Length") || 0);
+    if (!upstream.ok || !COVER_TYPES.test(type) || declared > MAX_COVER_BYTES) {
+      return json(request, { error: { code: "COVER_UNAVAILABLE", message: "Cover is unavailable." } }, 502);
+    }
+    const body = await upstream.arrayBuffer();
+    if (body.byteLength > MAX_COVER_BYTES) {
+      return json(request, { error: { code: "COVER_UNAVAILABLE", message: "Cover is unavailable." } }, 502);
+    }
+    return new Response(body, {
+      status: 200,
+      headers: {
+        "Content-Type": type,
+        "Cache-Control": "public, max-age=86400",
+        "X-Content-Type-Options": "nosniff",
+        ...corsHeaders(request),
+      },
+    });
+  } catch (_error) {
+    return json(request, { error: { code: "COVER_UNAVAILABLE", message: "Cover is unavailable." } }, 502);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -69,6 +123,10 @@ export default {
 
     if (request.method !== "GET") {
       return json(request, { error: { code: "METHOD_NOT_ALLOWED", message: "Only GET is allowed." } }, 405);
+    }
+
+    if (url.pathname === "/cover") {
+      return coverResponse(request, url);
     }
 
     if (url.pathname !== "/books") {

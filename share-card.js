@@ -160,9 +160,23 @@
     return Promise.race([Promise.all(loads), timeout]).then(function(){ return undefined; });
   }
 
+  function coverProxyUrl(url, proxy){
+    if (!proxy || !/^https?:/i.test(url)) return null;
+    return proxy + (proxy.indexOf("?") >= 0 ? "&" : "?") + "url=" + encodeURIComponent(url);
+  }
+
+  /* Remote covers (Kakao CDN) are not CORS-enabled, so an exportable copy is
+     requested through the book-search Worker first; the direct URL and then
+     the letter fallback remain as safety nets. */
   function loadCover(url, env){
     if (!url) return Promise.resolve(null);
     env = env || {};
+    var proxied = coverProxyUrl(url, env.coverProxy);
+    if (!proxied) return loadImage(url, env);
+    return loadImage(proxied, env).then(function(image){ return image || loadImage(url, env); });
+  }
+
+  function loadImage(url, env){
     var ImageCtor = env.Image || (typeof Image !== "undefined" ? Image : null);
     if (!ImageCtor) return Promise.resolve(null);
     return new Promise(function(resolve){
@@ -213,22 +227,48 @@
     var anchor = env.document.createElement("a");
     anchor.href = url;
     anchor.download = "booktokki-booklog.png";
+    var body = env.document.body;
+    if (body && typeof body.appendChild === "function") body.appendChild(anchor);
     anchor.click();
-    setTimeout(function(){ env.URL.revokeObjectURL(url); }, 0);
+    if (body && typeof body.removeChild === "function") body.removeChild(anchor);
+    /* iOS Safari reads the blob after click returns; revoking at once can break the save. */
+    setTimeout(function(){ env.URL.revokeObjectURL(url); }, env.revokeDelayMs == null ? 30000 : env.revokeDelayMs);
     return { method:"download", cancelled:false };
   }
 
-  function sharePng(blob, payload, env){
-    env = env || {
+  function browserEnv(env){
+    return env || {
       navigator:typeof navigator !== "undefined" ? navigator : {},
       document:typeof document !== "undefined" ? document : null,
       URL:typeof URL !== "undefined" ? URL : null,
       File:typeof File !== "undefined" ? File : null
     };
+  }
+
+  function shareDataFor(blob, payload, env){
     var file = env.File ? new env.File([blob], "booktokki-booklog.png", { type:"image/png" }) : null;
-    var shareData = file ? { title:payload.title, files:[file] } : null;
-    if (shareData && env.navigator && typeof env.navigator.share === "function" &&
-        typeof env.navigator.canShare === "function" && env.navigator.canShare(shareData)){
+    return file ? { title:payload.title, files:[file] } : null;
+  }
+
+  function canShareFiles(blob, payload, env){
+    env = browserEnv(env);
+    var shareData = shareDataFor(blob, payload, env);
+    try {
+      return !!(shareData && env.navigator && typeof env.navigator.share === "function" &&
+        typeof env.navigator.canShare === "function" && env.navigator.canShare(shareData));
+    } catch (_error){ return false; }
+  }
+
+  function savePng(blob, env){
+    env = browserEnv(env);
+    if (!env.document || !env.URL) return Promise.reject(new Error("Download is unavailable"));
+    return Promise.resolve(download(blob, env));
+  }
+
+  function sharePng(blob, payload, env){
+    env = browserEnv(env);
+    var shareData = shareDataFor(blob, payload, env);
+    if (canShareFiles(blob, payload, env)){
       return Promise.resolve(env.navigator.share(shareData)).then(function(){
         return { method:"share", cancelled:false };
       }).catch(function(error){
@@ -249,6 +289,9 @@
     layoutNote:layoutNote,
     prepareFonts:prepareFonts,
     loadCover:loadCover,
+    coverProxyUrl:coverProxyUrl,
+    canShareFiles:canShareFiles,
+    savePng:savePng,
     createPng:createPng,
     sharePng:sharePng
   };
