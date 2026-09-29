@@ -30,7 +30,8 @@ var pageNote = { id:"private-note-id", bookId:"private-book-id", text:"교육과
 var payload = shareCard.buildPayload(book, pageNote);
 assert.deepEqual(payload, {
   title:"죽은 시인의 사회", author:"N. H. 클라인바움", page:31,
-  note:"교육과 선택에 대한 생각", coverUrl:"https://example.com/cover.jpg"
+  note:"교육과 선택에 대한 생각", coverUrl:"https://example.com/cover.jpg",
+  createdAt:"2026-09-29T00:00:00.000Z"
 });
 assert.equal(Object.prototype.hasOwnProperty.call(payload, "id"), false);
 assert.equal(JSON.stringify(payload).includes("private-user-id"), false);
@@ -203,7 +204,7 @@ async function run(){
   assert.match(html, /data-editnote=/);
   assert.match(html, /data-delnote=/);
   assert.match(html, /shareCard\.buildPayload\(book, note\)/);
-  assert.match(html, /shareCard\.createPng\(canvas, payload, \{ coverProxy:SHARE_COVER_PROXY \}\)/);
+  assert.match(html, /shareCard\.createShareImage\(canvas, payload, photoImage, \{ coverProxy:SHARE_COVER_PROXY \}\)/);
   assert.match(html, /BOOK_SEARCH_ENDPOINT\.replace\(\/\\\/books\$\/, "\/cover"\)/);
   assert.match(html, /id="shareCardSave"[^>]*>이미지 저장</);
   assert.match(html, /id="shareCardSend"[^>]*>공유하기</);

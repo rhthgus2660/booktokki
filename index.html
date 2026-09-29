@@ -700,6 +700,9 @@
   .share-card-modal{ position:relative; background:#fff; color:#171717; gap:14px; border-radius:12px 12px 0 0; }
   .share-card-modal h2{ padding-right:34px; font-size:1.05rem; font-weight:600; }
   .share-card-modal .modal-actions .btn{ flex:1; }
+  .share-photo-actions{ display:flex; justify-content:center; gap:8px; }
+  .share-photo-actions .btn{ width:auto; min-width:92px; padding:8px 12px; font-size:.75rem; }
+  .share-photo-actions [aria-disabled="true"]{ opacity:.45; pointer-events:none; }
   .share-card-preview{ display:block; width:min(100%,300px); max-height:56vh; margin:0 auto; border:1px solid #e9e9e9; background:#fff; object-fit:contain; }
   .share-card-status{ min-height:18px; color:#737373; font-size:.72rem; line-height:1.5; text-align:center; }
   .share-card-modal .modal-actions .btn{ border-radius:3px; font-weight:500; }
@@ -3192,29 +3195,52 @@
     if (!book || !note || !window.BooktokkiShareCard) return;
     var shareCard = window.BooktokkiShareCard;
     var payload = shareCard.buildPayload(book, note);
-    var pngBlob = null, previewUrl = null, busy = false;
+    var pngBlob = null, previewUrl = null, busy = false, photoImage = null, closed = false, renderVersion = 0;
     openModal('<div class="modal share-card-modal">' +
       '<button type="button" class="page-log-close" id="shareCardClose" aria-label="닫기">×</button>' +
       '<h2>북로그 공유</h2>' +
       '<canvas class="share-card-preview" id="shareCardCanvas" width="720" height="960" aria-hidden="true"></canvas>' +
       '<img class="share-card-preview" id="shareCardPreview" alt="북로그 카드 미리보기" hidden>' +
       '<p class="share-card-status" id="shareCardStatus">카드를 만드는 중...</p>' +
+      '<div class="share-photo-actions">' +
+        '<label class="btn btn-outline" id="sharePhotoAdd" for="sharePhotoInput">사진 넣기</label>' +
+        '<input id="sharePhotoInput" type="file" accept="image/*,.heic,.heif" hidden>' +
+        '<button class="btn btn-outline" type="button" id="sharePhotoRemove" hidden>사진 제거</button>' +
+      '</div>' +
       '<div class="modal-actions">' +
         '<button class="btn btn-outline" type="button" id="shareCardSave" disabled>이미지 저장</button>' +
         '<button class="btn btn-dark" type="button" id="shareCardSend" disabled>공유하기</button>' +
       '</div></div>');
-    modalBeforeClose = function(){ if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; };
+    modalBeforeClose = function(){
+      closed = true;
+      renderVersion += 1;
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = null;
+      if (photoImage && typeof photoImage.close === "function") photoImage.close();
+      photoImage = null;
+    };
     var canvas = document.getElementById("shareCardCanvas");
     var preview = document.getElementById("shareCardPreview");
     var status = document.getElementById("shareCardStatus");
     var save = document.getElementById("shareCardSave");
     var send = document.getElementById("shareCardSend");
+    var photoAdd = document.getElementById("sharePhotoAdd");
+    var photoInput = document.getElementById("sharePhotoInput");
+    var photoRemove = document.getElementById("sharePhotoRemove");
     var readyText = "";
     document.getElementById("shareCardClose").onclick = closeModal;
-    function setBusy(value){ busy = value; save.disabled = value; send.disabled = value; }
-    shareCard.createPng(canvas, payload, { coverProxy:SHARE_COVER_PROXY }).then(function(result){
+    function setBusy(value){
+      busy = value;
+      save.disabled = value;
+      send.disabled = value;
+      photoInput.disabled = value;
+      photoRemove.disabled = value;
+      photoAdd.setAttribute("aria-disabled", value ? "true" : "false");
+    }
+    function showResult(result, version){
+      if (closed || version !== renderVersion || overlay.hidden || !document.body.contains(preview)) return;
       pngBlob = result.blob;
-      if (overlay.hidden || !document.body.contains(preview)) return;
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
       previewUrl = URL.createObjectURL(pngBlob);
       preview.src = previewUrl;
       preview.hidden = false;
@@ -3228,9 +3254,45 @@
       if (isIosDevice()) readyText = (readyText ? readyText + " " : "") + "이미지를 길게 눌러 사진에 바로 저장할 수도 있어요.";
       status.textContent = readyText;
       setBusy(false);
-    }).catch(function(){
-      status.textContent = "이미지를 만들지 못했어요. 잠시 후 다시 시도해 주세요.";
-    });
+    }
+    function renderShareImage(){
+      var version = ++renderVersion;
+      setBusy(true);
+      status.textContent = photoImage ? "사진에 북로그를 담는 중..." : "카드를 만드는 중...";
+      var task = shareCard.createShareImage(canvas, payload, photoImage, { coverProxy:SHARE_COVER_PROXY });
+      task.then(function(result){ showResult(result, version); }).catch(function(){
+        if (closed || version !== renderVersion) return;
+        setBusy(false);
+        status.textContent = "이미지를 만들지 못했어요. 잠시 후 다시 시도해 주세요.";
+      });
+    }
+    renderShareImage();
+    photoInput.onchange = function(){
+      var file = photoInput.files && photoInput.files[0];
+      if (!file || busy) return;
+      setBusy(true);
+      status.textContent = "사진을 불러오는 중...";
+      shareCard.loadPhotoFile(file).then(function(image){
+        if (closed){ if (image && typeof image.close === "function") image.close(); return; }
+        if (photoImage && typeof photoImage.close === "function") photoImage.close();
+        photoImage = image;
+        photoRemove.hidden = false;
+        photoAdd.textContent = "사진 바꾸기";
+        renderShareImage();
+      }).catch(function(){
+        if (closed) return;
+        setBusy(false);
+        status.textContent = "이 사진은 불러올 수 없어요. 다른 사진을 선택해 주세요.";
+      }).then(function(){ photoInput.value = ""; });
+    };
+    photoRemove.onclick = function(){
+      if (busy || !photoImage) return;
+      if (typeof photoImage.close === "function") photoImage.close();
+      photoImage = null;
+      photoRemove.hidden = true;
+      photoAdd.textContent = "사진 넣기";
+      renderShareImage();
+    };
     save.onclick = function(){
       if (!pngBlob || busy) return;
       if (isIosDevice()){

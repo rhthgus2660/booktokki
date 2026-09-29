@@ -17,6 +17,7 @@
     { size:26, lineHeight:42 },
     { size:22, lineHeight:36 }
   ];
+  var PHOTO_MAX_BYTES = 25 * 1024 * 1024;
 
   function text(value){ return String(value == null ? "" : value); }
 
@@ -26,7 +27,8 @@
       author:text(book && book.author),
       page:note && Number.isFinite(note.page) ? note.page : null,
       note:text(note && note.text).replace(/\s+$/, ""),
-      coverUrl:text(book && book.coverUrl) || null
+      coverUrl:text(book && book.coverUrl) || null,
+      createdAt:text(note && note.createdAt) || null
     };
   }
 
@@ -135,6 +137,82 @@
     return { canvas:canvas, truncated:note.truncated };
   }
 
+  function imageDimensions(image){
+    return {
+      width:Number(image && (image.naturalWidth || image.width)) || 0,
+      height:Number(image && (image.naturalHeight || image.height)) || 0
+    };
+  }
+
+  function centerCrop(image, targetWidth, targetHeight){
+    var size = imageDimensions(image);
+    if (!size.width || !size.height) throw new Error("Photo dimensions are unavailable");
+    var sourceRatio = size.width / size.height;
+    var targetRatio = targetWidth / targetHeight;
+    var sourceWidth = size.width, sourceHeight = size.height, sourceX = 0, sourceY = 0;
+    if (sourceRatio > targetRatio){
+      sourceWidth = size.height * targetRatio;
+      sourceX = (size.width - sourceWidth) / 2;
+    } else if (sourceRatio < targetRatio){
+      sourceHeight = size.width / targetRatio;
+      sourceY = (size.height - sourceHeight) / 2;
+    }
+    return { sx:sourceX, sy:sourceY, sw:sourceWidth, sh:sourceHeight };
+  }
+
+  function photoDate(value){
+    if (!value) return "";
+    var parsed = new Date(value);
+    if (isNaN(parsed.getTime())) return "";
+    return (parsed.getMonth() + 1) + "." + parsed.getDate();
+  }
+
+  function renderPhoto(canvas, payload, photoImage){
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
+    var ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas is unavailable");
+    var crop = centerCrop(photoImage, WIDTH, HEIGHT);
+    ctx.drawImage(photoImage, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, WIDTH, HEIGHT);
+
+    var memoX = 54, memoY = 638, memoWidth = 480, memoHeight = 250;
+    ctx.save();
+    ctx.translate(memoX + memoWidth / 2, memoY + memoHeight / 2);
+    ctx.rotate(-0.018);
+    ctx.fillStyle = "#f3eddf";
+    ctx.fillRect(-memoWidth / 2, -memoHeight / 2, memoWidth, memoHeight);
+    ctx.fillStyle = "rgba(220,207,181,.78)";
+    ctx.fillRect(-55, -memoHeight / 2 - 12, 110, 28);
+
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#25231f";
+    ctx.font = "400 24px " + FONT;
+    var note = wrapText(ctx, payload.note, memoWidth - 56, 4);
+    note.lines.forEach(function(line, index){ ctx.fillText(line, -memoWidth / 2 + 28, -memoHeight / 2 + 48 + index * 34); });
+
+    ctx.font = "600 18px " + FONT;
+    var title = wrapText(ctx, payload.title.replace(/\s*\n\s*/g, " "), memoWidth - 56, 1).lines[0] || "";
+    ctx.fillText(title, -memoWidth / 2 + 28, memoHeight / 2 - 48);
+    ctx.fillStyle = "#716b60";
+    ctx.font = "400 16px " + FONT;
+    var meta = photoDate(payload.createdAt);
+    if (payload.page != null) meta += (meta ? " · " : "") + "p." + payload.page;
+    ctx.fillText(meta, -memoWidth / 2 + 28, memoHeight / 2 - 20);
+    ctx.restore();
+
+    ctx.save();
+    ctx.textAlign = "right";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "rgba(255,255,255,.9)";
+    ctx.shadowColor = "rgba(0,0,0,.35)";
+    ctx.shadowBlur = 4;
+    ctx.font = "700 17px " + FONT;
+    ctx.fillText("BOOKTOKKI", 666, 914);
+    ctx.restore();
+    return { canvas:canvas, truncated:note.truncated, crop:crop };
+  }
+
   function layoutNote(ctx, value){
     var result = null, tier = null;
     for (var i = 0; i < NOTE_TIERS.length; i++){
@@ -222,6 +300,57 @@
     });
   }
 
+  function createPhotoPng(canvas, payload, photoImage, env){
+    return prepareFonts(payload, env).then(function(){
+      var drawn = renderPhoto(canvas, payload, photoImage);
+      return canvasBlob(canvas).then(function(blob){
+        return { blob:blob, truncated:drawn.truncated, photo:true, crop:drawn.crop };
+      });
+    });
+  }
+
+  function createShareImage(canvas, payload, photoImage, env){
+    return photoImage ? createPhotoPng(canvas, payload, photoImage, env) : createPng(canvas, payload, env);
+  }
+
+  function loadPhotoFile(file, env){
+    env = env || {};
+    if (!file) return Promise.reject(new Error("Photo is required"));
+    if (file.size > PHOTO_MAX_BYTES) return Promise.reject(new Error("Photo is too large"));
+    var type = text(file.type).toLowerCase();
+    var name = text(file.name).toLowerCase();
+    if (type && type.indexOf("image/") !== 0 && !/\.(heic|heif)$/.test(name)){
+      return Promise.reject(new Error("Unsupported photo type"));
+    }
+    var bitmap = env.createImageBitmap || (typeof createImageBitmap === "function" ? createImageBitmap : null);
+    if (bitmap){
+      return Promise.resolve().then(function(){
+        return bitmap(file, { imageOrientation:"from-image" });
+      }).catch(function(){ return loadPhotoWithImage(file, env); });
+    }
+    return loadPhotoWithImage(file, env);
+  }
+
+  function loadPhotoWithImage(file, env){
+    var ImageCtor = env.Image || (typeof Image !== "undefined" ? Image : null);
+    var URLApi = env.URL || (typeof URL !== "undefined" ? URL : null);
+    if (!ImageCtor || !URLApi) return Promise.reject(new Error("Photo decode is unavailable"));
+    return new Promise(function(resolve, reject){
+      var url = URLApi.createObjectURL(file);
+      var image = new ImageCtor();
+      var settled = false;
+      function finish(value, error){
+        if (settled) return;
+        settled = true;
+        URLApi.revokeObjectURL(url);
+        if (error) reject(error); else resolve(value);
+      }
+      image.onload = function(){ finish(image); };
+      image.onerror = function(){ finish(null, new Error("Photo format is not supported")); };
+      image.src = url;
+    });
+  }
+
   function download(blob, env){
     var url = env.URL.createObjectURL(blob);
     var anchor = env.document.createElement("a");
@@ -286,6 +415,8 @@
     buildPayload:buildPayload,
     wrapText:wrapText,
     render:render,
+    renderPhoto:renderPhoto,
+    centerCrop:centerCrop,
     layoutNote:layoutNote,
     prepareFonts:prepareFonts,
     loadCover:loadCover,
@@ -293,6 +424,9 @@
     canShareFiles:canShareFiles,
     savePng:savePng,
     createPng:createPng,
+    createPhotoPng:createPhotoPng,
+    createShareImage:createShareImage,
+    loadPhotoFile:loadPhotoFile,
     sharePng:sharePng
   };
 });
