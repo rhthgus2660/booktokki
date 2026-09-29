@@ -104,7 +104,8 @@ async function run(){
   assert.equal(revoked, 1);
 
   var html = fs.readFileSync(path.join(__dirname, "../../index.html"), "utf8");
-  assert.match(html, /id="sharePhotoInput" type="file" accept="image\/\*,\.heic,\.heif"/);
+  assert.match(html, /id="sharePhotoInput" type="file" accept="image\/jpeg,image\/png"/, "iOS Photos can transcode HEIC into a Canvas-safe format");
+  assert.doesNotMatch(html, /accept="[^"]*heic|accept="[^"]*heif/i, "the picker does not request raw HEIC/HEIF files");
   assert.match(html, />사진 넣기<\/label>/);
   assert.match(html, />사진 제거<\/button>/);
   assert.match(html, /shareCard\.createShareImage\(canvas, payload, photoImage/);
