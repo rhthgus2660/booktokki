@@ -1119,7 +1119,7 @@
   body.my-prototype .topbar h1{ color:#909090; font-size:.8rem; font-weight:500; }
   body.my-prototype .icon-nav-btn{ border:0; border-radius:3px; background:transparent; }
   body.my-prototype .icon-nav-btn:hover{ background:#f5f5f5; }
-  #view-my, #view-feedback, #view-data-info{ min-width:0; color:#171717; }
+  #view-my, #view-feedback, #view-data-info, #view-co-reading{ min-width:0; color:#171717; }
   .my-header{ gap:8px; }
   .my-header h2{ font-size:.95rem; font-weight:600; }
   .my-profile{ display:flex; flex-direction:column; align-items:center; padding:36px 0 34px; }
@@ -1151,6 +1151,14 @@
   .feedback-success{ margin-top:30px; padding:30px 0; border-block:1px solid #e9e9e9; }
   .feedback-success strong{ display:block; font-size:1rem; font-weight:600; }
   .feedback-success p{ margin-top:8px; color:#737373; font-size:.78rem; line-height:1.6; }
+  .friend-panel{ margin-top:26px; padding-block:18px; border-block:1px solid #e9e9e9; }
+  .friend-panel p{ color:#656565; font-size:.78rem; line-height:1.7; }
+  .friend-panel strong{ display:block; margin-bottom:8px; font-size:.95rem; }
+  .friend-field{ width:100%; min-height:46px; margin-top:16px; padding:0 12px; border:1px solid #d9d9d9; border-radius:4px; font:inherit; font-size:16px; }
+  .friend-actions{ display:flex; gap:8px; margin-top:14px; }
+  .friend-actions .btn{ flex:1; min-height:44px; }
+  .friend-status{ margin-top:12px; color:#737373; font-size:.74rem; line-height:1.55; }
+  .friend-invite-link{ margin-top:14px; padding:10px; background:#f5f5f5; color:#565656; font-size:.7rem; line-height:1.5; overflow-wrap:anywhere; }
   .data-guide{ margin-top:26px; }
   .data-guide section{ padding:20px 0; border-bottom:1px solid #e9e9e9; }
   .data-guide section:first-child{ border-top:1px solid #e9e9e9; }
@@ -1225,6 +1233,7 @@
     <section id="view-my" class="view" hidden></section>
     <section id="view-feedback" class="view" hidden></section>
     <section id="view-data-info" class="view" hidden></section>
+    <section id="view-co-reading" class="view" hidden></section>
   </main>
 </div>
 
@@ -1238,6 +1247,7 @@
 <script src="./analytics-repository.js"></script>
 <script src="./profile-repository.js"></script>
 <script src="./feedback-repository.js"></script>
+<script src="./co-reading-repository.js"></script>
 <script src="./share-card.js"></script>
 <script src="./supabase/migration-adapter.js"></script>
 <script src="./supabase/migration-dry-run.js"></script>
@@ -1271,6 +1281,14 @@
     feedbackDraft: "",
     feedbackStatus: null,
     feedbackSubmitting: false,
+    coReadingStatus: "loading",
+    coReadingConnection: null,
+    coReadingDisplayName: "",
+    coReadingInviteUrl: "",
+    coReadingPreviewName: "",
+    coReadingMessage: "",
+    coReadingBusyCreate: false,
+    coReadingBusyAccept: false,
     dbMode: null /* 'db' | 'local' */
   };
   var db = null;
@@ -1282,6 +1300,7 @@
   var analyticsRepository = null;
   var profileRepository = null;
   var feedbackRepository = null;
+  var coReadingRepository = null;
   var cloudMutationQueues = {};
   var pendingBookCreates = {};
   var appStarted = false;
@@ -1295,6 +1314,13 @@
   var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
   var BOOKTOKKI_GUIDE_URL = "https://desert-sandwich-d38.notion.site/3e882ff9dce98105ab80f0dc599218a4?pvs=73";
   var FEEDBACK_PROMPT_FLAG_PREFIX = "booktokki:feedback-prompt:v1:";
+  var createFriendInviteContext = window.BooktokkiCoReadingRepository && window.BooktokkiCoReadingRepository.createInviteContext
+    ? window.BooktokkiCoReadingRepository.createInviteContext
+    : function(token, clearUrl){ var current=token||"", consumed=false; return { getToken:function(){return current;}, consumeAutoNavigation:function(){if(!current||consumed)return false;consumed=true;return true;}, clear:function(){current="";clearUrl();} }; };
+  var friendInviteContext = createFriendInviteContext(
+    new URL(window.location.href).searchParams.get("friend_invite") || "",
+    function(){ var clean=new URL(window.location.href);clean.searchParams.delete("friend_invite");window.history.replaceState(null,"",clean.pathname+(clean.searchParams.toString()?"?"+clean.searchParams.toString():"")+clean.hash); }
+  );
   var MY_RABBIT_ASSET = "assets/bunny-sleep.png";
   document.getElementById("myNavRabbit").src = MY_RABBIT_ASSET;
 
@@ -2045,6 +2071,7 @@
     state.editingNoteId = null; /* leaving/entering a screen always drops any open 북로그 edit */
     state.statsSelectedDate = null; /* re-entering 통계 always starts back on today */
     renderAll();
+    if(view === "co-reading") loadCoReading();
   }
   function openMyBooklogs(){
     state.statsFrom = "my";
@@ -2076,7 +2103,7 @@
     document.body.classList.toggle("detail-prototype", state.view === "detail");
     document.body.classList.toggle("library-prototype", state.view === "library");
     document.body.classList.toggle("stats-prototype", state.view === "stats");
-    document.body.classList.toggle("my-prototype", state.view === "my" || state.view === "feedback" || state.view === "data-info");
+    document.body.classList.toggle("my-prototype", state.view === "my" || state.view === "feedback" || state.view === "data-info" || state.view === "co-reading");
     document.querySelector(".topbar h1").textContent = state.view === "home" ? "BOOKTOKKI" : "내 독서 기록";
     // Keep unsaved inputs only when the same book/input survives the render.
     var detail = document.getElementById("view-detail");
@@ -2102,9 +2129,10 @@
     document.getElementById("view-my").hidden = state.view !== "my";
     document.getElementById("view-feedback").hidden = state.view !== "feedback";
     document.getElementById("view-data-info").hidden = state.view !== "data-info";
+    document.getElementById("view-co-reading").hidden = state.view !== "co-reading";
     document.getElementById("libraryNavBtn").hidden = state.view === "library";
     document.getElementById("statsNavBtn").hidden = state.view === "stats";
-    document.getElementById("myNavBtn").hidden = state.view === "my" || state.view === "feedback" || state.view === "data-info";
+    document.getElementById("myNavBtn").hidden = state.view === "my" || state.view === "feedback" || state.view === "data-info" || state.view === "co-reading";
 
     renderOffline();
     renderHome();
@@ -2114,6 +2142,7 @@
     renderMy();
     renderFeedback();
     renderDataInfo();
+    renderCoReading();
     if (draftBookId === state.selectedBookId){
       drafts.forEach(function(draft){
         var input = detail.querySelector(draft.selector);
@@ -2771,6 +2800,7 @@
         '<button class="my-menu my-booklog" type="button" data-my-booklogs><span class="my-menu-copy"><span class="my-menu-label">내 북로그</span><span class="my-menu-note">월별로 남긴 기록 보기</span></span><span class="my-menu-arrow">›</span></button>' +
       '</section>' +
       '<section class="my-section"><div class="my-section-title">도움</div>' +
+        '<button class="my-menu" type="button" data-nav="co-reading"><span class="my-menu-label">같이 읽을 친구</span><span class="my-menu-arrow">›</span></button>' +
         '<button class="my-menu" type="button" data-guide><span class="my-menu-label">북토끼 사용법</span><span class="my-menu-arrow">↗</span></button>' +
         '<button class="my-menu" type="button" data-nav="feedback"><span class="my-menu-label">의견 보내기</span><span class="my-menu-arrow">›</span></button>' +
       '</section>' +
@@ -2811,6 +2841,35 @@
         '<section><h3>외부 서비스</h3><p>Kakao Login과 Kakao Book Search, Supabase, GitHub Pages, Cloudflare Worker를 사용해 로그인, 책 검색, 데이터 저장과 앱 제공 기능을 운영해요.</p></section>' +
         '<section><h3>데이터 삭제 요청</h3><p>데이터 삭제를 원한다면 MY → 의견 보내기를 통해 요청해줘. 확인 후 계정과 연결된 데이터 삭제를 진행할게. 외부 서비스의 로그나 백업까지 즉시 삭제된다는 의미는 아니에요.</p></section>' +
       '</div>';
+  }
+
+  function loadCoReading(){
+    if(!coReadingRepository){state.coReadingStatus="error";state.coReadingMessage="친구 연결을 불러오지 못했어요.";renderAll();return;}
+    state.coReadingStatus="loading"; state.coReadingMessage=""; renderAll();
+    Promise.all([coReadingRepository.getDisplayName(),coReadingRepository.getConnection()]).then(function(values){
+      state.coReadingDisplayName=values[0]||""; state.coReadingConnection=values[1]; state.coReadingStatus="ready";
+      if(friendInviteContext.getToken() && values[1]&&values[1].connected){cleanupFriendInvite();state.coReadingMessage="이미 친구와 연결되어 있어요.";return;}
+      if(friendInviteContext.getToken()) return coReadingRepository.previewInvite(friendInviteContext.getToken()).then(function(name){state.coReadingPreviewName=name;}).catch(function(){cleanupFriendInvite();state.coReadingMessage="이 초대는 만료됐거나 이미 사용됐어요.";});
+    }).catch(function(){state.coReadingMessage="친구 정보를 불러오지 못했어요.";state.coReadingStatus="error";}).finally(function(){if(state.view==="co-reading")renderAll();});
+  }
+  function cleanupFriendInvite(){
+    friendInviteContext.clear(); state.coReadingPreviewName="";
+  }
+  function copyInviteLink(url){
+    if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(url);
+    var input=document.createElement("textarea");input.value=url;input.setAttribute("readonly","");input.style.position="fixed";input.style.opacity="0";document.body.appendChild(input);input.select();
+    var copied=document.execCommand("copy");input.remove();return copied?Promise.resolve():Promise.reject(new Error("copy"));
+  }
+  function renderCoReading(){
+    var el=document.getElementById("view-co-reading"); if(!el)return;
+    var c=state.coReadingConnection;
+    var body='<p>서로 지금 읽는 중인지만 보여요.<br>읽는 책, 페이지, 북로그는 공유되지 않아요.</p>';
+    if(state.coReadingStatus==="loading"){body+='<p class="friend-status">친구 정보를 확인하고 있어요.</p>';}
+    else if(c&&c.connected){ body+='<div class="friend-panel"><strong>'+esc(c.friend_display_name||"연결된 친구")+'</strong><p>같이 읽을 친구로 연결되어 있어요.</p><div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-disconnect>연결 끊기</button></div></div>'; }
+    else if(state.coReadingPreviewName){ body+='<div class="friend-panel"><strong>'+esc(state.coReadingPreviewName)+'님의 초대</strong><p>같이 읽을 친구로 연결할까요?</p>'+(state.coReadingDisplayName?'':'<input class="friend-field" id="friendRecipientName" maxlength="20" placeholder="친구에게 보여줄 내 이름">')+'<div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-invite-later>나중에</button><button class="btn btn-dark" type="button" data-friend-accept'+(state.coReadingBusyAccept?' disabled':'')+'>'+(state.coReadingBusyAccept?'연결 중...':'연결하기')+'</button></div></div>'; }
+    else { body+='<div class="friend-panel"><strong>표시 이름</strong><p>친구에게 보여줄 이름이에요.</p><input class="friend-field" id="friendDisplayName" maxlength="20" value="'+esc(state.coReadingDisplayName)+'" placeholder="표시 이름"><div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-name>저장</button><button class="btn btn-dark" type="button" data-friend-invite'+(state.coReadingBusyCreate?' disabled':'')+'>'+(state.coReadingBusyCreate?'만드는 중...':'초대 링크 만들기')+'</button></div>'+(state.coReadingInviteUrl?'<div class="friend-invite-link">'+esc(state.coReadingInviteUrl)+'</div><div class="friend-actions"><button class="btn btn-dark" type="button" data-friend-share>공유하기</button><button class="btn btn-outline" type="button" data-friend-copy>링크 복사</button></div>':'')+'</div>'; }
+    if(state.coReadingMessage) body+='<p class="friend-status" aria-live="polite">'+esc(state.coReadingMessage)+'</p>';
+    el.innerHTML=myHeader("같이 읽을 친구","my")+body;
   }
 
   /* ---------------- modals ---------------- */
@@ -3424,6 +3483,21 @@
     t = e.target.closest("[data-logout]");
     if (t){ logout(t); return; }
 
+    t=e.target.closest("[data-friend-name]");
+    if(t){ var name=document.getElementById("friendDisplayName").value; coReadingRepository.setDisplayName(name).then(function(saved){state.coReadingDisplayName=saved;state.coReadingMessage="표시 이름을 저장했어요.";renderAll();}).catch(function(error){state.coReadingMessage=error.message||"저장하지 못했어요.";renderAll();}); return; }
+    t=e.target.closest("[data-friend-invite]");
+    if(t){var inviteNameInput=document.getElementById("friendDisplayName");var inviteName=inviteNameInput?inviteNameInput.value:state.coReadingDisplayName;state.coReadingMessage="";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyCreate",function(){renderAll();return coReadingRepository.setDisplayName(inviteName).then(function(saved){state.coReadingDisplayName=saved;return coReadingRepository.createInvite();}).then(function(token){var url=new URL("./",window.location.href);url.searchParams.set("friend_invite",token);state.coReadingInviteUrl=url.href;state.coReadingMessage="초대 링크를 만들었어요.";});}).catch(function(error){state.coReadingMessage=error.message||"초대 링크를 만들지 못했어요.";}).finally(function(){renderAll();});return;}
+    t=e.target.closest("[data-friend-share]");
+    if(t&&state.coReadingInviteUrl){if(!navigator.share){state.coReadingMessage="이 환경에서는 링크 복사를 이용해 주세요.";renderAll();return;}navigator.share({title:"북토끼 같이 읽기",text:"북토끼에서 같이 읽어요.",url:state.coReadingInviteUrl}).catch(function(error){if(!error||error.name!=="AbortError"){state.coReadingMessage="공유하지 못했어요. 링크 복사를 이용해 주세요.";renderAll();}});return;}
+    t=e.target.closest("[data-friend-copy]");
+    if(t&&state.coReadingInviteUrl){copyInviteLink(state.coReadingInviteUrl).then(function(){state.coReadingMessage="초대 링크를 복사했어요.";}).catch(function(){state.coReadingMessage="링크를 복사하지 못했어요.";}).finally(function(){renderAll();});return;}
+    t=e.target.closest("[data-friend-accept]");
+    if(t){var recipientName=document.getElementById("friendRecipientName");var recipientNameValue=recipientName?recipientName.value:"";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyAccept",function(){renderAll();return coReadingRepository.acceptInviteWithDisplayName(friendInviteContext.getToken(),state.coReadingDisplayName,recipientNameValue).then(function(){if(!state.coReadingDisplayName)state.coReadingDisplayName=recipientNameValue.trim();cleanupFriendInvite();state.coReadingMessage="친구와 연결했어요.";loadCoReading();});}).catch(function(error){state.coReadingMessage=error.message||"초대를 수락하지 못했어요.";}).finally(function(){if(state.view==="co-reading")renderAll();});return;}
+    t=e.target.closest("[data-friend-invite-later]");
+    if(t){cleanupFriendInvite();state.coReadingMessage="";goTo("my");return;}
+    t=e.target.closest("[data-friend-disconnect]");
+    if(t){if(!window.confirm("친구 연결을 끊을까요?"))return;coReadingRepository.disconnect().then(function(){state.coReadingConnection=null;state.coReadingMessage="연결을 끊었어요.";renderAll();}).catch(function(){state.coReadingMessage="연결을 끊지 못했어요.";renderAll();});return;}
+
     t = e.target.closest("[data-stats-month]");
     if (t){
       var parts = (state.statsMonth || dateKey(new Date()).slice(0, 7)).split("-").map(Number);
@@ -3620,7 +3694,9 @@
 
   /* ---------------- auth ---------------- */
   function authRedirectUrl(){
-    return new URL("./", window.location.href).href;
+    var url = new URL("./", window.location.href);
+    if (friendInviteContext.getToken()) url.searchParams.set("friend_invite", friendInviteContext.getToken());
+    return url.href;
   }
 
   function cleanAuthRedirectUrl(){
@@ -3817,13 +3893,17 @@
      an authenticated session (including re-login without a reload) restores
      them here, without touching bootstrap or IndexedDB. */
   function ensureAccountRepositories(){
-    if (!supabaseClient || (profileRepository && feedbackRepository)) return;
+    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository)) return;
     try {
       profileRepository = window.BooktokkiProfileRepository.create(supabaseClient);
       feedbackRepository = window.BooktokkiFeedbackRepository.create(supabaseClient);
+      coReadingRepository = window.BooktokkiCoReadingRepository
+        ? window.BooktokkiCoReadingRepository.create(supabaseClient)
+        : null;
     } catch (repositoryError) {
       profileRepository = null;
       feedbackRepository = null;
+      coReadingRepository = null;
       console.error("북토끼 MY 연결 초기화 실패", { code:repositoryError && repositoryError.code ? repositoryError.code : null });
     }
   }
@@ -3834,6 +3914,9 @@
     activeAuthUser = session && session.user ? session.user : null;
     ensureAccountRepositories();
     startApp(session);
+    if(friendInviteContext.consumeAutoNavigation()){
+      Promise.resolve(bootstrapPromise).then(function(){ if(friendInviteContext.getToken()) goTo("co-reading"); });
+    }
   }
 
   function showSignedOut(message){
@@ -3845,12 +3928,17 @@
     analyticsRepository = null;
     profileRepository = null;
     feedbackRepository = null;
+    coReadingRepository = null;
     cloudMutationQueues = {};
     pendingBookCreates = {};
     state.books = {};
     state.feedbackDraft = "";
     state.feedbackStatus = null;
     state.feedbackSubmitting = false;
+    state.coReadingConnection = null;
+    state.coReadingDisplayName = "";
+    state.coReadingPreviewName = "";
+    state.coReadingMessage = "";
     if (db) db.close();
     db = null;
     storageReady = null;

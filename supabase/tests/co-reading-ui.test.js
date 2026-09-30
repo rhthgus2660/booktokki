@@ -1,0 +1,24 @@
+"use strict";
+var assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path");
+var api=require("../../co-reading-repository.js");
+(async function(){
+  var calls=[],client={rpc:function(name,args){calls.push([name,args]);return Promise.resolve({data:name==="get_co_reading_presence"?[{connected:true,friend_display_name:"친구"}]:"ok",error:null});}};
+  var r=api.create(client);
+  await r.acceptInviteWithDisplayName("token","","새 친구");
+  assert.deepEqual(calls.map(function(x){return x[0];}),["set_friend_display_name","accept_friend_invite"]);
+  calls=[];await r.acceptInviteWithDisplayName("token","이미 있음","");assert.deepEqual(calls.map(function(x){return x[0];}),["accept_friend_invite"]);
+  var cleared=0,ctx=api.createInviteContext("token",function(){cleared++;});
+  assert.equal(ctx.consumeAutoNavigation(),true);assert.equal(ctx.consumeAutoNavigation(),false);
+  ctx.clear();assert.equal(ctx.getToken(),"");assert.equal(cleared,1);
+  var busy={working:false},resolve,executed=0;
+  var first=api.runOnce(busy,"working",function(){executed++;return new Promise(function(r){resolve=r;});});
+  var second=await api.runOnce(busy,"working",function(){executed++;});
+  assert.equal(second.ignored,true);assert.equal(executed,1);resolve();await first;assert.equal(busy.working,false);
+  var html=fs.readFileSync(path.join(__dirname,"../../index.html"),"utf8");
+  assert.match(html,/friendRecipientName/);assert.match(html,/acceptInviteWithDisplayName/);
+  assert.match(html,/이 초대는 만료됐거나 이미 사용됐어요/);assert.match(html,/data-friend-invite-later/);
+  assert.match(html,/consumeAutoNavigation/);assert.match(html,/data-friend-share/);assert.match(html,/data-friend-copy/);
+  assert.match(html,/coReadingInviteUrl/);assert.match(html,/AbortError/);assert.match(html,/runOnce\(state,"coReadingBusyCreate"/);assert.match(html,/runOnce\(state,"coReadingBusyAccept"/);
+  assert.doesNotMatch(html,/start_reading_presence|stop_reading_presence|setInterval\([^)]*presence/);
+  console.log("PASS co-reading friend connection UI tests");
+})().catch(function(e){console.error(e);process.exit(1);});
