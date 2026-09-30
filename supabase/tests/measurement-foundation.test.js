@@ -1,0 +1,15 @@
+"use strict";
+var assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path");
+var sql=fs.readFileSync(path.join(__dirname,"../migrations/202609300001_measurement_foundation.sql"),"utf8").replace(/\s+/g," ");
+var api=require("../../measurement-repository.js");
+assert.match(sql,/create table public\.acquisition_attributions/);assert.match(sql,/user_id uuid primary key/);assert.match(sql,/on conflict\(user_id\) do nothing/);
+assert.match(sql,/create table public\.measurement_events/);assert.match(sql,/security definer set search_path=''/);assert.match(sql,/revoke all on table public\.measurement_events from anon, authenticated/);
+assert.doesNotMatch(sql,/title|author|page|note|email|kakao|raw_referrer/i);
+assert.match(sql,/measurement_weekly_kpis/);assert.match(sql,/measurement_acquisition_kpis/);assert.match(sql,/measurement_p5_kpis/);assert.match(sql,/measurement_friction_kpis/);
+var data={},storage={getItem:function(k){return data[k]||null;},setItem:function(k,v){data[k]=v;},removeItem:function(k){delete data[k];}};
+api.capture({href:"https://example.test/?utm_source=x&utm_campaign=alpha_1"},storage);api.capture({href:"https://example.test/?utm_source=brunch"},storage);
+var captured=JSON.parse(data[api.KEY]);assert.equal(captured.source,"x");assert.equal(captured.campaign,"alpha_1");assert.ok(!isNaN(new Date(captured.firstSeenAt).getTime()));
+var calls=[],client={rpc:function(name,args){calls.push([name,args]);return Promise.resolve({data:true,error:null});}};
+(async function(){var repo=api.create(client,storage);await repo.claim();assert.equal(data[api.KEY],undefined);await repo.record("login_started",null,"oauth");assert.deepEqual(calls.map(function(x){return x[0];}),["claim_acquisition_source","record_measurement_event"]);console.log("PASS measurement foundation tests");})().catch(function(e){console.error(e);process.exit(1);});
+var oauth=api.createOAuthCompletionTracker("https://example.test/?code=oauth-code");assert.equal(oauth.consume(),true);assert.equal(oauth.consume(),false);
+var refresh=api.createOAuthCompletionTracker("https://example.test/");assert.equal(refresh.consume(),false);assert.equal(refresh.consume(),false);

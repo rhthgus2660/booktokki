@@ -1,0 +1,9 @@
+(function(root,factory){"use strict";var api=factory();if(typeof module==="object"&&module.exports)module.exports=api;else root.BooktokkiMeasurement=api;})(typeof globalThis!=="undefined"?globalThis:this,function(){
+  "use strict";
+  var SOURCES=["founder","acquaintance","x","brunch","organic","other"],KEY="booktokki:acquisition:v1";
+  function id(){return "measurement:"+(crypto.randomUUID?crypto.randomUUID():Date.now()+":"+Math.random());}
+  function capture(location,storage){var q=new URL(location.href).searchParams,s=(q.get("utm_source")||"").toLowerCase(),c=q.get("utm_campaign")||null;if(SOURCES.indexOf(s)<0)s="organic";if(storage.getItem(KEY))return;var row={source:s,campaign:c&&/^[A-Za-z0-9._-]{1,80}$/.test(c)?c:null,firstSeenAt:new Date().toISOString()};storage.setItem(KEY,JSON.stringify(row));}
+  function create(client,storage){return {claim:function(){var raw=storage.getItem(KEY);if(!raw)return Promise.resolve(false);var row;try{row=JSON.parse(raw);}catch(_e){row={source:"other",campaign:null,firstSeenAt:null};}return client.rpc("claim_acquisition_source",{p_source:row.source,p_campaign:row.campaign,p_first_seen_at:row.firstSeenAt||null}).then(function(r){if(r.error)throw r.error;storage.removeItem(KEY);return r.data;});},record:function(type,errorCode,context){return client.rpc("record_measurement_event",{p_event_id:id(),p_event_type:type,p_error_code:errorCode||null,p_context:context||null}).then(function(r){if(r.error)throw r.error;return true;}).catch(function(){return false;});}};}
+  function createOAuthCompletionTracker(href){var url=new URL(href),pending=url.searchParams.has("code")||/(?:access_token|refresh_token)=/.test(url.hash),recorded=false;return {consume:function(){if(!pending||recorded)return false;recorded=true;return true;}};}
+  return {capture:capture,create:create,createOAuthCompletionTracker:createOAuthCompletionTracker,SOURCES:SOURCES,KEY:KEY};
+});

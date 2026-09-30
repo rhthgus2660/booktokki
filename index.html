@@ -1248,6 +1248,7 @@
 <script src="./profile-repository.js"></script>
 <script src="./feedback-repository.js"></script>
 <script src="./co-reading-repository.js"></script>
+<script src="./measurement-repository.js"></script>
 <script src="./share-card.js"></script>
 <script src="./supabase/migration-adapter.js"></script>
 <script src="./supabase/migration-dry-run.js"></script>
@@ -1301,6 +1302,7 @@
   var profileRepository = null;
   var feedbackRepository = null;
   var coReadingRepository = null;
+  var measurementRepository = null;
   var cloudMutationQueues = {};
   var pendingBookCreates = {};
   var appStarted = false;
@@ -1321,7 +1323,11 @@
     new URL(window.location.href).searchParams.get("friend_invite") || "",
     function(){ var clean=new URL(window.location.href);clean.searchParams.delete("friend_invite");window.history.replaceState(null,"",clean.pathname+(clean.searchParams.toString()?"?"+clean.searchParams.toString():"")+clean.hash); }
   );
+  var oauthCompletionTracker = window.BooktokkiMeasurement
+    ? window.BooktokkiMeasurement.createOAuthCompletionTracker(window.location.href)
+    : { consume:function(){ return false; } };
   var MY_RABBIT_ASSET = "assets/bunny-sleep.png";
+  if(window.BooktokkiMeasurement) window.BooktokkiMeasurement.capture(window.location,window.localStorage);
   document.getElementById("myNavRabbit").src = MY_RABBIT_ASSET;
 
   function uid(){
@@ -2835,7 +2841,7 @@
         '<section><h3>왜 사용하는지</h3><p>기기에서 읽던 책과 기록을 이어서 보여주고, 독서 캘린더와 북로그를 구성하며, Public Alpha를 개선하기 위해 사용해요.</p></section>' +
         '<section><h3>클라우드에 저장되는 정보</h3><ul><li>Supabase Auth의 사용자 UUID와 Kakao 로그인 과정에서 Kakao가 전달한 계정 정보(metadata)</li><li>MY에서 직접 설정한 북토끼 닉네임: Kakao 계정 정보와 구분된 별도 항목으로 Supabase Auth user metadata에 저장돼요</li><li>책 정보, 페이지 기록, 북로그, 완독 상태와 소감</li><li>책 추가·독서 기록 저장 여부와 시각 등 Minimal Analytics</li><li>의견 보내기로 직접 작성한 내용과 접수 시각</li></ul></section>' +
         '<section><h3>현재 기기에 저장되는 정보</h3><p>IndexedDB에는 책과 독서 기록, 북로그, 직접 올린 표지 이미지가 남을 수 있어요. localStorage에는 로그인 세션, Local Owner 정보와 안전한 이전·복원을 위한 진행 정보가 저장될 수 있어요.</p></section>' +
-        '<section><h3>Minimal Analytics</h3><p>책 추가와 독서 기록 저장 같은 최소 행동을 사용자 UUID와 연결해 기록해요. 익명 통계가 아니며, 책 제목·검색어·실제 페이지 숫자·북로그 본문은 Analytics event에 넣지 않아요.</p></section>' +
+        '<section><h3>Minimal Analytics</h3><p>책 추가와 독서 기록 저장 같은 최소 행동을 사용자 UUID와 연결해 기록해요. 서비스 개선과 오류 확인을 위해 최초 유입 경로, 로그인 성공·실패 같은 최소 이용 상태, 친구 초대·연결 과정의 최소 상태도 기록할 수 있어요. 익명 통계가 아니며, 책 제목·검색어·실제 페이지 숫자·북로그 본문은 Analytics event에 넣지 않아요.</p></section>' +
         '<section><h3>의견 보내기</h3><p>보낸 의견은 로그인한 사용자 UUID와 함께 저장돼요. 의견 확인과 Public Alpha 개선에 사용하며, 비밀번호나 민감한 개인정보는 적지 말아줘.</p></section>' +
         '<section><h3>로그아웃과 데이터 삭제</h3><p>로그아웃은 계정 삭제가 아니에요. 로그아웃 후에도 현재 기기의 로컬 데이터가 남을 수 있고, 서버 데이터와 기기 데이터는 별도로 관리될 수 있어요. 현재 앱에는 자동 회원탈퇴나 전체 데이터 삭제 기능이 없어요.</p></section>' +
         '<section><h3>외부 서비스</h3><p>Kakao Login과 Kakao Book Search, Supabase, GitHub Pages, Cloudflare Worker를 사용해 로그인, 책 검색, 데이터 저장과 앱 제공 기능을 운영해요.</p></section>' +
@@ -3486,13 +3492,13 @@
     t=e.target.closest("[data-friend-name]");
     if(t){ var name=document.getElementById("friendDisplayName").value; coReadingRepository.setDisplayName(name).then(function(saved){state.coReadingDisplayName=saved;state.coReadingMessage="표시 이름을 저장했어요.";renderAll();}).catch(function(error){state.coReadingMessage=error.message||"저장하지 못했어요.";renderAll();}); return; }
     t=e.target.closest("[data-friend-invite]");
-    if(t){var inviteNameInput=document.getElementById("friendDisplayName");var inviteName=inviteNameInput?inviteNameInput.value:state.coReadingDisplayName;state.coReadingMessage="";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyCreate",function(){renderAll();return coReadingRepository.setDisplayName(inviteName).then(function(saved){state.coReadingDisplayName=saved;return coReadingRepository.createInvite();}).then(function(token){var url=new URL("./",window.location.href);url.searchParams.set("friend_invite",token);state.coReadingInviteUrl=url.href;state.coReadingMessage="초대 링크를 만들었어요.";});}).catch(function(error){state.coReadingMessage=error.message||"초대 링크를 만들지 못했어요.";}).finally(function(){renderAll();});return;}
+    if(t){var inviteNameInput=document.getElementById("friendDisplayName");var inviteName=inviteNameInput?inviteNameInput.value:state.coReadingDisplayName;state.coReadingMessage="";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyCreate",function(){renderAll();return coReadingRepository.setDisplayName(inviteName).then(function(saved){state.coReadingDisplayName=saved;return coReadingRepository.createInvite();}).then(function(token){var url=new URL("./",window.location.href);url.searchParams.set("friend_invite",token);state.coReadingInviteUrl=url.href;state.coReadingMessage="초대 링크를 만들었어요.";if(measurementRepository)measurementRepository.record("friend_invite_created",null,"friend_invite");});}).catch(function(error){if(measurementRepository)measurementRepository.record("friend_invite_failed","unknown","friend_invite");state.coReadingMessage=error.message||"초대 링크를 만들지 못했어요.";}).finally(function(){renderAll();});return;}
     t=e.target.closest("[data-friend-share]");
     if(t&&state.coReadingInviteUrl){if(!navigator.share){state.coReadingMessage="이 환경에서는 링크 복사를 이용해 주세요.";renderAll();return;}navigator.share({title:"북토끼 같이 읽기",text:"북토끼에서 같이 읽어요.",url:state.coReadingInviteUrl}).catch(function(error){if(!error||error.name!=="AbortError"){state.coReadingMessage="공유하지 못했어요. 링크 복사를 이용해 주세요.";renderAll();}});return;}
     t=e.target.closest("[data-friend-copy]");
     if(t&&state.coReadingInviteUrl){copyInviteLink(state.coReadingInviteUrl).then(function(){state.coReadingMessage="초대 링크를 복사했어요.";}).catch(function(){state.coReadingMessage="링크를 복사하지 못했어요.";}).finally(function(){renderAll();});return;}
     t=e.target.closest("[data-friend-accept]");
-    if(t){var recipientName=document.getElementById("friendRecipientName");var recipientNameValue=recipientName?recipientName.value:"";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyAccept",function(){renderAll();return coReadingRepository.acceptInviteWithDisplayName(friendInviteContext.getToken(),state.coReadingDisplayName,recipientNameValue).then(function(){if(!state.coReadingDisplayName)state.coReadingDisplayName=recipientNameValue.trim();cleanupFriendInvite();state.coReadingMessage="친구와 연결했어요.";loadCoReading();});}).catch(function(error){state.coReadingMessage=error.message||"초대를 수락하지 못했어요.";}).finally(function(){if(state.view==="co-reading")renderAll();});return;}
+    if(t){var recipientName=document.getElementById("friendRecipientName");var recipientNameValue=recipientName?recipientName.value:"";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyAccept",function(){renderAll();return coReadingRepository.acceptInviteWithDisplayName(friendInviteContext.getToken(),state.coReadingDisplayName,recipientNameValue).then(function(){if(measurementRepository)measurementRepository.record("friend_invite_accepted",null,"friend_invite");if(!state.coReadingDisplayName)state.coReadingDisplayName=recipientNameValue.trim();cleanupFriendInvite();state.coReadingMessage="친구와 연결했어요.";loadCoReading();});}).catch(function(error){if(measurementRepository)measurementRepository.record("friend_invite_failed","unknown","friend_invite");state.coReadingMessage=error.message||"초대를 수락하지 못했어요.";}).finally(function(){if(state.view==="co-reading")renderAll();});return;}
     t=e.target.closest("[data-friend-invite-later]");
     if(t){cleanupFriendInvite();state.coReadingMessage="";goTo("my");return;}
     t=e.target.closest("[data-friend-disconnect]");
@@ -3914,6 +3920,10 @@
     activeAuthUser = session && session.user ? session.user : null;
     ensureAccountRepositories();
     startApp(session);
+    if(measurementRepository){measurementRepository.claim();}
+    if(measurementRepository && oauthCompletionTracker.consume()){
+      measurementRepository.record("login_completed",null,"oauth");
+    }
     if(friendInviteContext.consumeAutoNavigation()){
       Promise.resolve(bootstrapPromise).then(function(){ if(friendInviteContext.getToken()) goTo("co-reading"); });
     }
@@ -3970,6 +3980,7 @@
         detectSessionInUrl: true
       }
     });
+    measurementRepository=window.BooktokkiMeasurement?window.BooktokkiMeasurement.create(supabaseClient,window.localStorage):null;
 
     supabaseClient.auth.onAuthStateChange(function(_event, session){
       if (session) showAuthenticated(session);
@@ -3991,11 +4002,13 @@
     var button = this;
     button.disabled = true;
     document.getElementById("authStatus").textContent = "카카오로 이동하고 있어요.";
+    if(measurementRepository)measurementRepository.record("login_started",null,"oauth");
     supabaseClient.auth.signInWithOAuth({
       provider: "kakao",
       options: { redirectTo: authRedirectUrl() }
     }).then(function(result){
       if (result.error){
+        if(measurementRepository)measurementRepository.record("login_failed","provider","oauth");
         button.disabled = false;
         document.getElementById("authStatus").textContent = "로그인을 시작하지 못했어요. 다시 시도해 주세요.";
       }
