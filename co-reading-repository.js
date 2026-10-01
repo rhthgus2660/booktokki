@@ -23,12 +23,25 @@
       getConnection:function(){ return client.rpc("get_co_reading_presence").then(function(result){ var rows=value(result); return Array.isArray(rows)?(rows[0]||null):rows; }); }
     };
   }
-  function createInviteContext(token,clearUrl){
+  function resolveInviteToken(urlToken,storage,key){
+    var token=String(urlToken||"");
+    if(token){storage.setItem(key,token);return token;}
+    return storage.getItem(key)||"";
+  }
+  function resolveAuthRedirectUrl(currentHref,productionUrl){
+    var current=new URL(currentHref);
+    if(current.hostname==="localhost"||current.hostname==="127.0.0.1") return new URL("./",current).href;
+    var target=new URL(productionUrl);
+    if(target.protocol!=="https:") throw new Error("Production OAuth redirect must use HTTPS");
+    target.search="";target.hash="";
+    return target.href;
+  }
+  function createInviteContext(token,clearUrl,clearStored){
     var current=token||"",autoConsumed=false;
     return {
       getToken:function(){return current;},
       consumeAutoNavigation:function(){if(!current||autoConsumed)return false;autoConsumed=true;return true;},
-      clear:function(){current="";if(clearUrl)clearUrl();}
+      clear:function(){current="";if(clearStored)clearStored();if(clearUrl)clearUrl();}
     };
   }
   function runOnce(state,key,work){
@@ -36,5 +49,5 @@
     state[key]=true;
     return Promise.resolve().then(work).finally(function(){state[key]=false;});
   }
-  return {create:create,createInviteContext:createInviteContext,runOnce:runOnce};
+  return {create:create,resolveInviteToken:resolveInviteToken,resolveAuthRedirectUrl:resolveAuthRedirectUrl,createInviteContext:createInviteContext,runOnce:runOnce};
 });

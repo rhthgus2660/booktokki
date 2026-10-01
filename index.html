@@ -1116,7 +1116,7 @@
   .profile-nav-btn:hover{ background:#f5f5f5; }
   .profile-nav-btn img{ width:31px; height:27px; object-fit:contain; image-rendering:pixelated; }
   body.my-prototype .app{ padding-inline:24px; gap:24px; }
-  body.my-prototype .topbar h1{ color:#909090; font-size:.8rem; font-weight:500; }
+  body.my-prototype .topbar h1{ display:none; }
   body.my-prototype .icon-nav-btn{ border:0; border-radius:3px; background:transparent; }
   body.my-prototype .icon-nav-btn:hover{ background:#f5f5f5; }
   #view-my, #view-feedback, #view-data-info, #view-co-reading{ min-width:0; color:#171717; }
@@ -1316,12 +1316,18 @@
   var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
   var BOOKTOKKI_GUIDE_URL = "https://desert-sandwich-d38.notion.site/3e882ff9dce98105ab80f0dc599218a4?pvs=73";
   var FEEDBACK_PROMPT_FLAG_PREFIX = "booktokki:feedback-prompt:v1:";
+  var FRIEND_INVITE_PENDING_KEY = "booktokki:friend-invite:v1";
   var createFriendInviteContext = window.BooktokkiCoReadingRepository && window.BooktokkiCoReadingRepository.createInviteContext
     ? window.BooktokkiCoReadingRepository.createInviteContext
-    : function(token, clearUrl){ var current=token||"", consumed=false; return { getToken:function(){return current;}, consumeAutoNavigation:function(){if(!current||consumed)return false;consumed=true;return true;}, clear:function(){current="";clearUrl();} }; };
+    : function(token,clearUrl,clearStored){var current=token||"",consumed=false;return {getToken:function(){return current;},consumeAutoNavigation:function(){if(!current||consumed)return false;consumed=true;return true;},clear:function(){current="";if(clearStored)clearStored();if(clearUrl)clearUrl();}};};
+  var friendInviteUrlToken = new URL(window.location.href).searchParams.get("friend_invite") || "";
+  var pendingFriendInviteToken = window.BooktokkiCoReadingRepository && window.BooktokkiCoReadingRepository.resolveInviteToken
+    ? window.BooktokkiCoReadingRepository.resolveInviteToken(friendInviteUrlToken,window.localStorage,FRIEND_INVITE_PENDING_KEY)
+    : friendInviteUrlToken;
   var friendInviteContext = createFriendInviteContext(
-    new URL(window.location.href).searchParams.get("friend_invite") || "",
-    function(){ var clean=new URL(window.location.href);clean.searchParams.delete("friend_invite");window.history.replaceState(null,"",clean.pathname+(clean.searchParams.toString()?"?"+clean.searchParams.toString():"")+clean.hash); }
+    pendingFriendInviteToken,
+    function(){ var clean=new URL(window.location.href);clean.searchParams.delete("friend_invite");window.history.replaceState(null,"",clean.pathname+(clean.searchParams.toString()?"?"+clean.searchParams.toString():"")+clean.hash); },
+    function(){ window.localStorage.removeItem(FRIEND_INVITE_PENDING_KEY); }
   );
   var oauthCompletionTracker = window.BooktokkiMeasurement
     ? window.BooktokkiMeasurement.createOAuthCompletionTracker(window.location.href)
@@ -3700,9 +3706,8 @@
 
   /* ---------------- auth ---------------- */
   function authRedirectUrl(){
-    var url = new URL("./", window.location.href);
-    if (friendInviteContext.getToken()) url.searchParams.set("friend_invite", friendInviteContext.getToken());
-    return url.href;
+    var config = window.BOOKTOKKI_AUTH_CONFIG || {};
+    return window.BooktokkiCoReadingRepository.resolveAuthRedirectUrl(window.location.href, config.productionRedirectUrl);
   }
 
   function cleanAuthRedirectUrl(){
