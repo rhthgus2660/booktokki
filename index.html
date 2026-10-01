@@ -752,6 +752,12 @@
   }
   #view-home .rabbit-scene{ display:flex; flex-direction:column; align-items:center; padding-block:29px; }
   #view-home .bunny-figure{ height:132px; margin-top:12px; }
+  #view-home .rabbit-pair{ display:flex; align-items:flex-end; justify-content:center; gap:3px; min-height:144px; }
+  #view-home .friend-rabbit-figure{ width:94px; height:104px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; opacity:.92; animation:friend-rabbit-arrive .6s ease-out both; pointer-events:none; }
+  #view-home .friend-rabbit-figure img{ width:86px; max-height:82px; object-fit:contain; image-rendering:pixelated; transform:scaleX(-1); }
+  #view-home .friend-rabbit-name{ max-width:96px; margin-top:3px; overflow:hidden; color:#737373; font-size:.62rem; text-overflow:ellipsis; white-space:nowrap; }
+  @keyframes friend-rabbit-arrive{ from{ opacity:0; transform:translateY(5px); } to{ opacity:.92; transform:none; } }
+  @media (prefers-reduced-motion:reduce){ #view-home .friend-rabbit-figure{ animation:none; } }
   #view-home .bunny-img{ max-width:65%; max-height:80%; }
   #view-home .bunny-status{ font-size:.72rem; font-weight:400; line-height:1.6; }
   #view-home .bunny-hero.is-recorded .bunny-status{ visibility:hidden; }
@@ -1159,6 +1165,13 @@
   .friend-actions .btn{ flex:1; min-height:44px; }
   .friend-status{ margin-top:12px; color:#737373; font-size:.74rem; line-height:1.55; }
   .friend-invite-link{ margin-top:14px; padding:10px; background:#f5f5f5; color:#565656; font-size:.7rem; line-height:1.5; overflow-wrap:anywhere; }
+  .friend-visit-setting{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:18px; padding-top:18px; border-top:1px solid #e9e9e9; }
+  .friend-visit-setting strong{ margin:0 0 4px; font-size:.84rem; }
+  .friend-visit-setting p{ margin:0; color:#737373; font-size:.7rem; line-height:1.55; }
+  .friend-visit-toggle{ flex:none; min-width:56px; min-height:36px; padding:0 10px; border:1px solid #d1d1d1; border-radius:18px; background:#fff; color:#737373; font:inherit; font-size:.72rem; cursor:pointer; }
+  .friend-visit-toggle[aria-pressed="true"]{ border-color:#171717; background:#171717; color:#fff; }
+  .friend-consent-modal .my-form-intro{ margin-top:14px; }
+  .friend-consent-note{ margin-top:13px; color:#737373; font-size:.72rem; line-height:1.65; }
   .data-guide{ margin-top:26px; }
   .data-guide section{ padding:20px 0; border-bottom:1px solid #e9e9e9; }
   .data-guide section:first-child{ border-top:1px solid #e9e9e9; }
@@ -1248,6 +1261,7 @@
 <script src="./profile-repository.js"></script>
 <script src="./feedback-repository.js"></script>
 <script src="./co-reading-repository.js"></script>
+<script src="./friend-visit.js"></script>
 <script src="./measurement-repository.js"></script>
 <script src="./share-card.js"></script>
 <script src="./supabase/migration-adapter.js"></script>
@@ -1290,6 +1304,8 @@
     coReadingMessage: "",
     coReadingBusyCreate: false,
     coReadingBusyAccept: false,
+    friendVisit: { connected:false, friendName:"", visitState:"none", here:false, episodeSeen:false },
+    friendVisitBusy: false,
     dbMode: null /* 'db' | 'local' */
   };
   var db = null;
@@ -1302,6 +1318,8 @@
   var profileRepository = null;
   var feedbackRepository = null;
   var coReadingRepository = null;
+  var friendVisit = null;
+  var friendVisitConsentDeferred = false;
   var measurementRepository = null;
   var cloudMutationQueues = {};
   var pendingBookCreates = {};
@@ -1324,6 +1342,7 @@
   var pendingFriendInviteToken = window.BooktokkiCoReadingRepository && window.BooktokkiCoReadingRepository.resolveInviteToken
     ? window.BooktokkiCoReadingRepository.resolveInviteToken(friendInviteUrlToken,window.localStorage,FRIEND_INVITE_PENDING_KEY)
     : friendInviteUrlToken;
+  function friendVisitEnabled(){return !!(window.BOOKTOKKI_AUTH_CONFIG&&window.BOOKTOKKI_AUTH_CONFIG.FRIEND_VISIT_ENABLED===true);}
   var friendInviteContext = createFriendInviteContext(
     pendingFriendInviteToken,
     function(){ var clean=new URL(window.location.href);clean.searchParams.delete("friend_invite");window.history.replaceState(null,"",clean.pathname+(clean.searchParams.toString()?"?"+clean.searchParams.toString():"")+clean.hash); },
@@ -2069,6 +2088,7 @@
      button — so `detailFrom` remembers whether a book was opened from
      home (요즘 읽는 책), 통계, or 서재, and that back button returns there. */
   function goTo(view, bookId){
+    if(view==="home"&&state.view!=="home")friendVisitConsentDeferred=false;
     if (view === "stats" && state.view !== "stats"){
       state.statsMonth = null;
       state.statsArchivePanel = null;
@@ -2212,7 +2232,11 @@
     var img = '<img class="bunny-img" src="' + esc(pick.img) + '" alt="' + esc(pick.alt || "") + '">';
     var caption = pick.caption || "";
     var zzz = pick.zzz ? '<div class="zzz"><span class="z1">Z</span><span class="z2">z</span><span class="z3">z</span></div>' : "";
+    var friendHere = !!(state.friendVisit && state.friendVisit.here && state.friendVisit.friendName);
     var bubble = pick.bubble;
+    var friendRabbit = friendHere
+      ? '<div class="friend-rabbit-figure" aria-label="'+esc(state.friendVisit.friendName)+'의 토끼"><img src="assets/bunny-sleep.png" alt=""><span class="friend-rabbit-name">'+esc(state.friendVisit.friendName)+'</span></div>'
+      : '';
     var status;
     if (logged){
       var todayPages = todayPagesRead();
@@ -2224,7 +2248,7 @@
       '<div class="card bunny-hero' + (logged ? ' is-recorded' : '') + '">' +
         '<div class="rabbit-scene">' +
           '<div class="speech-bubble">' + bubble + '</div>' +
-          '<div class="bunny-figure">' + zzz + img + '</div>' +
+          '<div class="rabbit-pair"><div class="bunny-figure">' + zzz + img + '</div>' + friendRabbit + '</div>' +
         '</div>' +
         (caption ? '<div class="bunny-caption">' + caption + '</div>' : '') +
         '<div class="bunny-status">' + status + '</div>' +
@@ -2292,6 +2316,8 @@
       ? currentBookMini() + '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button>'
       : '<div class="home-empty-reading"><div class="home-empty-title">요즘 무슨 책 읽어?</div>' +
           '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button></div>');
+    if (state.view==="home" && state.friendVisit && state.friendVisit.here && friendVisit) friendVisit.markRabbitRendered();
+    maybeShowFriendVisitConsent();
   }
 
   function statusBadge(status){
@@ -2848,6 +2874,7 @@
         '<section><h3>클라우드에 저장되는 정보</h3><ul><li>Supabase Auth의 사용자 UUID와 Kakao 로그인 과정에서 Kakao가 전달한 계정 정보(metadata)</li><li>MY에서 직접 설정한 북토끼 닉네임: Kakao 계정 정보와 구분된 별도 항목으로 Supabase Auth user metadata에 저장돼요</li><li>책 정보, 페이지 기록, 북로그, 완독 상태와 소감</li><li>책 추가·독서 기록 저장 여부와 시각 등 Minimal Analytics</li><li>의견 보내기로 직접 작성한 내용과 접수 시각</li></ul></section>' +
         '<section><h3>현재 기기에 저장되는 정보</h3><p>IndexedDB에는 책과 독서 기록, 북로그, 직접 올린 표지 이미지가 남을 수 있어요. localStorage에는 로그인 세션, Local Owner 정보와 안전한 이전·복원을 위한 진행 정보가 저장될 수 있어요.</p></section>' +
         '<section><h3>Minimal Analytics</h3><p>책 추가와 독서 기록 저장 같은 최소 행동을 사용자 UUID와 연결해 기록해요. 서비스 개선과 오류 확인을 위해 최초 유입 경로, 로그인 성공·실패 같은 최소 이용 상태, 친구 초대·연결 과정의 최소 상태도 기록할 수 있어요. 익명 통계가 아니며, 책 제목·검색어·실제 페이지 숫자·북로그 본문은 Analytics event에 넣지 않아요.</p></section>' +
+        '<section><h3>친구 토끼 방문</h3><p>친구와 둘 다 허용한 경우에만 북토끼를 사용하는 동안 마지막으로 확인된 시각 하나를 잠시 저장해요. 이전 기록은 남기지 않고 몇 분 뒤 효력을 잃어요. 친구에게는 시각이 아니라 토끼가 놀러 왔는지만 전달돼요. 서비스 개선을 위해 두 사람의 사용 시간이 겹쳤는지와 친구 토끼가 화면에 보였는지만 30분 단위로 기록해요.</p></section>' +
         '<section><h3>의견 보내기</h3><p>보낸 의견은 로그인한 사용자 UUID와 함께 저장돼요. 의견 확인과 Public Alpha 개선에 사용하며, 비밀번호나 민감한 개인정보는 적지 말아줘.</p></section>' +
         '<section><h3>로그아웃과 데이터 삭제</h3><p>로그아웃은 계정 삭제가 아니에요. 로그아웃 후에도 현재 기기의 로컬 데이터가 남을 수 있고, 서버 데이터와 기기 데이터는 별도로 관리될 수 있어요. 현재 앱에는 자동 회원탈퇴나 전체 데이터 삭제 기능이 없어요.</p></section>' +
         '<section><h3>외부 서비스</h3><p>Kakao Login과 Kakao Book Search, Supabase, GitHub Pages, Cloudflare Worker를 사용해 로그인, 책 검색, 데이터 저장과 앱 제공 기능을 운영해요.</p></section>' +
@@ -2860,6 +2887,7 @@
     state.coReadingStatus="loading"; state.coReadingMessage=""; renderAll();
     Promise.all([coReadingRepository.getDisplayName(),coReadingRepository.getConnection()]).then(function(values){
       state.coReadingDisplayName=values[0]||""; state.coReadingConnection=values[1]; state.coReadingStatus="ready";
+      if(friendVisit) friendVisit.refresh();
       if(friendInviteContext.getToken() && values[1]&&values[1].connected){cleanupFriendInvite();state.coReadingMessage="이미 친구와 연결되어 있어요.";return;}
       if(friendInviteContext.getToken()) return coReadingRepository.previewInvite(friendInviteContext.getToken()).then(function(name){state.coReadingPreviewName=name;}).catch(function(){cleanupFriendInvite();state.coReadingMessage="이 초대는 만료됐거나 이미 사용됐어요.";});
     }).catch(function(){state.coReadingMessage="친구 정보를 불러오지 못했어요.";state.coReadingStatus="error";}).finally(function(){if(state.view==="co-reading")renderAll();});
@@ -2875,9 +2903,16 @@
   function renderCoReading(){
     var el=document.getElementById("view-co-reading"); if(!el)return;
     var c=state.coReadingConnection;
-    var body='<p>서로 지금 읽는 중인지만 보여요.<br>읽는 책, 페이지, 북로그는 공유되지 않아요.</p>';
+    var body='<p>연결된 친구와 표시 이름만 공유돼요.<br>읽는 책, 페이지, 북로그는 공유되지 않아요.</p>';
     if(state.coReadingStatus==="loading"){body+='<p class="friend-status">친구 정보를 확인하고 있어요.</p>';}
-    else if(c&&c.connected){ body+='<div class="friend-panel"><strong>'+esc(c.friend_display_name||"연결된 친구")+'</strong><p>같이 읽을 친구로 연결되어 있어요.</p><div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-disconnect>연결 끊기</button></div></div>'; }
+    else if(c&&c.connected){
+      var visitOn=state.friendVisit&&state.friendVisit.visitState==="allowed";
+      body+='<div class="friend-panel"><strong>'+esc(c.friend_display_name||"연결된 친구")+'</strong><p>같이 읽을 친구로 연결되어 있어요.</p>'+
+        (friendVisitEnabled()?'<div class="friend-visit-setting"><div><strong>친구 토끼 방문 허용</strong><p>둘 다 허용하면 북토끼를 사용하는 동안 친구 토끼가 홈에 잠깐 놀러 올 수 있어요.</p></div>'+
+        '<button class="friend-visit-toggle" type="button" data-friend-visit-toggle aria-pressed="'+(visitOn?'true':'false')+'"'+(state.friendVisitBusy?' disabled':'')+'>'+(visitOn?'ON':'OFF')+'</button></div>'+
+        '<p class="friend-status">읽는 책, 페이지, 북로그, 보고 있는 화면과 방문 이력은 친구에게 공유되지 않아요.</p>':'')+
+        '<div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-disconnect>연결 끊기</button></div></div>';
+    }
     else if(state.coReadingPreviewName){ body+='<div class="friend-panel"><strong>'+esc(state.coReadingPreviewName)+'님의 초대</strong><p>같이 읽을 친구로 연결할까요?</p>'+(state.coReadingDisplayName?'':'<input class="friend-field" id="friendRecipientName" maxlength="20" placeholder="친구에게 보여줄 내 이름">')+'<div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-invite-later>나중에</button><button class="btn btn-dark" type="button" data-friend-accept'+(state.coReadingBusyAccept?' disabled':'')+'>'+(state.coReadingBusyAccept?'연결 중...':'연결하기')+'</button></div></div>'; }
     else { body+='<div class="friend-panel"><strong>표시 이름</strong><p>친구에게 보여줄 이름이에요.</p><input class="friend-field" id="friendDisplayName" maxlength="20" value="'+esc(state.coReadingDisplayName)+'" placeholder="표시 이름"><div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-name>저장</button><button class="btn btn-dark" type="button" data-friend-invite'+(state.coReadingBusyCreate?' disabled':'')+'>'+(state.coReadingBusyCreate?'만드는 중...':'초대 링크 만들기')+'</button></div>'+(state.coReadingInviteUrl?'<div class="friend-invite-link">'+esc(state.coReadingInviteUrl)+'</div><div class="friend-actions"><button class="btn btn-dark" type="button" data-friend-share>공유하기</button><button class="btn btn-outline" type="button" data-friend-copy>링크 복사</button></div>':'')+'</div>'; }
     if(state.coReadingMessage) body+='<p class="friend-status" aria-live="polite">'+esc(state.coReadingMessage)+'</p>';
@@ -2888,6 +2923,7 @@
   var overlay = document.getElementById("modalOverlay");
   var modalBeforeClose = null;
   function closeModal(){
+    if(overlay.dataset.locked==="friend-visit-consent")return;
     var beforeClose = modalBeforeClose;
     modalBeforeClose = null;
     if (beforeClose){
@@ -2899,6 +2935,7 @@
   }
   function openModal(html){
     modalBeforeClose = null;
+    delete overlay.dataset.locked;
     overlay.innerHTML = html;
     overlay.hidden = false;
     var first = overlay.querySelector("input, textarea");
@@ -2910,6 +2947,32 @@
   document.addEventListener("keydown", function(e){
     if (e.key === "Escape" && !overlay.hidden) closeModal();
   });
+
+  function finishFriendVisitConsent(){
+    delete overlay.dataset.locked;
+    closeModal();
+  }
+  function decideFriendVisitConsent(allowed){
+    if(state.friendVisitBusy||!coReadingRepository||!friendVisit)return;
+    state.friendVisitBusy=true;
+    var buttons=overlay.querySelectorAll("button");buttons.forEach(function(button){button.disabled=true;});
+    var status=overlay.querySelector("[data-friend-consent-status]");
+    window.BooktokkiFriendVisit.saveConsent(coReadingRepository,friendVisit,allowed).then(function(){
+      finishFriendVisitConsent();
+      renderAll();
+      friendVisit.refresh();
+    }).catch(function(){
+      if(status)status.textContent="설정을 저장하지 못했어요. 다시 시도해 주세요.";
+      buttons.forEach(function(button){button.disabled=false;});
+      var dismiss=overlay.querySelector("[data-friend-consent-dismiss]");if(dismiss)dismiss.hidden=false;
+    }).finally(function(){state.friendVisitBusy=false;});
+  }
+  function maybeShowFriendVisitConsent(){
+    if(friendVisitConsentDeferred||!friendVisitEnabled()||!window.BooktokkiFriendVisit||!window.BooktokkiFriendVisit.shouldPromptConsent({view:state.view,appStarted:appStarted,connected:!!(state.friendVisit&&state.friendVisit.connected),visitState:state.friendVisit&&state.friendVisit.visitState,modalOpen:!overlay.hidden}))return false;
+    openModal('<div class="modal friend-consent-modal"><h2>친구 토끼가 놀러 와도 될까요?</h2><p class="my-form-intro">두 사람 모두 허용하고 북토끼를 사용하고 있을 때 친구 토끼가 홈에 잠깐 놀러 올 수 있어요.<br>내가 북토끼를 쓰는 동안엔 내 토끼도 친구 홈에 놀러 가요.</p><p class="friend-consent-note">책, 페이지, 북로그, 보고 있는 화면은 공유되지 않아요.<br>방문 이력이나 마지막 사용 시각도 친구에게 보여주지 않아요.</p><p class="friend-status" data-friend-consent-status aria-live="polite"></p><div class="modal-actions"><button class="btn btn-outline" type="button" data-friend-consent="false">허용하지 않기</button><button class="btn btn-dark" type="button" data-friend-consent="true">허용하기</button></div><button class="my-edit-nickname" type="button" data-friend-consent-dismiss hidden>이번엔 닫기</button></div>');
+    overlay.dataset.locked="friend-visit-consent";
+    return true;
+  }
 
   var pendingFirstRecordFeedbackUserId = null;
   var feedbackPromptWaitTimer = null;
@@ -3462,7 +3525,8 @@
     if (!supabaseClient) return;
     var button = triggerButton || document.querySelector("[data-logout]");
     if (button) button.disabled = true;
-    supabaseClient.auth.signOut().then(function(result){
+    var leave=friendVisit?friendVisit.stop({leave:true}):Promise.resolve();
+    Promise.race([leave,new Promise(function(resolve){setTimeout(resolve,1500);})]).then(function(){return supabaseClient.auth.signOut();}).then(function(result){
       if (result.error){
         if (button) button.disabled = false;
         window.alert("로그아웃하지 못했어요. 다시 시도해 주세요.");
@@ -3472,6 +3536,10 @@
 
   /* ---------------- event delegation ---------------- */
   document.body.addEventListener("click", function(e){
+    var consentDismiss=e.target.closest("[data-friend-consent-dismiss]");
+    if(consentDismiss){friendVisitConsentDeferred=true;finishFriendVisitConsent();return;}
+    var consent=e.target.closest("[data-friend-consent]");
+    if(consent){decideFriendVisitConsent(consent.getAttribute("data-friend-consent")==="true");return;}
     var t = e.target.closest("[data-feedback-back]");
     if (t){
       state.view = state.feedbackFrom || "my";
@@ -3508,7 +3576,9 @@
     t=e.target.closest("[data-friend-invite-later]");
     if(t){cleanupFriendInvite();state.coReadingMessage="";goTo("my");return;}
     t=e.target.closest("[data-friend-disconnect]");
-    if(t){if(!window.confirm("친구 연결을 끊을까요?"))return;coReadingRepository.disconnect().then(function(){state.coReadingConnection=null;state.coReadingMessage="연결을 끊었어요.";renderAll();}).catch(function(){state.coReadingMessage="연결을 끊지 못했어요.";renderAll();});return;}
+    if(t){if(!window.confirm("친구 연결을 끊을까요?"))return;coReadingRepository.disconnect().then(function(){state.coReadingConnection=null;state.coReadingMessage="연결을 끊었어요.";if(friendVisit)return friendVisit.refresh();}).then(function(){renderAll();}).catch(function(){state.coReadingMessage="연결을 끊지 못했어요.";renderAll();});return;}
+    t=e.target.closest("[data-friend-visit-toggle]");
+    if(t&&friendVisitEnabled()&&!state.friendVisitBusy){var allow=!(state.friendVisit&&state.friendVisit.visitState==="allowed");state.friendVisitBusy=true;renderAll();coReadingRepository.setVisitAllowed(allow).then(function(){return friendVisit.refresh();}).then(function(){state.coReadingMessage=allow?"친구 토끼 방문을 허용했어요.":"친구 토끼 방문을 끈 상태예요.";}).catch(function(){state.coReadingMessage="설정을 바꾸지 못했어요.";}).finally(function(){state.friendVisitBusy=false;renderAll();});return;}
 
     t = e.target.closest("[data-stats-month]");
     if (t){
@@ -3904,17 +3974,30 @@
      an authenticated session (including re-login without a reload) restores
      them here, without touching bootstrap or IndexedDB. */
   function ensureAccountRepositories(){
-    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository)) return;
+    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository && friendVisit)) return;
     try {
       profileRepository = window.BooktokkiProfileRepository.create(supabaseClient);
       feedbackRepository = window.BooktokkiFeedbackRepository.create(supabaseClient);
       coReadingRepository = window.BooktokkiCoReadingRepository
         ? window.BooktokkiCoReadingRepository.create(supabaseClient)
         : null;
+      friendVisit = window.BooktokkiFriendVisit && coReadingRepository
+        ? window.BooktokkiFriendVisit.create({
+            repo:coReadingRepository,
+            enabled:friendVisitEnabled(),
+            isVisible:function(){return !document.hidden;},
+            isRabbitVisible:function(){return state.view==="home"&&!document.hidden;},
+            onChange:function(next){
+              state.friendVisit=next;
+              if(appStarted&&(state.view==="home"||state.view==="co-reading"))renderAll();
+            }
+          })
+        : null;
     } catch (repositoryError) {
       profileRepository = null;
       feedbackRepository = null;
       coReadingRepository = null;
+      friendVisit = null;
       console.error("북토끼 MY 연결 초기화 실패", { code:repositoryError && repositoryError.code ? repositoryError.code : null });
     }
   }
@@ -3925,6 +4008,10 @@
     activeAuthUser = session && session.user ? session.user : null;
     ensureAccountRepositories();
     startApp(session);
+    var appReady=bootstrapPromise||Promise.resolve();
+    Promise.resolve(appReady).then(function(){
+      if(appStarted&&activeAuthUserId&&friendVisit)return friendVisit.start(activeAuthUserId);
+    }).catch(function(){});
     if(measurementRepository){measurementRepository.claim();}
     if(measurementRepository && oauthCompletionTracker.consume()){
       measurementRepository.record("login_completed",null,"oauth");
@@ -3935,6 +4022,8 @@
   }
 
   function showSignedOut(message){
+    if(friendVisit)friendVisit.stop();
+    if(overlay&&overlay.dataset.locked==="friend-visit-consent"){delete overlay.dataset.locked;closeModal();}
     activeAuthUserId = null;
     activeAuthUser = null;
     appStarted = false;
@@ -3944,6 +4033,7 @@
     profileRepository = null;
     feedbackRepository = null;
     coReadingRepository = null;
+    friendVisit = null;
     cloudMutationQueues = {};
     pendingBookCreates = {};
     state.books = {};
@@ -3954,6 +4044,9 @@
     state.coReadingDisplayName = "";
     state.coReadingPreviewName = "";
     state.coReadingMessage = "";
+    state.friendVisit = {connected:false,friendName:"",visitState:"none",here:false,episodeSeen:false};
+    state.friendVisitBusy = false;
+    friendVisitConsentDeferred = false;
     if (db) db.close();
     db = null;
     storageReady = null;
@@ -4021,6 +4114,17 @@
   });
 
   /* ---------------- boot ---------------- */
+  var lastFriendVisitInteraction=0;
+  function noteFriendVisitInteraction(){
+    var now=Date.now();
+    if(now-lastFriendVisitInteraction<1000)return;
+    lastFriendVisitInteraction=now;
+    if(friendVisit)friendVisit.noteInteraction();
+  }
+  document.addEventListener("pointerdown",noteFriendVisitInteraction,{passive:true});
+  document.addEventListener("keydown",noteFriendVisitInteraction);
+  document.addEventListener("visibilitychange",function(){if(friendVisit)friendVisit.onVisibility(!document.hidden);});
+  if(window.addEventListener)window.addEventListener("pagehide",function(){if(friendVisit)friendVisit.onVisibility(false);});
   initAuth();
 
   /* Catch the day rolling over to the next date while the page stays

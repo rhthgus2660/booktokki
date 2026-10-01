@@ -7,5 +7,6 @@
 window.BOOKTOKKI_AUTH_CONFIG = {
   supabaseUrl: "https://khcquhottdcgivadsezv.supabase.co",
   supabaseAnonKey: "sb_publishable_qzhjsXT9TJg7qExdR3pBHw_dCe-CJ54",
-  productionRedirectUrl: "https://rhthgus2660.github.io/booktokki/"
+  productionRedirectUrl: "https://rhthgus2660.github.io/booktokki/",
+  FRIEND_VISIT_ENABLED: true
 };

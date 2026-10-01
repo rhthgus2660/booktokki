@@ -20,6 +20,10 @@
         return self.setDisplayName(enteredName).then(function(){return self.acceptInvite(token);});
       },
       disconnect:function(){ return client.rpc("disconnect_friend").then(value); },
+      touchPresence:function(){ return client.rpc("touch_app_presence").then(function(result){ var rows=value(result); return Array.isArray(rows)?(rows[0]||null):rows; }); },
+      leavePresence:function(){ return client.rpc("leave_app_presence").then(value); },
+      setVisitAllowed:function(allowed){ return client.rpc("set_friend_visit_allowed",{p_allowed:!!allowed}).then(value); },
+      recordRabbitSeen:function(){ return client.rpc("record_friend_rabbit_seen").then(value); },
       getConnection:function(){ return client.rpc("get_co_reading_presence").then(function(result){ var rows=value(result); return Array.isArray(rows)?(rows[0]||null):rows; }); }
     };
   }
