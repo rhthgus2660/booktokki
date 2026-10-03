@@ -33,6 +33,14 @@
       setDisplayName:function(name){ name=String(name||"").trim(); if(!name||Array.from(name).length>20||/[\u0000-\u001f\u007f-\u009f]/.test(name)) return Promise.reject(new Error("표시 이름은 1~20자로 입력해 주세요.")); return client.rpc("set_friend_display_name",{p_display_name:name}).then(value); },
       getDisplayName:function(){ return client.rpc("get_friend_display_name").then(value); },
       createInvite:function(){ return client.rpc("create_friend_invite").then(value); },
+      createInviteWithDisplayName:function(currentName,enteredName,onSaved){
+        var self=this;
+        if(currentName) return self.createInvite().then(function(token){return {token:token,displayName:currentName};});
+        return self.setDisplayName(enteredName).then(function(saved){
+          if(typeof onSaved==="function") onSaved(saved);
+          return self.createInvite().then(function(token){return {token:token,displayName:saved};});
+        });
+      },
       previewInvite:function(token){ return client.rpc("preview_friend_invite",{p_token:token}).then(value); },
       acceptInvite:function(token){ return client.rpc("accept_friend_invite",{p_token:token}).then(value); },
       acceptInviteWithDisplayName:function(token,currentName,enteredName){
