@@ -29,7 +29,7 @@ assert.match(html, /class="library-rabbit-spot"/);
 /* Non-home reading screens use their own compact title/navigation instead of
    repeating the global “내 독서 기록” label. */
 assert.match(html, /body\.detail-prototype \.topbar h1,[\s\S]*?body\.stats-prototype \.topbar h1\{ display:none; \}/);
-assert.match(html, /var backLabel = backTarget === "stats" \? "독서 캘린더" : \(backTarget === "library" \? "내 서재" : "홈"\)/);
+assert.match(html, /var backLabel = backTarget === "stats" \? "독서 캘린더" : \(backTarget === "library" \? "내 책장" : "내 서재"\)/);
 assert.match(html, /<span class="back-context">' \+ backLabel \+ '<\/span>/);
 
 const sampleBook = {

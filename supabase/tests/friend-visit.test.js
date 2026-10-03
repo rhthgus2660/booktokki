@@ -41,7 +41,7 @@ function clock(){var now=0,next=1,timers=new Map();return {now:function(){return
   var html=fs.readFileSync(path.join(__dirname,"../../index.html"),"utf8");
   assert.match(html,/coReadingConnections/);assert.match(html,/data-friend-disconnect=/);assert.match(html,/data-friend-visit-toggle=/);
   assert.doesNotMatch(html,/data-friend-consent|maybeShowFriendVisitConsent|friendVisitConsentDeferred/);
-  assert.match(html,/selectVisitor\(state\.friendVisit&&state\.friendVisit\.visitors\)/);assert.match(html,/markRabbitRendered\(renderedVisitor\.connectionId\)/);
+  assert.match(html,/BooktokkiHomeScene\.build\(\{visitors:state\.friendVisit&&state\.friendVisit\.visitors\}\)/);assert.match(html,/markRabbitRendered\(visitor\.connectionId\)/);
   assert.match(html,/friendVisitEnabled\(\).*setConnectionVisit|setConnectionVisit\(visitId,allow\)/s);
   console.log("PASS friend visit collection lifecycle and UI contract tests");
 })().catch(function(error){console.error(error);process.exit(1);});
