@@ -1170,8 +1170,6 @@
   .friend-visit-setting p{ margin:0; color:#737373; font-size:.7rem; line-height:1.55; }
   .friend-visit-toggle{ flex:none; min-width:56px; min-height:36px; padding:0 10px; border:1px solid #d1d1d1; border-radius:18px; background:#fff; color:#737373; font:inherit; font-size:.72rem; cursor:pointer; }
   .friend-visit-toggle[aria-pressed="true"]{ border-color:#171717; background:#171717; color:#fff; }
-  .friend-consent-modal .my-form-intro{ margin-top:14px; }
-  .friend-consent-note{ margin-top:13px; color:#737373; font-size:.72rem; line-height:1.65; }
   .data-guide{ margin-top:26px; }
   .data-guide section{ padding:20px 0; border-bottom:1px solid #e9e9e9; }
   .data-guide section:first-child{ border-top:1px solid #e9e9e9; }
@@ -1297,15 +1295,15 @@
     feedbackStatus: null,
     feedbackSubmitting: false,
     coReadingStatus: "loading",
-    coReadingConnection: null,
+    coReadingConnections: [],
     coReadingDisplayName: "",
     coReadingInviteUrl: "",
     coReadingPreviewName: "",
     coReadingMessage: "",
     coReadingBusyCreate: false,
     coReadingBusyAccept: false,
-    friendVisit: { connected:false, friendName:"", visitState:"none", here:false, episodeSeen:false },
-    friendVisitBusy: false,
+    coReadingBusyConnections: {},
+    friendVisit: { userId:null, visitors:[] },
     dbMode: null /* 'db' | 'local' */
   };
   var db = null;
@@ -1319,7 +1317,7 @@
   var feedbackRepository = null;
   var coReadingRepository = null;
   var friendVisit = null;
-  var friendVisitConsentDeferred = false;
+  var coReadingLoadEpoch = 0;
   var measurementRepository = null;
   var cloudMutationQueues = {};
   var pendingBookCreates = {};
@@ -2088,7 +2086,6 @@
      button — so `detailFrom` remembers whether a book was opened from
      home (요즘 읽는 책), 통계, or 서재, and that back button returns there. */
   function goTo(view, bookId){
-    if(view==="home"&&state.view!=="home")friendVisitConsentDeferred=false;
     if (view === "stats" && state.view !== "stats"){
       state.statsMonth = null;
       state.statsArchivePanel = null;
@@ -2232,10 +2229,11 @@
     var img = '<img class="bunny-img" src="' + esc(pick.img) + '" alt="' + esc(pick.alt || "") + '">';
     var caption = pick.caption || "";
     var zzz = pick.zzz ? '<div class="zzz"><span class="z1">Z</span><span class="z2">z</span><span class="z3">z</span></div>' : "";
-    var friendHere = !!(state.friendVisit && state.friendVisit.here && state.friendVisit.friendName);
+    var homeVisitor = window.BooktokkiFriendVisit ? window.BooktokkiFriendVisit.selectVisitor(state.friendVisit&&state.friendVisit.visitors) : null;
+    var friendHere = !!homeVisitor;
     var bubble = pick.bubble;
     var friendRabbit = friendHere
-      ? '<div class="friend-rabbit-figure" aria-label="'+esc(state.friendVisit.friendName)+'의 토끼"><img src="assets/bunny-sleep.png" alt=""><span class="friend-rabbit-name">'+esc(state.friendVisit.friendName)+'</span></div>'
+      ? '<div class="friend-rabbit-figure" aria-label="'+esc(homeVisitor.friendDisplayName)+'의 토끼"><img src="assets/bunny-sleep.png" alt=""><span class="friend-rabbit-name">'+esc(homeVisitor.friendDisplayName)+'</span></div>'
       : '';
     var status;
     if (logged){
@@ -2316,8 +2314,10 @@
       ? currentBookMini() + '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button>'
       : '<div class="home-empty-reading"><div class="home-empty-title">요즘 무슨 책 읽어?</div>' +
           '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button></div>');
-    if (state.view==="home" && state.friendVisit && state.friendVisit.here && friendVisit) friendVisit.markRabbitRendered();
-    maybeShowFriendVisitConsent();
+    if (state.view==="home" && friendVisit && window.BooktokkiFriendVisit){
+      var renderedVisitor=window.BooktokkiFriendVisit.selectVisitor(state.friendVisit&&state.friendVisit.visitors);
+      if(renderedVisitor)friendVisit.markRabbitRendered(renderedVisitor.connectionId);
+    }
   }
 
   function statusBadge(status){
@@ -2884,13 +2884,19 @@
 
   function loadCoReading(){
     if(!coReadingRepository){state.coReadingStatus="error";state.coReadingMessage="친구 연결을 불러오지 못했어요.";renderAll();return;}
+    var loadEpoch=++coReadingLoadEpoch,userId=activeAuthUserId;
     state.coReadingStatus="loading"; state.coReadingMessage=""; renderAll();
-    Promise.all([coReadingRepository.getDisplayName(),coReadingRepository.getConnection()]).then(function(values){
-      state.coReadingDisplayName=values[0]||""; state.coReadingConnection=values[1]; state.coReadingStatus="ready";
-      if(friendVisit) friendVisit.refresh();
-      if(friendInviteContext.getToken() && values[1]&&values[1].connected){cleanupFriendInvite();state.coReadingMessage="이미 친구와 연결되어 있어요.";return;}
-      if(friendInviteContext.getToken()) return coReadingRepository.previewInvite(friendInviteContext.getToken()).then(function(name){state.coReadingPreviewName=name;}).catch(function(){cleanupFriendInvite();state.coReadingMessage="이 초대는 만료됐거나 이미 사용됐어요.";});
-    }).catch(function(){state.coReadingMessage="친구 정보를 불러오지 못했어요.";state.coReadingStatus="error";}).finally(function(){if(state.view==="co-reading")renderAll();});
+    Promise.all([coReadingRepository.getDisplayName(),coReadingRepository.getConnections()]).then(function(values){
+      if(loadEpoch!==coReadingLoadEpoch||userId!==activeAuthUserId)return;
+      state.coReadingDisplayName=values[0]||""; state.coReadingConnections=values[1]; state.coReadingStatus="ready";
+      if(friendVisit&&friendVisitEnabled())friendVisit.setConnections(values[1]);
+      if(friendInviteContext.getToken()) return coReadingRepository.previewInvite(friendInviteContext.getToken()).then(function(name){
+        if(loadEpoch===coReadingLoadEpoch&&userId===activeAuthUserId)state.coReadingPreviewName=name;
+      }).catch(function(){
+        if(loadEpoch!==coReadingLoadEpoch||userId!==activeAuthUserId)return;
+        cleanupFriendInvite();state.coReadingMessage="이 초대는 만료됐거나 이미 사용됐어요.";
+      });
+    }).catch(function(){if(loadEpoch===coReadingLoadEpoch&&userId===activeAuthUserId){state.coReadingMessage="친구 정보를 불러오지 못했어요.";state.coReadingStatus="error";}}).finally(function(){if(loadEpoch===coReadingLoadEpoch&&userId===activeAuthUserId&&state.view==="co-reading")renderAll();});
   }
   function cleanupFriendInvite(){
     friendInviteContext.clear(); state.coReadingPreviewName="";
@@ -2902,19 +2908,22 @@
   }
   function renderCoReading(){
     var el=document.getElementById("view-co-reading"); if(!el)return;
-    var c=state.coReadingConnection;
     var body='<p>연결된 친구와 표시 이름만 공유돼요.<br>읽는 책, 페이지, 북로그는 공유되지 않아요.</p>';
     if(state.coReadingStatus==="loading"){body+='<p class="friend-status">친구 정보를 확인하고 있어요.</p>';}
-    else if(c&&c.connected){
-      var visitOn=state.friendVisit&&state.friendVisit.visitState==="allowed";
-      body+='<div class="friend-panel"><strong>'+esc(c.friend_display_name||"연결된 친구")+'</strong><p>같이 읽을 친구로 연결되어 있어요.</p>'+
-        (friendVisitEnabled()?'<div class="friend-visit-setting"><div><strong>친구 토끼 방문 허용</strong><p>둘 다 허용하면 북토끼를 사용하는 동안 친구 토끼가 홈에 잠깐 놀러 올 수 있어요.</p></div>'+
-        '<button class="friend-visit-toggle" type="button" data-friend-visit-toggle aria-pressed="'+(visitOn?'true':'false')+'"'+(state.friendVisitBusy?' disabled':'')+'>'+(visitOn?'ON':'OFF')+'</button></div>'+
-        '<p class="friend-status">읽는 책, 페이지, 북로그, 보고 있는 화면과 방문 이력은 친구에게 공유되지 않아요.</p>':'')+
-        '<div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-disconnect>연결 끊기</button></div></div>';
+    else {
+      if(state.coReadingPreviewName)body+='<div class="friend-panel"><strong>'+esc(state.coReadingPreviewName)+'님의 초대</strong><p>같이 읽을 친구로 연결할까요?</p>'+(state.coReadingDisplayName?'':'<input class="friend-field" id="friendRecipientName" maxlength="20" placeholder="친구에게 보여줄 내 이름">')+'<div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-invite-later>나중에</button><button class="btn btn-dark" type="button" data-friend-accept'+(state.coReadingBusyAccept?' disabled':'')+'>'+(state.coReadingBusyAccept?'연결 중...':'연결하기')+'</button></div></div>';
+      if(state.coReadingConnections.length){
+        body+='<div class="friend-list">';
+        state.coReadingConnections.forEach(function(c){
+          var id=c.connectionId,busy=!!state.coReadingBusyConnections[id],visitOn=c.myVisitState==="allowed";
+          body+='<div class="friend-panel" data-friend-row="'+esc(id)+'"><strong>'+esc(c.friendDisplayName||"연결된 친구")+'</strong><p>같이 읽을 친구로 연결되어 있어요.</p>'+
+            (friendVisitEnabled()?'<div class="friend-visit-setting"><div><strong>친구 토끼 방문 허용</strong><p>이 친구와의 토끼 방문에만 적용돼요. 둘 다 허용한 동안에만 서로의 홈에 토끼가 잠깐 나타날 수 있어요. 내가 북토끼를 쓰는 동안엔 내 토끼도 이 친구 홈에 놀러 가요.</p></div><button class="friend-visit-toggle" type="button" data-friend-visit-toggle="'+esc(id)+'" aria-pressed="'+(visitOn?'true':'false')+'"'+(busy?' disabled':'')+'>'+(visitOn?'ON':'OFF')+'</button></div><p class="friend-status">상대방의 설정, 책, 페이지, 북로그, 보고 있는 화면과 방문 이력은 보여주지 않아요.</p>':'')+
+            '<div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-disconnect="'+esc(id)+'"'+(busy?' disabled':'')+'>연결 끊기</button></div></div>';
+        });
+        body+='</div>';
+      }else body+='<p class="friend-status">아직 연결된 친구가 없어요.</p>';
+      body+='<div class="friend-panel"><strong>표시 이름과 새 초대</strong><p>친구에게 보여줄 이름이에요. 연결된 친구가 있어도 새 친구를 계속 초대할 수 있어요.</p><input class="friend-field" id="friendDisplayName" maxlength="20" value="'+esc(state.coReadingDisplayName)+'" placeholder="표시 이름"><div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-name>저장</button><button class="btn btn-dark" type="button" data-friend-invite'+(state.coReadingBusyCreate?' disabled':'')+'>'+(state.coReadingBusyCreate?'만드는 중...':'초대 링크 만들기')+'</button></div>'+(state.coReadingInviteUrl?'<div class="friend-invite-link">'+esc(state.coReadingInviteUrl)+'</div><div class="friend-actions"><button class="btn btn-dark" type="button" data-friend-share>공유하기</button><button class="btn btn-outline" type="button" data-friend-copy>링크 복사</button></div>':'')+'</div>';
     }
-    else if(state.coReadingPreviewName){ body+='<div class="friend-panel"><strong>'+esc(state.coReadingPreviewName)+'님의 초대</strong><p>같이 읽을 친구로 연결할까요?</p>'+(state.coReadingDisplayName?'':'<input class="friend-field" id="friendRecipientName" maxlength="20" placeholder="친구에게 보여줄 내 이름">')+'<div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-invite-later>나중에</button><button class="btn btn-dark" type="button" data-friend-accept'+(state.coReadingBusyAccept?' disabled':'')+'>'+(state.coReadingBusyAccept?'연결 중...':'연결하기')+'</button></div></div>'; }
-    else { body+='<div class="friend-panel"><strong>표시 이름</strong><p>친구에게 보여줄 이름이에요.</p><input class="friend-field" id="friendDisplayName" maxlength="20" value="'+esc(state.coReadingDisplayName)+'" placeholder="표시 이름"><div class="friend-actions"><button class="btn btn-outline" type="button" data-friend-name>저장</button><button class="btn btn-dark" type="button" data-friend-invite'+(state.coReadingBusyCreate?' disabled':'')+'>'+(state.coReadingBusyCreate?'만드는 중...':'초대 링크 만들기')+'</button></div>'+(state.coReadingInviteUrl?'<div class="friend-invite-link">'+esc(state.coReadingInviteUrl)+'</div><div class="friend-actions"><button class="btn btn-dark" type="button" data-friend-share>공유하기</button><button class="btn btn-outline" type="button" data-friend-copy>링크 복사</button></div>':'')+'</div>'; }
     if(state.coReadingMessage) body+='<p class="friend-status" aria-live="polite">'+esc(state.coReadingMessage)+'</p>';
     el.innerHTML=myHeader("같이 읽을 친구","my")+body;
   }
@@ -2923,7 +2932,6 @@
   var overlay = document.getElementById("modalOverlay");
   var modalBeforeClose = null;
   function closeModal(){
-    if(overlay.dataset.locked==="friend-visit-consent")return;
     var beforeClose = modalBeforeClose;
     modalBeforeClose = null;
     if (beforeClose){
@@ -2947,32 +2955,6 @@
   document.addEventListener("keydown", function(e){
     if (e.key === "Escape" && !overlay.hidden) closeModal();
   });
-
-  function finishFriendVisitConsent(){
-    delete overlay.dataset.locked;
-    closeModal();
-  }
-  function decideFriendVisitConsent(allowed){
-    if(state.friendVisitBusy||!coReadingRepository||!friendVisit)return;
-    state.friendVisitBusy=true;
-    var buttons=overlay.querySelectorAll("button");buttons.forEach(function(button){button.disabled=true;});
-    var status=overlay.querySelector("[data-friend-consent-status]");
-    window.BooktokkiFriendVisit.saveConsent(coReadingRepository,friendVisit,allowed).then(function(){
-      finishFriendVisitConsent();
-      renderAll();
-      friendVisit.refresh();
-    }).catch(function(){
-      if(status)status.textContent="설정을 저장하지 못했어요. 다시 시도해 주세요.";
-      buttons.forEach(function(button){button.disabled=false;});
-      var dismiss=overlay.querySelector("[data-friend-consent-dismiss]");if(dismiss)dismiss.hidden=false;
-    }).finally(function(){state.friendVisitBusy=false;});
-  }
-  function maybeShowFriendVisitConsent(){
-    if(friendVisitConsentDeferred||!friendVisitEnabled()||!window.BooktokkiFriendVisit||!window.BooktokkiFriendVisit.shouldPromptConsent({view:state.view,appStarted:appStarted,connected:!!(state.friendVisit&&state.friendVisit.connected),visitState:state.friendVisit&&state.friendVisit.visitState,modalOpen:!overlay.hidden}))return false;
-    openModal('<div class="modal friend-consent-modal"><h2>친구 토끼가 놀러 와도 될까요?</h2><p class="my-form-intro">두 사람 모두 허용하고 북토끼를 사용하고 있을 때 친구 토끼가 홈에 잠깐 놀러 올 수 있어요.<br>내가 북토끼를 쓰는 동안엔 내 토끼도 친구 홈에 놀러 가요.</p><p class="friend-consent-note">책, 페이지, 북로그, 보고 있는 화면은 공유되지 않아요.<br>방문 이력이나 마지막 사용 시각도 친구에게 보여주지 않아요.</p><p class="friend-status" data-friend-consent-status aria-live="polite"></p><div class="modal-actions"><button class="btn btn-outline" type="button" data-friend-consent="false">허용하지 않기</button><button class="btn btn-dark" type="button" data-friend-consent="true">허용하기</button></div><button class="my-edit-nickname" type="button" data-friend-consent-dismiss hidden>이번엔 닫기</button></div>');
-    overlay.dataset.locked="friend-visit-consent";
-    return true;
-  }
 
   var pendingFirstRecordFeedbackUserId = null;
   var feedbackPromptWaitTimer = null;
@@ -3536,10 +3518,6 @@
 
   /* ---------------- event delegation ---------------- */
   document.body.addEventListener("click", function(e){
-    var consentDismiss=e.target.closest("[data-friend-consent-dismiss]");
-    if(consentDismiss){friendVisitConsentDeferred=true;finishFriendVisitConsent();return;}
-    var consent=e.target.closest("[data-friend-consent]");
-    if(consent){decideFriendVisitConsent(consent.getAttribute("data-friend-consent")==="true");return;}
     var t = e.target.closest("[data-feedback-back]");
     if (t){
       state.view = state.feedbackFrom || "my";
@@ -3564,21 +3542,21 @@
     if (t){ logout(t); return; }
 
     t=e.target.closest("[data-friend-name]");
-    if(t){ var name=document.getElementById("friendDisplayName").value; coReadingRepository.setDisplayName(name).then(function(saved){state.coReadingDisplayName=saved;state.coReadingMessage="표시 이름을 저장했어요.";renderAll();}).catch(function(error){state.coReadingMessage=error.message||"저장하지 못했어요.";renderAll();}); return; }
+    if(t){ var name=document.getElementById("friendDisplayName").value,nameUser=activeAuthUserId; coReadingRepository.setDisplayName(name).then(function(saved){if(nameUser!==activeAuthUserId)return;state.coReadingDisplayName=saved;state.coReadingMessage="표시 이름을 저장했어요.";renderAll();}).catch(function(error){if(nameUser!==activeAuthUserId)return;state.coReadingMessage=error.message||"저장하지 못했어요.";renderAll();}); return; }
     t=e.target.closest("[data-friend-invite]");
-    if(t){var inviteNameInput=document.getElementById("friendDisplayName");var inviteName=inviteNameInput?inviteNameInput.value:state.coReadingDisplayName;state.coReadingMessage="";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyCreate",function(){renderAll();return coReadingRepository.setDisplayName(inviteName).then(function(saved){state.coReadingDisplayName=saved;return coReadingRepository.createInvite();}).then(function(token){var url=new URL("./",window.location.href);url.searchParams.set("friend_invite",token);state.coReadingInviteUrl=url.href;state.coReadingMessage="초대 링크를 만들었어요.";if(measurementRepository)measurementRepository.record("friend_invite_created",null,"friend_invite");});}).catch(function(error){if(measurementRepository)measurementRepository.record("friend_invite_failed","unknown","friend_invite");state.coReadingMessage=error.message||"초대 링크를 만들지 못했어요.";}).finally(function(){renderAll();});return;}
+    if(t){var inviteNameInput=document.getElementById("friendDisplayName"),inviteUser=activeAuthUserId;var inviteName=inviteNameInput?inviteNameInput.value:state.coReadingDisplayName;state.coReadingMessage="";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyCreate",function(){renderAll();return coReadingRepository.setDisplayName(inviteName).then(function(saved){if(inviteUser!==activeAuthUserId)return Promise.reject({stale:true});state.coReadingDisplayName=saved;return coReadingRepository.createInvite();}).then(function(token){if(inviteUser!==activeAuthUserId)return;var url=new URL("./",window.location.href);url.searchParams.set("friend_invite",token);state.coReadingInviteUrl=url.href;state.coReadingMessage="초대 링크를 만들었어요.";if(measurementRepository)measurementRepository.record("friend_invite_created",null,"friend_invite");});}).catch(function(error){if(inviteUser!==activeAuthUserId||error&&error.stale)return;if(measurementRepository)measurementRepository.record("friend_invite_failed","unknown","friend_invite");state.coReadingMessage=error.message||"초대 링크를 만들지 못했어요.";}).finally(function(){if(inviteUser===activeAuthUserId)renderAll();});return;}
     t=e.target.closest("[data-friend-share]");
     if(t&&state.coReadingInviteUrl){if(!navigator.share){state.coReadingMessage="이 환경에서는 링크 복사를 이용해 주세요.";renderAll();return;}navigator.share({title:"북토끼 같이 읽기",text:"북토끼에서 같이 읽어요.",url:state.coReadingInviteUrl}).catch(function(error){if(!error||error.name!=="AbortError"){state.coReadingMessage="공유하지 못했어요. 링크 복사를 이용해 주세요.";renderAll();}});return;}
     t=e.target.closest("[data-friend-copy]");
     if(t&&state.coReadingInviteUrl){copyInviteLink(state.coReadingInviteUrl).then(function(){state.coReadingMessage="초대 링크를 복사했어요.";}).catch(function(){state.coReadingMessage="링크를 복사하지 못했어요.";}).finally(function(){renderAll();});return;}
     t=e.target.closest("[data-friend-accept]");
-    if(t){var recipientName=document.getElementById("friendRecipientName");var recipientNameValue=recipientName?recipientName.value:"";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyAccept",function(){renderAll();return coReadingRepository.acceptInviteWithDisplayName(friendInviteContext.getToken(),state.coReadingDisplayName,recipientNameValue).then(function(){if(measurementRepository)measurementRepository.record("friend_invite_accepted",null,"friend_invite");if(!state.coReadingDisplayName)state.coReadingDisplayName=recipientNameValue.trim();cleanupFriendInvite();state.coReadingMessage="친구와 연결했어요.";loadCoReading();});}).catch(function(error){if(measurementRepository)measurementRepository.record("friend_invite_failed","unknown","friend_invite");state.coReadingMessage=error.message||"초대를 수락하지 못했어요.";}).finally(function(){if(state.view==="co-reading")renderAll();});return;}
+    if(t){var recipientName=document.getElementById("friendRecipientName"),acceptUser=activeAuthUserId;var recipientNameValue=recipientName?recipientName.value:"";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyAccept",function(){renderAll();return coReadingRepository.acceptInviteWithDisplayName(friendInviteContext.getToken(),state.coReadingDisplayName,recipientNameValue).then(function(){if(acceptUser!==activeAuthUserId)return;if(measurementRepository)measurementRepository.record("friend_invite_accepted",null,"friend_invite");if(!state.coReadingDisplayName)state.coReadingDisplayName=recipientNameValue.trim();cleanupFriendInvite();loadCoReading();state.coReadingMessage="친구와 연결했어요.";});}).catch(function(error){if(acceptUser!==activeAuthUserId)return;if(measurementRepository)measurementRepository.record("friend_invite_failed","unknown","friend_invite");if(window.BooktokkiCoReadingRepository.isAlreadyConnectedError(error)){cleanupFriendInvite();state.coReadingMessage="이미 연결된 친구예요.";}else state.coReadingMessage=error.message||"초대를 수락하지 못했어요.";}).finally(function(){if(acceptUser===activeAuthUserId&&state.view==="co-reading")renderAll();});return;}
     t=e.target.closest("[data-friend-invite-later]");
     if(t){cleanupFriendInvite();state.coReadingMessage="";goTo("my");return;}
     t=e.target.closest("[data-friend-disconnect]");
-    if(t){if(!window.confirm("친구 연결을 끊을까요?"))return;coReadingRepository.disconnect().then(function(){state.coReadingConnection=null;state.coReadingMessage="연결을 끊었어요.";if(friendVisit)return friendVisit.refresh();}).then(function(){renderAll();}).catch(function(){state.coReadingMessage="연결을 끊지 못했어요.";renderAll();});return;}
+    if(t){var disconnectId=t.getAttribute("data-friend-disconnect"),disconnectUser=activeAuthUserId;if(!disconnectId||state.coReadingBusyConnections[disconnectId]||!window.confirm("이 친구와 연결을 끊을까요?"))return;state.coReadingBusyConnections[disconnectId]=true;renderAll();coReadingRepository.disconnectConnection(disconnectId).then(function(){if(disconnectUser!==activeAuthUserId)return;state.coReadingConnections=state.coReadingConnections.filter(function(c){return c.connectionId!==disconnectId;});state.coReadingMessage="연결을 끊었어요.";if(friendVisit&&friendVisitEnabled())return friendVisit.setConnections(state.coReadingConnections);}).catch(function(){if(disconnectUser===activeAuthUserId)state.coReadingMessage="연결을 끊지 못했어요.";}).finally(function(){if(disconnectUser===activeAuthUserId){delete state.coReadingBusyConnections[disconnectId];renderAll();}});return;}
     t=e.target.closest("[data-friend-visit-toggle]");
-    if(t&&friendVisitEnabled()&&!state.friendVisitBusy){var allow=!(state.friendVisit&&state.friendVisit.visitState==="allowed");state.friendVisitBusy=true;renderAll();coReadingRepository.setVisitAllowed(allow).then(function(){return friendVisit.refresh();}).then(function(){state.coReadingMessage=allow?"친구 토끼 방문을 허용했어요.":"친구 토끼 방문을 끈 상태예요.";}).catch(function(){state.coReadingMessage="설정을 바꾸지 못했어요.";}).finally(function(){state.friendVisitBusy=false;renderAll();});return;}
+    if(t&&friendVisitEnabled()){var visitId=t.getAttribute("data-friend-visit-toggle"),visitUser=activeAuthUserId,currentConnection=state.coReadingConnections.find(function(c){return c.connectionId===visitId;});if(!currentConnection||state.coReadingBusyConnections[visitId])return;var allow=currentConnection.myVisitState!=="allowed";state.coReadingBusyConnections[visitId]=true;renderAll();coReadingRepository.setConnectionVisit(visitId,allow).then(function(){if(visitUser!==activeAuthUserId)return;state.coReadingConnections=state.coReadingConnections.map(function(c){return c.connectionId===visitId?Object.assign({},c,{myVisitState:allow?"allowed":"declined"}):c;});state.coReadingMessage=allow?"이 친구와의 토끼 방문을 허용했어요.":"이 친구와의 토끼 방문을 껐어요.";if(friendVisit)return friendVisit.setConnections(state.coReadingConnections);}).catch(function(){if(visitUser===activeAuthUserId)state.coReadingMessage="설정을 바꾸지 못했어요.";}).finally(function(){if(visitUser===activeAuthUserId){delete state.coReadingBusyConnections[visitId];renderAll();}});return;}
 
     t = e.target.closest("[data-stats-month]");
     if (t){
@@ -4023,7 +4001,7 @@
 
   function showSignedOut(message){
     if(friendVisit)friendVisit.stop();
-    if(overlay&&overlay.dataset.locked==="friend-visit-consent"){delete overlay.dataset.locked;closeModal();}
+    coReadingLoadEpoch+=1;
     activeAuthUserId = null;
     activeAuthUser = null;
     appStarted = false;
@@ -4040,13 +4018,15 @@
     state.feedbackDraft = "";
     state.feedbackStatus = null;
     state.feedbackSubmitting = false;
-    state.coReadingConnection = null;
+    state.coReadingConnections = [];
     state.coReadingDisplayName = "";
+    state.coReadingInviteUrl = "";
     state.coReadingPreviewName = "";
     state.coReadingMessage = "";
-    state.friendVisit = {connected:false,friendName:"",visitState:"none",here:false,episodeSeen:false};
-    state.friendVisitBusy = false;
-    friendVisitConsentDeferred = false;
+    state.coReadingBusyCreate = false;
+    state.coReadingBusyAccept = false;
+    state.coReadingBusyConnections = {};
+    state.friendVisit = {userId:null,visitors:[]};
     if (db) db.close();
     db = null;
     storageReady = null;

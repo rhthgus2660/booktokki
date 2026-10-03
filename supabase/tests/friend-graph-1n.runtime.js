@@ -15,6 +15,7 @@ var migrations=path.join(__dirname,"../migrations");
 var step1=fs.readFileSync(path.join(migrations,"202609290001_co_reading_presence.sql"),"utf8");
 var visit=fs.readFileSync(path.join(migrations,"202610020001_friend_visit_presence.sql"),"utf8");
 var graph=fs.readFileSync(path.join(migrations,"202610030001_friend_graph_1n.sql"),"utf8");
+var followup=fs.readFileSync(path.join(migrations,"202610030002_friend_graph_1n_client_followup.sql"),"utf8");
 var rollback=fs.readFileSync(path.join(__dirname,"../rollback/202610030001_friend_graph_1n_rollback.sql"),"utf8");
 function uid(n){return "00000000-0000-4000-8000-"+String(n).padStart(12,"0");}
 async function rejected(promise,pattern){try{await promise;assert.fail("expected rejection");}catch(error){if(error.code==="ERR_ASSERTION")throw error;if(pattern)assert.match(String(error.message),pattern);}}
@@ -46,6 +47,7 @@ async function baseDb(){
   var beforeEvents=(await db.query("select count(*)::int n from public.presence_analytics_events")).rows[0].n;
 
   await db.exec(graph);
+  await db.exec(followup);
   assert.deepEqual((await db.query("select user_id,friend_user_id,connection_id from public.friend_links order by user_id")).rows,beforeLinks);
   assert.deepEqual((await db.query("select user_id,connection_id,allowed from public.friend_visit_consents where connection_id=$1 order by user_id",[ab])).rows,beforeConsent);
   assert.equal((await db.query("select token_hash from public.friend_invites where inviter_user_id=$1",[C])).rows[0].token_hash,beforeInvite);
@@ -82,6 +84,10 @@ async function baseDb(){
   assert.deepEqual((await call(E,"select * from public.touch_app_presence()")).rows[0],{connected:false,friend_display_name:null,visit_state:"none",friend_here:false});
   await rejected(call(A,"select public.disconnect_friend()"),/Multiple friends/i);
   assert.deepEqual((await call(A,"select * from public.touch_app_presence()")).rows[0],{connected:true,friend_display_name:null,visit_state:"none",friend_here:false});
+
+  await db.exec("create function public.force_consent_fk_race() returns trigger language plpgsql as $$ begin raise foreign_key_violation using message='internal constraint detail'; end $$; create trigger force_consent_fk_race before insert or update on public.friend_visit_consents for each row execute function public.force_consent_fk_race();");
+  await rejected(call(A,"select public.set_friend_connection_visit($1,false)",[ac]),/Connection not available/i);
+  await db.exec("drop trigger force_consent_fk_race on public.friend_visit_consents; drop function public.force_consent_fk_race();");
 
   await call(A,"select public.disconnect_friend_connection($1)",[ab]);
   assert.equal((await db.query("select count(*)::int n from public.friend_links where connection_id=$1",[ab])).rows[0].n,0);

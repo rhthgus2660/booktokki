@@ -6,6 +6,27 @@
 })(typeof globalThis!=="undefined"?globalThis:this,function(){
   "use strict";
   function value(result){ if(result.error) throw result.error; return result.data; }
+  function rows(result){var data=value(result);return Array.isArray(data)?data:(data?[data]:[]);}
+  function connection(row){
+    return {
+      connectionId:String(row&&row.connection_id||""),
+      friendDisplayName:String(row&&row.friend_display_name||""),
+      connectedAt:row&&row.connected_at||null,
+      myVisitState:/^(allowed|declined|undecided)$/.test(row&&row.my_visit_state||"")?row.my_visit_state:"undecided"
+    };
+  }
+  function visitor(row){return {connectionId:String(row&&row.connection_id||""),friendDisplayName:String(row&&row.friend_display_name||"")};}
+  function stableConnections(list){
+    var seen={};
+    return list.map(connection).filter(function(item){if(!item.connectionId||seen[item.connectionId])return false;seen[item.connectionId]=true;return true;}).sort(function(a,b){
+      var byTime=String(a.connectedAt||"").localeCompare(String(b.connectedAt||""));
+      return byTime||a.connectionId.localeCompare(b.connectionId);
+    });
+  }
+  function stableVisitors(list){
+    var seen={};
+    return list.map(visitor).filter(function(item){if(!item.connectionId||seen[item.connectionId])return false;seen[item.connectionId]=true;return true;}).sort(function(a,b){return a.connectionId.localeCompare(b.connectionId);});
+  }
   function create(client){
     if(!client||typeof client.rpc!=="function") throw new Error("Supabase client is required");
     return {
@@ -19,6 +40,11 @@
         if(currentName) return self.acceptInvite(token);
         return self.setDisplayName(enteredName).then(function(){return self.acceptInvite(token);});
       },
+      getConnections:function(){return client.rpc("get_friend_connections").then(rows).then(stableConnections);},
+      touchFriendPresence:function(){return client.rpc("touch_friend_presence").then(rows).then(stableVisitors);},
+      setConnectionVisit:function(connectionId,allowed){return client.rpc("set_friend_connection_visit",{p_connection_id:connectionId,p_allowed:!!allowed}).then(value);},
+      disconnectConnection:function(connectionId){return client.rpc("disconnect_friend_connection",{p_connection_id:connectionId}).then(value);},
+      recordRabbitSeenV2:function(connectionId){return client.rpc("record_friend_rabbit_seen_v2",{p_connection_id:connectionId}).then(value);},
       disconnect:function(){ return client.rpc("disconnect_friend").then(value); },
       touchPresence:function(){ return client.rpc("touch_app_presence").then(function(result){ var rows=value(result); return Array.isArray(rows)?(rows[0]||null):rows; }); },
       leavePresence:function(){ return client.rpc("leave_app_presence").then(value); },
@@ -50,8 +76,9 @@
   }
   function runOnce(state,key,work){
     if(state[key])return Promise.resolve({ignored:true});
-    state[key]=true;
-    return Promise.resolve().then(work).finally(function(){state[key]=false;});
+    var marker={};state[key]=marker;
+    return Promise.resolve().then(work).finally(function(){if(state[key]===marker)state[key]=false;});
   }
-  return {create:create,resolveInviteToken:resolveInviteToken,resolveAuthRedirectUrl:resolveAuthRedirectUrl,createInviteContext:createInviteContext,runOnce:runOnce};
+  function isAlreadyConnectedError(error){return !!(error&&(error.code==="PT409"||/already connected/i.test(error.message||"")));}
+  return {create:create,resolveInviteToken:resolveInviteToken,resolveAuthRedirectUrl:resolveAuthRedirectUrl,createInviteContext:createInviteContext,runOnce:runOnce,isAlreadyConnectedError:isAlreadyConnectedError,stableConnections:stableConnections,stableVisitors:stableVisitors};
 });
