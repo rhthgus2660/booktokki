@@ -1258,6 +1258,10 @@
     #view-detail .note-compose textarea, #view-detail .note-edit-input,
     #view-detail .completion-reflection textarea{ font-size:16px; }
   }
+  .continue-reading-book{border-left:3px solid var(--ink, #45372e); padding-left:10px;}
+  .continue-reading-action{min-height:44px; border:1px solid #d5cec2; border-radius:8px; background:#f5f0e7; color:#45372e; font:inherit; font-size:.8rem; padding:8px 12px; cursor:pointer;}
+  .continue-reading-actions{display:flex; flex-direction:column; flex:none; width:94px; gap:2px;}
+  #view-home .continue-reading-book .book-resume{white-space:normal; line-height:1.5;}
 </style>
 </head>
 <body>
@@ -1331,6 +1335,7 @@
 <script src="./reading-record-flow.js"></script>
 <script src="./cloud-repository.js"></script>
 <script src="./analytics-repository.js"></script>
+<script src="./continue-reading.js"></script>
 <script src="./profile-repository.js"></script>
 <script src="./feedback-repository.js"></script>
 <script src="./co-reading-repository.js"></script>
@@ -1390,6 +1395,33 @@
   var supabaseClient = null;
   var cloudRepository = null;
   var analyticsRepository = null;
+  var continueReadingReady = false;
+  var continueReadingFlow = window.BooktokkiContinueReading.createFlow();
+  var continueReadingObserver = null;
+  function trackContinueReading(type, bookId, rootId){
+    var ref = cloudRepository && cloudRepository.getRef(bookId);
+    if (!ref || !rootId) return;
+    trackAnalyticsEvent({eventId:type === "continue_reading_viewed" ? rootId : uid(), bookId:ref.cloudId,
+      eventType:type, occurredAt:nowIso(), withNote:null, continueReadingId:rootId});
+  }
+  function observeContinueReading(){
+    if (continueReadingObserver) continueReadingObserver.disconnect();
+    if (!continueReadingReady || !appStarted || state.view !== "home" || document.visibilityState !== "visible") return;
+    var row = document.querySelector("[data-continue-reading-row]");
+    if (!row) return;
+    continueReadingObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (!continueReadingReady || !entry.target.isConnected || !entry.isIntersecting || entry.intersectionRatio < 0.5 || state.view !== "home" || document.visibilityState !== "visible") return;
+        var id = entry.target.getAttribute("data-continue-reading-row");
+        var rootId = continueReadingFlow.viewed(id, uid());
+        if (rootId) trackContinueReading("continue_reading_viewed", id, rootId);
+      });
+    }, {threshold:0.5});
+    continueReadingObserver.observe(row);
+  }
+  document.addEventListener("visibilitychange", observeContinueReading);
+  window.addEventListener("pagehide", function(){ continueReadingFlow.reset(); });
+  window.addEventListener("pageshow", function(){ if (continueReadingReady) renderAll(); });
   var profileRepository = null;
   var feedbackRepository = null;
   var coReadingRepository = null;
@@ -1894,17 +1926,21 @@
       var b = state.books[bookId];
       var hadPageRecords = getBooks().some(function(book){ return (book.pageLogs || []).length > 0; });
       var shouldPromptForFeedback = false;
+      var savedAnalytics = null;
+      var continueRootId = continueReadingFlow.context(bookId);
       var patch = buildPageLogPatch(b, page);
       var reaction = readingReaction(b, patch.currentPage);
       var reactionSeed = b.id + "|" + todayStr() + "|" + patch.currentPage;
       var log = patch.pageLogs && patch.pageLogs[patch.pageLogs.length - 1];
       var operation = { logId:log ? log.id : uid(), newPage:patch.currentPage, date:todayStr(), at:log ? log.at : patch.updatedAt };
       return cloudRepository.recordPage(activeAuthUserId, bookId, operation).then(function(result){
+        savedAnalytics = {pageDelta:result.logCreated && result.log ? result.log.delta : 0, continueReadingId:continueRootId};
         shouldPromptForFeedback = !hadPageRecords && result.logCreated === true;
         var candidate = localBookFromCloudRow(Object.assign({}, b, patch, { pageLogs:result.logs }), result.book);
         if (result.logCreated && !log){ throw new Error("Unexpected Cloud page log"); }
         return commitLocalBook(candidate);
       }).then(function(){
+        if (options.onSaved) options.onSaved(savedAnalytics);
         var pageInput = document.querySelector('[data-pageinput="' + bookId + '"]');
         if (pageInput){ pageInput.value = patch.currentPage; pageInput.defaultValue = patch.currentPage; }
         if (reaction && !options.suppressReaction) showReadingReaction(reaction, reactionSeed);
@@ -2172,6 +2208,7 @@
       state.feedbackFrom = state.view;
       state.feedbackStatus = null;
     }
+    continueReadingFlow.leave(view, bookId);
     state.view = view;
     if (typeof bookId !== "undefined") state.selectedBookId = bookId;
     state.editingNoteId = null; /* leaving/entering a screen always drops any open 북로그 edit */
@@ -2376,13 +2413,18 @@
      처리, page history) lives in the book's own detail screen now. */
   function currentBookMini(){
     var books = getRecentReadingBooks();
+    var continuation = window.BooktokkiContinueReading.select(getBooks(), new Date(), continueReadingReady);
+    if (continuation){ books = [continuation.book].concat(books.filter(function(b){ return b.id !== continuation.book.id; })).slice(0,3); }
     return '' +
       '<div>' +
         '<div class="section-title">요즘 읽는 책</div>' +
         (books.length ? '<div class="recent-reading-list">' + books.map(function(b){
           var p = pct(b.currentPage, b.totalPages);
-          var resumeContext = resumeContextForBook(b);
-          return '<div class="recent-book">' +
+          var isContinueReading = continuation && continuation.book.id === b.id;
+          var resumeContext = isContinueReading
+            ? b.currentPage + "p까지 읽었어요 · 마지막 페이지 기록 " + continuation.days + "일 전"
+            : resumeContextForBook(b);
+          return '<div class="recent-book'+(isContinueReading ? ' continue-reading-book' : '')+'"'+(isContinueReading ? ' data-continue-reading-row="'+b.id+'"' : '')+'>' +
           '<button type="button" class="recent-book-info" data-open="' + b.id + '" data-open-from="home" aria-label="' + esc(b.title) + ' 상세 보기">' +
             coverEl(b) +
             '<div class="book-meta">' +
@@ -2397,7 +2439,9 @@
               '</div>' +
             '</div>' +
           '</button>' +
+          (isContinueReading ? '<div class="continue-reading-actions"><button type="button" class="continue-reading-action" data-continue-reading="'+b.id+'">이어서 읽기</button>' : '') +
           '<button type="button" class="recent-page-action" data-log="' + b.id + '" aria-label="' + esc(b.title) + ' 읽은 페이지 남기기">+ 읽은 페이지</button>' +
+          (isContinueReading ? '</div>' : '') +
           '</div>';
         }).join("") + '</div>' : '') +
       '</div>';
@@ -2410,6 +2454,7 @@
       ? currentBookMini() + '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button>'
       : '<div class="home-empty-reading"><div class="home-empty-title">요즘 무슨 책 읽어?</div>' +
           '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button></div>');
+    observeContinueReading();
     if (state.view==="home" && friendVisit && window.BooktokkiFriendVisit){
       var renderedScene=window.BooktokkiHomeScene&&window.BooktokkiHomeScene.build({visitors:state.friendVisit&&state.friendVisit.visitors});
       if(renderedScene)renderedScene.visitors.forEach(function(visitor){friendVisit.markRabbitRendered(visitor.connectionId);});
@@ -3335,12 +3380,13 @@
     if (!b) return;
     var noteSeed = { id:uid(), createdAt:nowIso() };
     var analyticsOccurredAt = null;
+    var savedAnalytics = {};
     var analyticsRef = cloudRepository && cloudRepository.getRef(bookId);
     var analyticsSession = analyticsRef && window.BooktokkiAnalyticsRepository
       ? window.BooktokkiAnalyticsRepository.createReadingRecordSession({
           eventId:uid(),
           bookId:analyticsRef.cloudId,
-          send:function(event){ trackAnalyticsEvent(event); }
+          send:function(event){ Object.assign(event, savedAnalytics); trackAnalyticsEvent(event); }
         })
       : null;
     openModal('' +
@@ -3393,7 +3439,7 @@
       BooktokkiReadingRecord.saveReadingRecord({
         page:v,
         thought:noteInput.value,
-        savePage:function(page){ return logPage(bookId, page); },
+        savePage:function(page){ return logPage(bookId, page, {onSaved:function(meta){ if (savedAnalytics.pageDelta == null) savedAnalytics = meta; }}); },
         saveNote:function(text, page){ return addNote(bookId, text, page, noteSeed); }
       }).then(function(result){
         if (analyticsSession) analyticsSession.handleResult(result, analyticsOccurredAt);
@@ -3678,6 +3724,18 @@
     t = e.target.closest("[data-selectday]");
     if (t){ state.statsSelectedDate = t.getAttribute("data-selectday"); renderAll(); return; }
 
+    t = e.target.closest("[data-continue-reading]");
+    if (t){
+      var continueBookId = t.getAttribute("data-continue-reading");
+      var continueRootId = continueReadingFlow.clicked(continueBookId);
+      if (continueRootId){
+        trackContinueReading("continue_reading_clicked", continueBookId, continueRootId);
+        openBook(continueBookId, "home");
+        var enteredRootId = continueReadingFlow.entered(continueBookId);
+        if (enteredRootId && state.view === "detail" && state.books[continueBookId]) trackContinueReading("continue_reading_entered", continueBookId, enteredRootId);
+      } else { openBook(continueBookId, "home"); }
+      return;
+    }
     t = e.target.closest("[data-open]");
     if (t){ openBook(t.getAttribute("data-open"), t.getAttribute("data-open-from")); return; }
 
@@ -3794,7 +3852,8 @@
     var analyticsRef = cloudRepository && cloudRepository.getRef(bookId);
     var analyticsEventId = uid();
     var analyticsOccurredAt = nowIso();
-    logPage(bookId, v).then(function(saved){
+    var savedAnalytics = {};
+    logPage(bookId, v, {onSaved:function(meta){ savedAnalytics = meta; }}).then(function(saved){
       if (!saved){
         if (state.books[bookId]) t.value = state.books[bookId].currentPage;
         return;
@@ -3805,7 +3864,7 @@
             analyticsEventId,
             analyticsRef.cloudId,
             analyticsOccurredAt,
-            { pageSaved:true, noteSaved:false }
+            Object.assign({ pageSaved:true, noteSaved:false }, savedAnalytics)
           );
         });
       }
@@ -3969,6 +4028,7 @@
 
   function showReadyApp(userId){
     if (activeAuthUserId !== userId) return;
+    continueReadingReady = true;
     appStarted = true;
     bootstrappedUserId = userId;
     showOwnerMismatchRecovery(false);
@@ -3995,6 +4055,8 @@
       storageReady = null;
     }
 
+    continueReadingReady = false;
+    continueReadingFlow.reset();
     bootstrapStarted = true;
     showOwnerMismatchRecovery(false);
     document.getElementById("authGate").hidden = false;
@@ -4098,6 +4160,9 @@
   }
 
   function showSignedOut(message){
+    continueReadingReady = false;
+    continueReadingFlow.reset();
+    if (continueReadingObserver) continueReadingObserver.disconnect();
     if(friendVisit)friendVisit.stop();
     coReadingLoadEpoch+=1;
     activeAuthUserId = null;

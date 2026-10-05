@@ -84,7 +84,7 @@ var flow = require("../../reading-record-flow.js");
   var html = fs.readFileSync(path.join(__dirname, "../../index.html"), "utf8");
   assert.match(html, /class=\"page-inline-input\" data-pageinput=\"/);
   assert.match(html, /closest\(\"\[data-pageinput\]\"\)/);
-  assert.match(html, /logPage\(bookId, v\)\.then\(function\(saved\)/);
+  assert.match(html, /logPage\(bookId, v, \{onSaved:.*\}\)\.then\(function\(saved\)/);
   assert.match(html, /readingRecordEvent\([\s\S]*analyticsEventId[\s\S]*noteSaved:false/);
   assert.match(html, /if \(t\)\{ modalLogPage\(t\.getAttribute\(\"data-log\"\)\); return; \}/);
   assert.match(html, /<h2>어디까지 읽었어\?<\/h2>/);

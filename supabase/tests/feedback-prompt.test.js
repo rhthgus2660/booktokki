@@ -14,7 +14,7 @@ function createLogPageHarness(options){
   var factory = new Function(
     "state", "queueCloudMutation", "getBooks", "buildPageLogPatch", "readingReaction", "todayStr", "uid",
     "cloudRepository", "activeAuthUserId", "localBookFromCloudRow", "commitLocalBook", "document",
-    "showReadingReaction", "queueFirstRecordFeedbackPrompt", "cloudSaveFailed",
+    "showReadingReaction", "queueFirstRecordFeedbackPrompt", "cloudSaveFailed", "continueReadingFlow",
     source + "; return logPage;"
   );
   var logCreated = options.logCreated !== false;
@@ -45,7 +45,8 @@ function createLogPageHarness(options){
     { querySelector:function(){ return null; } },
     function(){},
     function(userId){ promptCalls.push(userId); },
-    function(){}
+    function(){},
+    require("../../continue-reading.js").createFlow()
   );
   return { logPage:logPage, promptCalls:promptCalls, state:state };
 }
@@ -187,9 +188,10 @@ function createLogPageHarness(options){
 
   var goToSource = html.slice(html.indexOf("function goTo("), html.indexOf("function openMyBooklogs("));
   var navigationState = { view:"my" };
-  var goTo = new Function("state", "renderAll", goToSource + "; return goTo;")(
+  var goTo = new Function("state", "renderAll", "continueReadingFlow", goToSource + "; return goTo;")(
     navigationState,
-    function(){}
+    function(){},
+    require("../../continue-reading.js").createFlow()
   );
   goTo("feedback");
   assert.equal(navigationState.feedbackFrom, "my");

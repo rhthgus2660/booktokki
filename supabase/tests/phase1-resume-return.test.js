@@ -67,14 +67,15 @@ var miniSource = html.slice(
   html.indexOf("function renderHome(")
 );
 var renderMini = new Function(
-  "getRecentReadingBooks", "pct", "coverEl", "esc", "resumeContextForBook",
+  "getRecentReadingBooks", "pct", "coverEl", "esc", "resumeContextForBook", "window", "getBooks", "continueReadingReady",
   miniSource + "; return currentBookMini;"
 )(
   function(){ return [{ id:"book", title:"책", author:"저자", currentPage:83, totalPages:200, pageLogs:[{ delta:10 }] }]; },
   function(){ return 42; },
   function(){ return '<div class="cover"></div>'; },
   function(value){ return String(value); },
-  function(){ return "83p · 5일 전"; }
+  function(){ return "83p · 5일 전"; },
+  {BooktokkiContinueReading:require("../../continue-reading.js")}, function(){return [];}, false
 );
 var miniMarkup = renderMini();
 assert.match(miniMarkup, /class="book-resume">83p · 5일 전</);
@@ -151,7 +152,7 @@ function logPageHarness(shouldFail){
   var logPage = new Function(
     "state", "queueCloudMutation", "getBooks", "buildPageLogPatch", "readingReaction", "todayStr", "uid",
     "cloudRepository", "activeAuthUserId", "localBookFromCloudRow", "commitLocalBook", "document",
-    "showReadingReaction", "queueFirstRecordFeedbackPrompt", "cloudSaveFailed",
+    "showReadingReaction", "queueFirstRecordFeedbackPrompt", "cloudSaveFailed", "continueReadingFlow",
     logPageSource + "; return logPage;"
   )(
     state,
@@ -168,7 +169,8 @@ function logPageHarness(shouldFail){
     { querySelector:function(){ return null; } },
     function(mode){ shown.push(mode); },
     function(){},
-    function(){}
+    function(){},
+    require("../../continue-reading.js").createFlow()
   );
   return { logPage:logPage, shown:shown };
 }

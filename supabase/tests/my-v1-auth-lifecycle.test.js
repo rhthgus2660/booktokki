@@ -133,6 +133,8 @@ function createHarness(options){
     BOOKTOKKI_AUTH_CONFIG:{ supabaseUrl:"https://example.supabase.co", supabaseAnonKey:"sb_publishable_test" },
     supabase:{ createClient:function(){ return client; } },
     BooktokkiReadingRecord:require(path.join(ROOT, "reading-record-flow.js")),
+    addEventListener:function(){},
+    BooktokkiContinueReading:require(path.join(ROOT, "continue-reading.js")),
     BooktokkiAnalyticsRepository:require(path.join(ROOT, "analytics-repository.js")),
     BooktokkiProfileRepository:require(path.join(ROOT, "profile-repository.js")),
     BooktokkiFeedbackRepository:require(path.join(ROOT, "feedback-repository.js")),

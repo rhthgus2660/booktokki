@@ -17,7 +17,9 @@
       bookId:bookId,
       eventType:"reading_record_saved",
       occurredAt:occurredAt,
-      withNote:result.noteSaved === true
+      withNote:result.noteSaved === true,
+      pageDelta:result.pageDelta == null ? null : result.pageDelta,
+      continueReadingId:result.continueReadingId || null
     };
   }
 
@@ -49,7 +51,11 @@
 
   function eventRow(userId, event){
     if (!userId || !event || !event.eventId || !event.bookId || !event.occurredAt) throw new Error("Analytics event is incomplete");
-    if (event.eventType !== "book_added" && event.eventType !== "reading_record_saved") throw new Error("Unknown analytics event type");
+    var continueTypes = ["continue_reading_viewed", "continue_reading_clicked", "continue_reading_entered"];
+    var isContinue = continueTypes.indexOf(event.eventType) !== -1;
+    if (event.eventType !== "book_added" && event.eventType !== "reading_record_saved" && !isContinue) throw new Error("Unknown analytics event type");
+    if (isContinue && (!event.continueReadingId || event.withNote !== null)) throw new Error("Continue Reading event is incomplete");
+    if (event.pageDelta != null && (event.eventType !== "reading_record_saved" || !Number.isInteger(event.pageDelta))) throw new Error("Invalid page delta");
     if (event.eventType === "book_added" && event.withNote !== null) throw new Error("book_added with_note must be null");
     if (event.eventType === "reading_record_saved" && typeof event.withNote !== "boolean") throw new Error("reading_record_saved with_note must be boolean");
     if (!Number.isFinite(Date.parse(event.occurredAt))) throw new Error("Analytics timestamp is invalid");
@@ -59,7 +65,9 @@
       book_id:event.bookId,
       event_type:event.eventType,
       occurred_at:event.occurredAt,
-      with_note:event.withNote
+      with_note:event.withNote,
+      continue_reading_id:event.continueReadingId || null,
+      page_delta:event.pageDelta == null ? null : event.pageDelta
     };
   }
 
