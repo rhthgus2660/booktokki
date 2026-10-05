@@ -148,7 +148,7 @@ function createHarness(options){
     },
     BooktokkiConflictResolution:{
       prepare:function(){ counters.conflictPrepare++; return Promise.resolve({state:"READY"}); },
-      downloadPreparedBackup:function(){ counters.conflictDownload++; },
+      downloadPreparedBackup:function(context){ counters.conflictDownload++; context.backupDownloaded=true; },
       resolve:function(){ counters.conflictResolve++; return Promise.resolve({success:true,bootstrap:{state:"SYNCED",canStart:true}}); }
     },
     BooktokkiCloudRepository:{
@@ -207,8 +207,8 @@ function createHarness(options){
   assert.equal(app.counters.indexedDbOpen, 1);
   assert.equal(app.el("app").hidden, false);
 
-  // A validated conflict prepares a backup before showing its CTA, then
-  // downloads before replacement and enters Home only after SYNCED.
+  // A validated conflict prepares a backup before showing its CTA. The first
+  // explicit action only downloads; replacement requires a second action.
   var conflictApp=createHarness({bootstrapResults:[{state:"CONFLICT",canStart:false},{state:"SYNCED",canStart:true}]});
   await wait();
   assert.equal(conflictApp.counters.conflictPrepare,1);
@@ -217,6 +217,12 @@ function createHarness(options){
   conflictApp.clickElement("conflictContinueBtn");
   await wait(30);
   assert.equal(conflictApp.counters.conflictDownload,1);
+  assert.equal(conflictApp.counters.conflictResolve,0);
+  assert.equal(conflictApp.el("app").hidden,true);
+  assert.equal(conflictApp.el("conflictBackupConfirmedBtn").hidden,false);
+  assert.match(conflictApp.el("conflictResolutionStatus").textContent, /다운로드된 파일을 확인/);
+  conflictApp.clickElement("conflictBackupConfirmedBtn");
+  await wait(30);
   assert.equal(conflictApp.counters.conflictResolve,1);
   assert.equal(conflictApp.el("app").hidden,false);
   assert.equal(app.el("ownerMismatchRecovery").hidden, true);

@@ -41,6 +41,8 @@ function storage(){var values={"booktokki:local-owner:v1":JSON.stringify({versio
   assert.equal(prepared.state,"READY");assert.equal(db.inspect().writes,0,"prepare and CTA display perform no Local writes");
   await assert.rejects(resolver.resolve({context:prepared,database:db,client:client(cloud,calls),storage:store,userId:USER}),/Downloaded verified backup/);
   var downloads=0;resolver.downloadPreparedBackup(prepared,null,function(payload){downloads++;assert.equal(payload.local.books[0].id,"local-only");});
+  assert.equal(db.inspect().writes,0,"verified backup download performs no destructive Local writes before explicit confirmation");
+  assert.equal(db.inspect().books[0].id,"local-only","first CTA leaves Local books unchanged");
   assert.equal(downloads,1);var result=await resolver.resolve({context:prepared,database:db,client:client(cloud,calls),storage:store,userId:USER});
   assert.equal(result.success,true);assert.equal(result.bootstrap.state,"SYNCED");assert.equal(db.inspect().books.length,1);
   assert.equal(db.inspect().books[0].id,"cloud-book");assert.equal(db.inspect().books[0].pageLogs.length,1);assert.equal(db.inspect().books[0].notes.length,1);
