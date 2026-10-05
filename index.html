@@ -1297,6 +1297,12 @@
       <button type="button" id="ownerRecoveryExecuteBtn" hidden>복구 실행</button>
     </div>
   </div>
+  <div class="auth-owner-recovery" id="conflictResolution" hidden>
+    <strong>저장된 기록과 이 기기의 기록이 달라요.</strong>
+    <p>이 기기의 현재 기록을 백업한 뒤, 계정에 저장된 기록으로 계속합니다.</p>
+    <button class="auth-owner-recovery-action" id="conflictContinueBtn" type="button">저장된 기록으로 계속하기</button>
+    <p id="conflictResolutionStatus" aria-live="polite"></p>
+  </div>
 </section>
 
 <div class="app" id="app" hidden>
@@ -1363,6 +1369,7 @@
 <script src="./supabase/cloud-bootstrap.js"></script>
 <script src="./owner-diagnostics.js"></script>
 <script src="./supabase/legacy-recovery.js"></script>
+<script src="./supabase/conflict-resolution.js"></script>
 <script>
 (function(){
   "use strict";
@@ -1451,6 +1458,8 @@
   var bootstrappedUserId = null;
   var activeAuthUserId = null;
   var activeAuthUser = null;
+  var pendingConflictResolution = null;
+  var conflictResolutionLocked = false;
   /* Set after the Worker is deployed. This URL is public configuration;
      the Kakao key remains a Worker secret and is never shipped here. */
   var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
@@ -4092,12 +4101,70 @@
     if (missing) initLegacyRecoveryFlow();
   }
 
+  function setConflictResolutionVisible(visible){
+    var panel=document.getElementById("conflictResolution");
+    if(panel) panel.hidden=!visible;
+  }
+  function conflictResolutionStatus(text){
+    var node=document.getElementById("conflictResolutionStatus");
+    if(node) node.textContent=text||"";
+  }
+  function prepareConflictResolution(userId){
+    if(!window.BooktokkiConflictResolution){
+      conflictResolutionStatus("기록 확인 기능을 불러오지 못했어요.");
+      return Promise.resolve(false);
+    }
+    pendingConflictResolution=null;
+    conflictResolutionLocked=false;
+    setConflictResolutionVisible(false);
+    return window.BooktokkiConflictResolution.prepare({database:db,client:supabaseClient,storage:window.localStorage,userId:userId}).then(function(context){
+      if(activeAuthUserId!==userId) return false;
+      pendingConflictResolution=context;
+      document.getElementById("conflictContinueBtn").disabled=false;
+      conflictResolutionStatus("");
+      setConflictResolutionVisible(true);
+      document.getElementById("authStatus").textContent="";
+      return true;
+    }).catch(function(error){
+      console.error("BOOKTOKKI_CONFLICT_PREPARE_FAILED",error);
+      conflictResolutionStatus("");
+      document.getElementById("authStatus").textContent="충돌 상태를 안전하게 확인하지 못했어요. 기록은 변경하지 않았습니다.";
+      return false;
+    });
+  }
+  document.getElementById("conflictContinueBtn").addEventListener("click",function(){
+    var button=this;
+    if(!pendingConflictResolution||conflictResolutionLocked||!activeAuthUserId)return;
+    conflictResolutionLocked=true;
+    button.disabled=true;
+    conflictResolutionStatus("이 기기의 기록을 백업하고 있어요...");
+    try{
+      window.BooktokkiConflictResolution.downloadPreparedBackup(pendingConflictResolution,"booktokki-conflict-local-backup.json");
+    }catch(error){
+      conflictResolutionStatus("백업 파일을 저장하지 못했어요. 기록은 변경하지 않았습니다.");
+      return;
+    }
+    conflictResolutionStatus("저장된 기록을 안전하게 확인하고 있어요...");
+    window.BooktokkiConflictResolution.resolve({
+      context:pendingConflictResolution,database:db,client:supabaseClient,storage:window.localStorage,userId:activeAuthUserId
+    }).then(function(result){
+      if(!result.success)throw new Error("Conflict resolution failed");
+      setConflictResolutionVisible(false);
+      conflictResolutionStatus("");
+      return startApp({user:activeAuthUser});
+    }).catch(function(error){
+      console.error("BOOKTOKKI_CONFLICT_RESOLUTION_FAILED",error);
+      conflictResolutionStatus("기록을 불러오지 못했어요. 백업 파일은 유지됩니다. 이 화면에서는 다시 시도하지 않습니다.");
+    });
+  });
+
   function showReadyApp(userId){
     if (activeAuthUserId !== userId) return;
     continueReadingReady = true;
     appStarted = true;
     bootstrappedUserId = userId;
     showOwnerMismatchRecovery(false);
+    setConflictResolutionVisible(false);
     document.getElementById("authGate").hidden = true;
     document.getElementById("app").hidden = false;
     document.getElementById("app").inert = false;
@@ -4126,6 +4193,7 @@
     continueReadingFlow.reset();
     bootstrapStarted = true;
     showOwnerMismatchRecovery(false);
+    setConflictResolutionVisible(false);
     document.getElementById("authGate").hidden = false;
     document.getElementById("app").hidden = true;
     document.getElementById("kakaoLoginBtn").hidden = true;
@@ -4165,8 +4233,10 @@
       document.getElementById("authGate").hidden = false;
       document.getElementById("kakaoLoginBtn").hidden = true;
       var ownerMismatch = error && error.bootstrapResult && error.bootstrapResult.state === "LOCAL_OWNER_MISMATCH";
+      var conflict = error && error.bootstrapResult && error.bootstrapResult.state === "CONFLICT";
       showOwnerMismatchRecovery(ownerMismatch, error && error.bootstrapResult ? error.bootstrapResult : null);
-      document.getElementById("authStatus").textContent = ownerMismatch ? "" : (error.message || "저장된 기록을 불러오지 못했어요.");
+      document.getElementById("authStatus").textContent = (ownerMismatch || conflict) ? "" : (error.message || "저장된 기록을 불러오지 못했어요.");
+      if(conflict)return prepareConflictResolution(userId);
     }).finally(function(){
       bootstrapStarted = false;
       bootstrapPromise = null;
@@ -4266,6 +4336,9 @@
     storageReady = null;
     cleanAuthRedirectUrl();
     showOwnerMismatchRecovery(false);
+    setConflictResolutionVisible(false);
+    pendingConflictResolution = null;
+    conflictResolutionLocked = false;
     document.getElementById("app").hidden = true;
     document.getElementById("authGate").hidden = false;
     document.getElementById("kakaoLoginBtn").hidden = false;

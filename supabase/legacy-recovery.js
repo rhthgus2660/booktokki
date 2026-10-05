@@ -103,6 +103,13 @@
     return {valid:true};
   }
   function encodeBytes(bytes){ if (typeof btoa === "function"){ var text=""; for(var i=0;i<bytes.length;i++) text+=String.fromCharCode(bytes[i]); return btoa(text); } if (typeof Buffer !== "undefined") return Buffer.from(bytes).toString("base64"); throw new Error("No base64 encoder"); }
+  async function payloadHash(payload){
+    var value=clone(payload); delete value.payloadHash;
+    var bytes=new TextEncoder().encode(JSON.stringify(stable(value)));
+    var digest=await globalThis.crypto.subtle.digest("SHA-256",bytes), out="";
+    new Uint8Array(digest).forEach(function(byte){out+=byte.toString(16).padStart(2,"0");});
+    return "sha256:"+out;
+  }
   async function createBackupPayload(localSnapshot, cloudSnapshot, userId){
     var images=[];
     for (var i=0;i<(localSnapshot.images||[]).length;i++){
@@ -112,7 +119,9 @@
     }
     var normalized=adapter.normalizeLocalSnapshot(bootstrap.comparableLocalSnapshot(localSnapshot),userId||"backup");
     var manifest=await adapter.createMigrationManifest(normalized);
-    return {version:1,createdAt:new Date().toISOString(),userId:userId||null,localManifestHash:manifest.normalizedContentHash,baselineCloudHash:baselineHash(cloudSnapshot),local:{books:clone(localSnapshot.books||[]),images:images},cloud:clone(cloudSnapshot),purpose:"legacy-recovery-backup"};
+    var payload={version:1,createdAt:new Date().toISOString(),userId:userId||null,localManifestHash:manifest.normalizedContentHash,baselineCloudHash:baselineHash(cloudSnapshot),local:{books:clone(localSnapshot.books||[]),images:images},cloud:clone(cloudSnapshot),purpose:"legacy-recovery-backup"};
+    payload.payloadHash=await payloadHash(payload);
+    return payload;
   }
   function downloadBackup(payload,filename){
     if (typeof document === "undefined") throw new Error("Browser document is required");
@@ -185,7 +194,8 @@
       var manifest=await adapter.createMigrationManifest(normalized);
       var base=baselineHash(payload.cloud);
       if (manifest.normalizedContentHash!==payload.localManifestHash || base!==payload.baselineCloudHash) return null;
-      var fingerprint=JSON.stringify({userId:userId,localManifestHash:manifest.normalizedContentHash,baselineCloudHash:base});
+      if (payload.payloadHash && payload.payloadHash!==await payloadHash(payload)) return null;
+      var fingerprint=JSON.stringify({userId:userId,localManifestHash:manifest.normalizedContentHash,baselineCloudHash:base,payloadHash:payload.payloadHash||null});
       return {version:1,userId:userId,payloadFingerprint:fingerprint};
     } catch (_error){ return null; }
   }

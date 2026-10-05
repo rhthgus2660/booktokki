@@ -57,7 +57,7 @@ function createHarness(options){
     notes:[], pageLogs:[], createdAt:"2026-09-20T00:00:00.000Z", updatedAt:"2026-09-20T00:00:00.000Z",
     completedAt:null, lastPageLogDate:null, dayStartPage:null, coverId:null, coverUrl:null
   }];
-  var counters = { indexedDbOpen:0, dbClose:0, bootstrap:0, cloudRepositoryCreate:0, ownerComparisons:0, updateUser:[], feedbackInsert:[], signOut:0 };
+  var counters = { indexedDbOpen:0, dbClose:0, bootstrap:0, cloudRepositoryCreate:0, ownerComparisons:0, conflictPrepare:0, conflictDownload:0, conflictResolve:0, updateUser:[], feedbackInsert:[], signOut:0 };
   function fakeDatabase(){
     return {
       close:function(){ counters.dbClose++; },
@@ -142,8 +142,14 @@ function createHarness(options){
       runSafeCloudBootstrap:function(options){
         counters.bootstrap++;
         assert.equal(options.userId, USER_ID);
-        return Promise.resolve(harnessOptions.bootstrapResult || { state:"CLOUD_ONLY", canStart:true });
+        var sequence=harnessOptions.bootstrapResults;
+        return Promise.resolve(sequence&&sequence.length ? sequence.shift() : (harnessOptions.bootstrapResult || { state:"CLOUD_ONLY", canStart:true }));
       }
+    },
+    BooktokkiConflictResolution:{
+      prepare:function(){ counters.conflictPrepare++; return Promise.resolve({state:"READY"}); },
+      downloadPreparedBackup:function(){ counters.conflictDownload++; },
+      resolve:function(){ counters.conflictResolve++; return Promise.resolve({success:true,bootstrap:{state:"SYNCED",canStart:true}}); }
     },
     BooktokkiCloudRepository:{
       create:function(){
@@ -187,6 +193,7 @@ function createHarness(options){
     emitAuth:function(event, withSession){ authCallback(event, withSession ? session() : null); },
     clickNav:function(view){ clickSelector("[data-nav]", view); },
     clickSelector:clickSelector,
+    clickElement:function(id){ var el=documentStub.getElementById(id);(el.listeners.click||[]).forEach(function(listener){listener.call(el,{target:el,preventDefault:function(){}});}); },
     submit:function(formId){ dispatch("submit", { id:formId }); }
   };
 }
@@ -199,6 +206,19 @@ function createHarness(options){
   assert.equal(app.counters.bootstrap, 1);
   assert.equal(app.counters.indexedDbOpen, 1);
   assert.equal(app.el("app").hidden, false);
+
+  // A validated conflict prepares a backup before showing its CTA, then
+  // downloads before replacement and enters Home only after SYNCED.
+  var conflictApp=createHarness({bootstrapResults:[{state:"CONFLICT",canStart:false},{state:"SYNCED",canStart:true}]});
+  await wait();
+  assert.equal(conflictApp.counters.conflictPrepare,1);
+  assert.equal(conflictApp.el("conflictResolution").hidden,false);
+  assert.equal(conflictApp.el("app").hidden,true);
+  conflictApp.clickElement("conflictContinueBtn");
+  await wait(30);
+  assert.equal(conflictApp.counters.conflictDownload,1);
+  assert.equal(conflictApp.counters.conflictResolve,1);
+  assert.equal(conflictApp.el("app").hidden,false);
   assert.equal(app.el("ownerMismatchRecovery").hidden, true);
   assert.match(app.el("view-library").innerHTML, /코어 상태 확인용 책/);
 
