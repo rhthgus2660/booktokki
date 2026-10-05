@@ -763,56 +763,66 @@
   #view-home .bunny-hero.is-recorded .bunny-status{ visibility:hidden; }
   #view-home .home-scene{
     position:relative; width:100%; height:min(58svh,480px); min-height:390px; overflow:hidden;
-    border:1px solid #e7e1d5; border-radius:8px; background:#f7f3e9;
+    border:1px solid #d7c2a4; border-radius:8px;
+    background:#b77f4e url("assets/backgrounds/Starter_Room_Clean_v1.png") center/cover no-repeat;
     isolation:isolate;
   }
-  #view-home .home-scene-wall{ position:absolute; inset:0 0 31%; background:#fbf8f0; }
-  #view-home .home-scene-floor{
-    position:absolute; inset:69% 0 0; border-top:1px solid #ddd4c5;
-    background:linear-gradient(165deg,#eee7da 0%,#f7f2e8 72%);
-  }
+  #view-home .home-scene-wall, #view-home .home-scene-floor{ display:none; }
   #view-home .home-scene-object{ position:absolute; transform:translate(-50%,-100%); }
+  #view-home .home-scene-furniture{ height:auto; pointer-events:none; image-rendering:pixelated; }
+  #view-home .home-scene-core{ height:auto; pointer-events:none; image-rendering:pixelated; }
   #view-home .home-scene-bookshelf{
-    width:112px; height:116px; padding:0; border:0; background:transparent; color:#4b4034; cursor:pointer;
+    transform:none;
+    padding:0; border:0; background:transparent; color:#4b4034; cursor:pointer;
   }
   #view-home .home-scene-bookshelf-frame{
-    position:absolute; inset:0; border:5px solid #8d745a; border-bottom-width:8px; border-radius:3px 3px 1px 1px;
-    background:#d8c5a8; box-shadow:0 4px 0 rgba(81,64,47,.1);
+    display:none;
   }
   #view-home .home-scene-bookshelf-shelf{ position:absolute; left:5px; right:5px; top:55px; height:5px; background:#8d745a; }
   #view-home .home-scene-books{ position:absolute; left:12px; right:10px; bottom:9px; height:47px; display:flex; align-items:flex-end; gap:3px; }
   #view-home .home-scene-book{ width:9px; border:1px solid rgba(63,48,35,.2); border-radius:1px 1px 0 0; background:#b7c7b1; }
   #view-home .home-scene-book:nth-child(2n){ background:#d5b5aa; }
   #view-home .home-scene-book:nth-child(3n){ background:#d9c994; }
-  #view-home .home-scene-bookshelf-label{
-    position:absolute; left:50%; bottom:-23px; transform:translateX(-50%); color:#5e5144; font-size:.68rem; font-weight:600; white-space:nowrap;
+  #view-home .home-scene-bookshelf:focus-visible{ outline:2px solid #fff8ea; outline-offset:-3px; }
+  #view-home .home-scene-rabbit{
+    width:60px; display:flex; flex-direction:column; align-items:center; pointer-events:none;
+    transition:left var(--home-rabbit-move-ms,0ms) linear,top var(--home-rabbit-move-ms,0ms) linear;
   }
-  #view-home .home-scene-rabbit{ width:78px; display:flex; flex-direction:column; align-items:center; pointer-events:none; }
-  #view-home .home-scene-rabbit img{ width:72px; max-height:70px; object-fit:contain; image-rendering:auto; }
-  #view-home .home-scene-rabbit.facing-left img{ transform:scaleX(-1); }
-  #view-home .home-scene-owner{ width:88px; }
-  #view-home .home-scene-owner img{ width:84px; max-height:82px; }
+  #view-home .home-scene-rabbit img{
+    width:62px; max-height:65px; object-fit:contain; image-rendering:pixelated;
+    filter:drop-shadow(0 2px 1px rgba(74,47,27,.14)); transform-origin:50% 100%;
+    transform:translate(var(--home-pose-anchor-x,0px),var(--home-pose-anchor-y,0px)) scaleX(var(--home-pose-facing,1)) scale(var(--home-pose-scale,1));
+  }
+  #view-home .home-scene-rabbit.facing-left{ --home-pose-facing:-1; }
+  #view-home .home-scene-rabbit.peek-edge{ top:38%; transform:translateY(-50%); }
+  #view-home .home-scene-rabbit.peek-left{ left:-17px; }
+  #view-home .home-scene-rabbit.peek-right{ left:auto; right:-17px; }
+  #view-home .home-scene-chair-occlusion{ pointer-events:none; image-rendering:pixelated; clip-path:polygon(0 43%,100% 43%,100% 100%,0 100%); }
+  #view-home .home-scene-chair-occlusion.left{ clip-path:polygon(0 20%,39% 20%,39% 78%,0 78%); }
+  #view-home .home-scene-chair-occlusion.right{ clip-path:polygon(64% 20%,100% 20%,100% 78%,64% 78%); }
+  #view-home .home-scene-chair-occlusion.front{ clip-path:polygon(12% 62%,88% 62%,88% 78%,12% 78%); }
+  #view-home .home-scene-owner{ width:66px; }
   #view-home .home-scene-speech{
-    position:absolute; left:50%; bottom:calc(100% + 5px); min-width:112px; max-width:148px; transform:translateX(-50%);
-    padding:8px 9px; border:1px solid #ddd6ca; border-radius:7px; background:rgba(255,255,255,.96);
-    color:#35302a; font-size:.68rem; font-weight:500; line-height:1.45; text-align:center;
+    position:absolute; left:50%; bottom:calc(100% + 4px); min-width:96px; max-width:124px; transform:translateX(-50%);
+    padding:6px 7px; border:1px solid rgba(105,80,55,.25); border-radius:6px; background:rgba(255,253,248,.94);
+    color:#35302a; font-size:.59rem; font-weight:600; line-height:1.4; text-align:center;
   }
   #view-home .home-scene-speech::after{
     content:""; position:absolute; left:50%; bottom:-5px; width:8px; height:8px; margin-left:-4px;
     border-right:1px solid #ddd6ca; border-bottom:1px solid #ddd6ca; background:#fff; transform:rotate(45deg);
   }
   #view-home .home-scene-friend-name{
-    max-width:88px; margin-top:2px; overflow:hidden; color:#6f655a; font-size:.61rem; text-overflow:ellipsis; white-space:nowrap;
+    max-width:72px; margin-top:1px; padding:1px 4px; overflow:hidden; border-radius:3px; background:rgba(255,250,241,.78); color:#584938; font-size:.56rem; text-overflow:ellipsis; white-space:nowrap;
   }
   #view-home .home-scene-status{
-    position:absolute; right:12px; bottom:10px; z-index:50; color:#81776c; font-size:.62rem; line-height:1.45; text-align:right;
+    position:absolute; right:9px; bottom:8px; z-index:50; padding:3px 5px; border-radius:4px;
+    background:rgba(255,250,240,.7); color:#6f5a45; font-size:.56rem; line-height:1.4; text-align:right;
   }
+  @media (prefers-reduced-motion:reduce){ #view-home .home-scene-rabbit, #view-home .home-scene-rabbit img{ transition:none; } }
   @media (max-height:700px){ #view-home .home-scene{ height:380px; min-height:380px; } }
   @media (max-width:360px){
     #view-home .home-scene{ min-height:370px; }
-    #view-home .home-scene-bookshelf{ width:100px; height:108px; }
-    #view-home .home-scene-rabbit{ width:70px; }
-    #view-home .home-scene-rabbit img{ width:65px; }
+    #view-home .home-scene-rabbit{ width:66px; }
   }
   #view-home .stat-line{
     width:100%; margin:0; padding:20px 0; border-block:1px solid #e9e9e9;
@@ -1340,6 +1350,9 @@
 <script src="./feedback-repository.js"></script>
 <script src="./co-reading-repository.js"></script>
 <script src="./friend-visit.js"></script>
+<script src="./room-depth.js"></script>
+<script src="./home-room-assets.js"></script>
+<script src="./home-ambient.js"></script>
 <script src="./home-scene.js"></script>
 <script src="./measurement-repository.js"></script>
 <script src="./share-card.js"></script>
@@ -1386,6 +1399,7 @@
     coReadingBusyAccept: false,
     coReadingBusyConnections: {},
     friendVisit: { userId:null, visitors:[] },
+    homeAmbient: { actors:[] },
     dbMode: null /* 'db' | 'local' */
   };
   var db = null;
@@ -1426,6 +1440,7 @@
   var feedbackRepository = null;
   var coReadingRepository = null;
   var friendVisit = null;
+  var homeAmbient = null;
   var coReadingLoadEpoch = 0;
   var measurementRepository = null;
   var cloudMutationQueues = {};
@@ -2339,15 +2354,59 @@
     return html;
   }
 
+  function applyHomeAmbientSnapshot(next){
+    state.homeAmbient=next||{actors:[]};
+    if(!appStarted||state.view!=="home")return;
+    state.homeAmbient.actors.forEach(function(actor){
+      var el=document.querySelector('#view-home [data-scene-id="'+CSS.escape(actor.id)+'"]');
+      if(!el)return;
+      el.dataset.roomX=actor.x;el.dataset.roomY=actor.y;el.style.zIndex=window.BooktokkiRoomDepth?window.BooktokkiRoomDepth.stackLayer(actor.layer,actor.id):actor.layer;
+      el.style.setProperty("--home-rabbit-move-ms",actor.moveDuration+"ms");
+      el.style.setProperty("--home-pose-anchor-x",(actor.anchorX||0)+"px");
+      el.style.setProperty("--home-pose-anchor-y",(actor.anchorY||0)+"px");
+      el.style.setProperty("--home-pose-scale",actor.visualScale==null?1:actor.visualScale);
+      el.classList.toggle("facing-left",actor.facing==="left");
+      el.classList.toggle("facing-right",actor.facing!=="left");
+      el.dataset.behavior=actor.behavior;
+      var image=el.querySelector("img");if(image&&image.getAttribute("src")!==actor.asset)image.setAttribute("src",actor.asset);
+    });
+    if(window.BooktokkiRoomDepth)window.BooktokkiRoomDepth.applyScene(document.querySelector("#view-home .home-scene"));
+  }
+
+  function ensureHomeAmbient(){
+    if(homeAmbient||!window.BooktokkiHomeAmbient)return homeAmbient;
+    homeAmbient=window.BooktokkiHomeAmbient.create({
+      reducedMotion:window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      onChange:applyHomeAmbientSnapshot
+    });
+    return homeAmbient;
+  }
+
+  function syncHomeAmbientActors(){
+    var controller=ensureHomeAmbient();if(!controller)return;
+    var visitors=window.BooktokkiHomeScene
+      ? window.BooktokkiHomeScene.normalizeVisitors(state.friendVisit&&state.friendVisit.visitors).slice(0,window.BooktokkiHomeScene.MAX_VISIBLE_VISITORS)
+      : [];
+    controller.setActors([{id:"owner",role:"owner"}].concat(visitors.map(function(visitor){
+      return {id:visitor.connectionId,role:"visitor",friendDisplayName:visitor.friendDisplayName};
+    })));
+  }
+
   function homeSceneRabbit(item, owner){
     var style = window.BooktokkiHomeScene.styleFor(item);
-    var classes = "home-scene-object home-scene-rabbit " + (owner ? "home-scene-owner " : "home-scene-visitor ") + "facing-" + item.facing;
+    var classes = "home-scene-object home-scene-rabbit " + (owner ? "home-scene-owner " : "home-scene-visitor ") + "facing-" + item.facing + (item.viewportEdge ? " peek-edge peek-"+item.viewportEdge : "");
     var label = owner ? "내 토끼" : item.friendDisplayName + "의 토끼";
-    return '<div class="'+classes+'" data-scene-object="'+esc(item.type)+'" data-scene-id="'+esc(item.id)+'" style="'+style+'" aria-label="'+esc(label)+'">' +
-      (owner && item.speech ? '<div class="home-scene-speech">'+item.speech+'</div>' : '') +
+    style += "--home-rabbit-move-ms:"+(item.moveDuration||0)+"ms;--home-pose-anchor-x:"+(item.anchorX||0)+"px;--home-pose-anchor-y:"+(item.anchorY||0)+"px;--home-pose-scale:"+(item.visualScale==null?1:item.visualScale)+";";
+    return '<div class="'+classes+'" data-scene-object="'+esc(item.type)+'" data-scene-id="'+esc(item.id)+'" data-behavior="'+esc(item.behavior||"IDLE")+'"'+(item.viewportEdge?'':window.BooktokkiHomeScene.projectionAttributes(item))+' style="'+style+'" aria-label="'+esc(label)+'">' +
+      (owner && item.speech && !item.suppressSpeech ? '<div class="home-scene-speech">'+item.speech+'</div>' : '') +
       '<img src="'+esc(item.asset)+'" alt="'+(owner?esc(item.alt):"")+'">' +
       (!owner ? '<span class="home-scene-friend-name">'+esc(item.friendDisplayName)+'</span>' : '') +
     '</div>';
+  }
+
+  function homeSceneFurniture(item){
+    var base='<img class="home-scene-object home-scene-furniture" data-scene-object="furniture" data-scene-id="'+esc(item.id)+'" data-furniture-type="'+esc(item.furnitureType)+'"'+window.BooktokkiHomeScene.projectionAttributes(item)+' src="'+esc(item.asset)+'" alt="" aria-hidden="true" style="'+window.BooktokkiHomeScene.styleFor(item)+'">';
+    return base;
   }
 
   /* HomeScene is derived from reading and visitor state. Coordinates are
@@ -2363,6 +2422,7 @@
       ownerSpeech:pick.bubble,
       visitorAsset:"assets/bunny-sleep.png",
       visitors:state.friendVisit&&state.friendVisit.visitors,
+      ambientActors:state.homeAmbient&&state.homeAmbient.actors,
       bookCount:getBooks().length
     });
     var bookshelf = scene.bookshelf;
@@ -2376,9 +2436,10 @@
     return '<section class="home-scene" aria-label="내 서재">' +
       '<div class="home-scene-wall" aria-hidden="true"></div>' +
       '<div class="home-scene-floor" aria-hidden="true"></div>' +
-      '<button class="home-scene-object home-scene-bookshelf" type="button" data-nav="library" data-scene-object="bookshelf" data-scene-id="bookshelf" style="'+window.BooktokkiHomeScene.styleFor(bookshelf)+'" aria-label="내 책장 열기">' +
+      scene.furniture.map(homeSceneFurniture).join("") +
+      '<img class="home-scene-object home-scene-core" data-scene-object="fixed-core" data-scene-id="CORE"'+window.BooktokkiHomeScene.projectionAttributes(bookshelf)+' src="'+esc(bookshelf.asset)+'" alt="" aria-hidden="true" style="'+window.BooktokkiHomeScene.styleFor(bookshelf)+'">' +
+      '<button class="home-scene-object home-scene-bookshelf" type="button" data-nav="library" data-scene-object="bookshelf" data-scene-id="bookshelf-hotspot" data-room-rect="'+bookshelf.hotspotRect.join(",")+'" style="z-index:21" aria-label="내 책장 열기">' +
         '<span class="home-scene-bookshelf-frame" aria-hidden="true"><span class="home-scene-bookshelf-shelf"></span><span class="home-scene-books">'+homeSceneBookSpines(bookshelf.bookCount)+'</span></span>' +
-        '<span class="home-scene-bookshelf-label">내 책장</span>' +
       '</button>' +
       homeSceneRabbit(scene.owner,true) +
       scene.visitors.map(function(visitor){return homeSceneRabbit(visitor,false);}).join("") +
@@ -2454,12 +2515,17 @@
       ? currentBookMini() + '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button>'
       : '<div class="home-empty-reading"><div class="home-empty-title">요즘 무슨 책 읽어?</div>' +
           '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button></div>');
+    if(window.BooktokkiRoomDepth)window.BooktokkiRoomDepth.applyScene(el.querySelector(".home-scene"));
     observeContinueReading();
     if (state.view==="home" && friendVisit && window.BooktokkiFriendVisit){
       var renderedScene=window.BooktokkiHomeScene&&window.BooktokkiHomeScene.build({visitors:state.friendVisit&&state.friendVisit.visitors});
       if(renderedScene)renderedScene.visitors.forEach(function(visitor){friendVisit.markRabbitRendered(visitor.connectionId);});
     }
   }
+
+  window.addEventListener("resize",function(){
+    if(state.view==="home"&&window.BooktokkiRoomDepth)window.BooktokkiRoomDepth.applyScene(document.querySelector("#view-home .home-scene"));
+  });
 
   function statusBadge(status){
     if (status === "reading") return '<span class="badge badge-reading">읽는 중</span>';
@@ -4035,6 +4101,7 @@
     document.getElementById("authGate").hidden = true;
     document.getElementById("app").hidden = false;
     document.getElementById("app").inert = false;
+    syncHomeAmbientActors();
     renderAll();
   }
 
@@ -4127,6 +4194,7 @@
             isRabbitVisible:function(){return state.view==="home"&&!document.hidden;},
             onChange:function(next){
               state.friendVisit=next;
+              syncHomeAmbientActors();
               if(appStarted&&(state.view==="home"||state.view==="co-reading"))renderAll();
             }
           })
@@ -4164,6 +4232,7 @@
     continueReadingFlow.reset();
     if (continueReadingObserver) continueReadingObserver.disconnect();
     if(friendVisit)friendVisit.stop();
+    if(homeAmbient)homeAmbient.stop();
     coReadingLoadEpoch+=1;
     activeAuthUserId = null;
     activeAuthUser = null;
@@ -4191,6 +4260,7 @@
     state.coReadingBusyAccept = false;
     state.coReadingBusyConnections = {};
     state.friendVisit = {userId:null,visitors:[]};
+    state.homeAmbient = {actors:[]};
     if (db) db.close();
     db = null;
     storageReady = null;
@@ -4267,8 +4337,14 @@
   }
   document.addEventListener("pointerdown",noteFriendVisitInteraction,{passive:true});
   document.addEventListener("keydown",noteFriendVisitInteraction);
-  document.addEventListener("visibilitychange",function(){if(friendVisit)friendVisit.onVisibility(!document.hidden);});
-  if(window.addEventListener)window.addEventListener("pagehide",function(){if(friendVisit)friendVisit.onVisibility(false);});
+  document.addEventListener("visibilitychange",function(){
+    if(friendVisit)friendVisit.onVisibility(!document.hidden);
+    if(homeAmbient)homeAmbient.onVisibility(!document.hidden);
+  });
+  if(window.addEventListener)window.addEventListener("pagehide",function(){
+    if(friendVisit)friendVisit.onVisibility(false);
+    if(homeAmbient)homeAmbient.onVisibility(false);
+  });
   initAuth();
 
   /* Catch the day rolling over to the next date while the page stays
