@@ -33,7 +33,11 @@ for(const type of ["continue_reading_viewed","continue_reading_clicked","continu
 }
 assert.throws(()=>analytics.eventRow("user",{eventId:"x",bookId:"book",occurredAt:now.toISOString(),eventType:"recap_viewed",withNote:null}));
 const html=fs.readFileSync(path.join(__dirname,"../../index.html"),"utf8");
+assert.match(html,/#view-home \.recent-reading-list\{[\s\S]*?overflow-x:auto/);
+assert.match(html,/#view-home \.recent-book\{ flex:0 0 21\.5%/);
+assert.doesNotMatch(html,/\.continue-reading-action\{/);
+assert.doesNotMatch(html,/class="recent-page-action" data-log=/);
 const source=html.slice(html.indexOf("function currentBookMini("),html.indexOf("function renderHome("));
 const render=new Function("getRecentReadingBooks","pct","coverEl","esc","resumeContextForBook","window","getBooks","continueReadingReady",source+";return currentBookMini;")(()=>[yesterday],()=>42,()=>"",x=>x,()=>"",{BooktokkiContinueReading:{select:()=>({book:yesterday,days:1})}},()=>[yesterday],true);
-const markup=render();assert.match(markup,/이어서 읽기/);assert.match(markup,/128p까지 읽었어요/);assert.match(markup,/\+ 읽은 페이지/);assert.equal((markup.match(/data-continue-reading=/g)||[]).length,1);
+const markup=render();assert.doesNotMatch(markup,/이어 읽기/);assert.doesNotMatch(markup,/\+ 읽은 페이지/);assert.match(markup,/data-nav="library"/);assert.match(markup,/data-continue-reading="a"/);assert.equal((markup.match(/data-continue-reading=/g)||[]).length,1);assert.equal((markup.match(/data-continue-reading-row=/g)||[]).length,1);
 console.log("PASS Continue Reading selection, Korean dates, attribution lifecycle and event payload");

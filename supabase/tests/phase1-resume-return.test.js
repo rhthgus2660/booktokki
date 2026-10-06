@@ -60,7 +60,7 @@ var recentBooks = [
 var getRecentReadingBooks = new Function(
   "getBooks", recentSource + "; return getRecentReadingBooks;"
 )(function(){ return recentBooks; });
-assert.deepEqual(getRecentReadingBooks().map(function(item){ return item.id; }), ["started-new", "started-old", "unstarted-new"]);
+assert.deepEqual(getRecentReadingBooks().map(function(item){ return item.id; }), ["started-new", "started-old", "unstarted-new", "unstarted-old"]);
 
 var miniSource = html.slice(
   html.indexOf("function currentBookMini("),
@@ -78,8 +78,9 @@ var renderMini = new Function(
   {BooktokkiContinueReading:require("../../continue-reading.js")}, function(){return [];}, false
 );
 var miniMarkup = renderMini();
-assert.match(miniMarkup, /class="book-resume">83p · 5일 전</);
-assert.match(miniMarkup, /\+ 읽은 페이지/);
+assert.match(miniMarkup, /class="book-pages">83 \/ 200p</);
+assert.match(miniMarkup, /class="book-resume">5일 전</);
+assert.doesNotMatch(miniMarkup, /\+ 읽은 페이지/);
 assert.match(miniMarkup, /width:42%/);
 
 var reactionSource = html.slice(
