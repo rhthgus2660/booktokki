@@ -1383,6 +1383,7 @@
 <script src="./home-room-assets.js"></script>
 <script src="./home-ambient.js"></script>
 <script src="./home-scene.js"></script>
+<script src="./p4-character.js"></script>
 <script src="./measurement-repository.js"></script>
 <script src="./share-card.js"></script>
 <script src="./capture-ocr.js"></script>
@@ -1472,6 +1473,8 @@
   var coReadingRepository = null;
   var friendVisit = null;
   var homeAmbient = null;
+  var P4_SPEECH_MS = 4000;
+  var p4Session = {userId:null,momentEvaluated:false,dailyShown:false,speech:null,speechTimer:null,tapBusyUntil:0,tapCount:0};
   var coReadingLoadEpoch = 0;
   var measurementRepository = null;
   var cloudMutationQueues = {};
@@ -2249,6 +2252,8 @@
      button — so `detailFrom` remembers whether a book was opened from
      home (요즘 읽는 책), 통계, or 서재, and that back button returns there. */
   function goTo(view, bookId){
+    var enteringHome = view === "home" && state.view !== "home";
+    if(enteringHome)hideReadingReaction();
     if (view === "stats" && state.view !== "stats"){
       state.statsMonth = null;
       state.statsArchivePanel = null;
@@ -2264,6 +2269,7 @@
     state.editingNoteId = null; /* leaving/entering a screen always drops any open 북로그 edit */
     state.statsSelectedDate = null; /* re-entering 통계 always starts back on today */
     renderAll();
+    if (enteringHome) enterHomeCharacterMoment();
     if(view === "co-reading") loadCoReading();
   }
   function openMyBooklogs(){
@@ -2382,6 +2388,61 @@
     return pool[hashStr(todayStr() + "|" + seedKey) % pool.length];
   }
 
+  function clearP4SpeechTimer(){
+    if(p4Session.speechTimer){clearTimeout(p4Session.speechTimer);p4Session.speechTimer=null;}
+  }
+  function resetP4Session(userId){
+    clearP4SpeechTimer();
+    p4Session={userId:userId||null,momentEvaluated:false,dailyShown:false,speech:null,speechTimer:null,tapBusyUntil:0,tapCount:0};
+  }
+  function setHomeOwnerSpeech(source,text,priority){
+    if(!text||!activeAuthUserId||p4Session.userId!==activeAuthUserId)return false;
+    var current=p4Session.speech;
+    if(!window.BooktokkiP4Character.canReplaceSpeech(current,priority,Date.now()))return false;
+    clearP4SpeechTimer();
+    var speechId=uid(),userId=activeAuthUserId;
+    p4Session.speech={id:speechId,source:source,text:text,priority:priority,expiresAt:Date.now()+P4_SPEECH_MS};
+    p4Session.speechTimer=setTimeout(function(){
+      if(activeAuthUserId!==userId||p4Session.userId!==userId||!p4Session.speech||p4Session.speech.id!==speechId)return;
+      p4Session.speech=null;p4Session.speechTimer=null;
+      if(appStarted&&state.view==="home")renderHome();
+    },P4_SPEECH_MS);
+    if(appStarted&&state.view==="home")renderHome();
+    return true;
+  }
+  function dailyOwnerSpeech(){
+    var logged=hasLoggedToday();
+    return pickBunnyBehavior(logged?BUNNY_LOGGED:BUNNY_NONE,logged?"logged":"none").bubble;
+  }
+  function enterHomeCharacterMoment(){
+    if(!appStarted||state.view!=="home"||!activeAuthUserId||!window.BooktokkiP4Character)return;
+    if(p4Session.userId!==activeAuthUserId)resetP4Session(activeAuthUserId);
+    if(p4Session.momentEvaluated)return;
+    p4Session.momentEvaluated=true;
+    var continuation=window.BooktokkiContinueReading.select(getBooks(),new Date(),continueReadingReady);
+    var moment=window.BooktokkiP4Character.selectLibrarianMoment(getBooks(),continuation&&continuation.book&&continuation.book.id,new Date());
+    if(moment){
+      var controller=ensureHomeAmbient();
+      if(controller)controller.forceAt("owner","READ_BOOK","floor-a");
+      setHomeOwnerSpeech("librarian",moment.text,3);
+      return;
+    }
+    p4Session.dailyShown=true;
+    setHomeOwnerSpeech("daily",dailyOwnerSpeech(),1);
+  }
+  function tapOwnerRabbit(){
+    if(!appStarted||state.view!=="home"||!activeAuthUserId||p4Session.userId!==activeAuthUserId||Date.now()<p4Session.tapBusyUntil||!window.BooktokkiP4Character)return false;
+    var actor=(state.homeAmbient.actors||[]).find(function(item){return item.id==="owner";});
+    if(!actor||actor.behavior==="WALK"||actor.activity)return false;
+    var controller=ensureHomeAmbient();if(!controller)return false;
+    p4Session.tapCount+=1;
+    var plan=window.BooktokkiP4Character.tapPlan(p4Session.tapCount);
+    if(!controller.forceAt("owner",plan.behaviorId,"floor-a"))return false;
+    p4Session.tapBusyUntil=Date.now()+P4_SPEECH_MS;
+    if(plan.text)setHomeOwnerSpeech("tap",plan.text,2);
+    return true;
+  }
+
   function homeSceneBookSpines(bookCount){
     var count = Math.min(7, Math.max(0, bookCount));
     var html = "";
@@ -2432,8 +2493,8 @@
     var classes = "home-scene-object home-scene-rabbit " + (owner ? "home-scene-owner " : "home-scene-visitor ") + "facing-" + item.facing + (item.viewportEdge ? " peek-edge peek-"+item.viewportEdge : "");
     var label = owner ? "내 토끼" : item.friendDisplayName + "의 토끼";
     style += "--home-rabbit-move-ms:"+(item.moveDuration||0)+"ms;--home-pose-anchor-x:"+(item.anchorX||0)+"px;--home-pose-anchor-y:"+(item.anchorY||0)+"px;--home-pose-scale:"+(item.visualScale==null?1:item.visualScale)+";";
-    return '<div class="'+classes+'" data-scene-object="'+esc(item.type)+'" data-scene-id="'+esc(item.id)+'" data-behavior="'+esc(item.behavior||"IDLE")+'"'+(item.viewportEdge?'':window.BooktokkiHomeScene.projectionAttributes(item))+' style="'+style+'" aria-label="'+esc(label)+'">' +
-      (owner && item.speech && !item.suppressSpeech ? '<div class="home-scene-speech">'+item.speech+'</div>' : '') +
+    return '<div class="'+classes+'" data-scene-object="'+esc(item.type)+'" data-scene-id="'+esc(item.id)+'" data-behavior="'+esc(item.behavior||"IDLE")+'"'+(owner?' data-owner-rabbit-tap role="button" tabindex="0"':'')+(item.viewportEdge?'':window.BooktokkiHomeScene.projectionAttributes(item))+' style="'+style+'" aria-label="'+esc(label)+'">' +
+      (owner && item.speech && (item.forceSpeech || !item.suppressSpeech) ? '<div class="home-scene-speech" aria-live="polite">'+item.speech+'</div>' : '') +
       '<img src="'+esc(item.asset)+'" alt="'+(owner?esc(item.alt):"")+'">' +
       (!owner ? '<span class="home-scene-friend-name">'+esc(item.friendDisplayName)+'</span>' : '') +
     '</div>';
@@ -2450,11 +2511,13 @@
   function homeScene(){
     var logged = hasLoggedToday();
     var pick = pickBunnyBehavior(logged ? BUNNY_LOGGED : BUNNY_NONE, logged ? "logged" : "none");
+    var ownerSpeech=p4Session.speech&&p4Session.speech.expiresAt>Date.now()?p4Session.speech:null;
     if (!window.BooktokkiHomeScene) return "";
     var scene = window.BooktokkiHomeScene.build({
       ownerAsset:pick.img,
       ownerAlt:pick.alt || "",
-      ownerSpeech:pick.bubble,
+      ownerSpeech:ownerSpeech?ownerSpeech.text:"",
+      ownerForceSpeech:!!(ownerSpeech&&ownerSpeech.source!=="daily"),
       visitorAsset:"assets/bunny-sleep.png",
       visitors:state.friendVisit&&state.friendVisit.visitors,
       ambientActors:state.homeAmbient&&state.homeAmbient.actors,
@@ -3796,6 +3859,8 @@
 
   /* ---------------- event delegation ---------------- */
   document.body.addEventListener("click", function(e){
+    var ownerRabbit=e.target.closest("[data-owner-rabbit-tap]");
+    if(ownerRabbit){tapOwnerRabbit();return;}
     t = e.target.closest("[data-closemodal]");
     if(t){closeModal();return;}
     t = e.target.closest("[data-opencapture]");
@@ -4246,8 +4311,15 @@
     });
   });
 
+  document.body.addEventListener("keydown",function(e){
+    var ownerRabbit=e.target.closest&&e.target.closest("[data-owner-rabbit-tap]");
+    if(!ownerRabbit||(e.key!=="Enter"&&e.key!==" "))return;
+    e.preventDefault();tapOwnerRabbit();
+  });
+
   function showReadyApp(userId){
     if (activeAuthUserId !== userId) return;
+    if(p4Session.userId!==userId)resetP4Session(userId);
     continueReadingReady = true;
     appStarted = true;
     bootstrappedUserId = userId;
@@ -4258,6 +4330,7 @@
     document.getElementById("app").inert = false;
     syncHomeAmbientActors();
     renderAll();
+    if(state.view==="home")enterHomeCharacterMoment();
   }
 
   function startApp(session){
@@ -4391,6 +4464,7 @@
     if (continueReadingObserver) continueReadingObserver.disconnect();
     if(friendVisit)friendVisit.stop();
     if(homeAmbient)homeAmbient.stop();
+    resetP4Session(null);
     coReadingLoadEpoch+=1;
     activeAuthUserId = null;
     activeAuthUser = null;

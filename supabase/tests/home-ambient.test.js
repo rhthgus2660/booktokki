@@ -94,6 +94,13 @@ var reducedTimers=0;
 var reduced=ambientApi.create({reducedMotion:true,setTimer:function(){reducedTimers+=1;},onChange:function(){}});
 reduced.setActors([{id:"owner",role:"owner"}]);
 assert.equal(reducedTimers,0,"reduced motion leaves a stable rabbit pose without a loop");
+assert.equal(reduced.forceActivity("owner","READ","table"),true);
+var reducedRead=reduced.getSnapshot().actors[0];
+assert.equal(reducedRead.behavior,"READ_BOOK","reduced-motion forced activity settles immediately at its final pose");
+assert.equal(reducedRead.poseId,"READ_BOOK");
+assert.notEqual(reducedRead.behavior,"WALK","reduced-motion activity never remains in SIDE_WALK");
+assert.equal(reduced.forceActivity("owner","BOOK_READING"),true);
+assert.equal(reduced.getSnapshot().actors[0].behavior,"READ_BOOK","reduced-motion reading episode resolves to its meaningful settled pose");
 
 var contact=ambientApi.create({reducedMotion:true,onChange:function(){}});
 contact.setActors([{id:"owner",role:"owner"}]);

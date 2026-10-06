@@ -49,7 +49,7 @@
       anchorX:Number(ambient.anchorX)||0,anchorY:Number(ambient.anchorY)||0,
       visualScale:ambient.visualScale==null?1:Number(ambient.visualScale)||1,
       renderLayerOverride:ambient.renderLayerOverride==null?null:Number(ambient.renderLayerOverride),
-      viewportEdge:ambient.viewportEdge||null
+      viewportEdge:ambient.viewportEdge||null,suppressSpeech:!!ambient.suppressSpeech
     }));
   }
 
@@ -92,7 +92,7 @@
       owner:applyAmbient(object("owner","owner-rabbit",ownerSlot,{
         asset:String(input.ownerAsset||"assets/bunny-sleep.png"),
         alt:String(input.ownerAlt||""),
-        speech:String(input.ownerSpeech||"")
+        speech:String(input.ownerSpeech||""),forceSpeech:!!input.ownerForceSpeech
       }),ambient.owner),
       visitors:visibleVisitors,
       core:core,

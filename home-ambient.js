@@ -160,6 +160,7 @@
     function transition(id,behavior,spot){
       var actor=actors[id];if(!actor||!spot)return false;
       if(actor.spotId===spot.id){settle(id,behavior,spot);return true;}
+      if(reducedMotion){settle(id,behavior,spot);return true;}
       var walk=behaviors.WALK;
       var distance=Math.sqrt(Math.pow(spot.x-actor.x,2)+Math.pow(spot.y-actor.y,2));
       var duration=Math.max(walk.duration[0],Math.min(walk.duration[1],Math.round(distance*70)));
@@ -239,6 +240,10 @@
         var destinations=spots.filter(function(spot){return spot.id!==actor.spotId;});
         if(!destinations.length)return false;
         var destination=destinations[(hash(id)+Math.round(actor.x))%destinations.length];
+        if(reducedMotion){
+          actor.spotId=destination.id;actor.x=destination.x;actor.y=destination.y;actor.moveDuration=0;
+          advance(id);return true;
+        }
         var distance=Math.sqrt(Math.pow(destination.x-actor.x,2)+Math.pow(destination.y-actor.y,2));
         var duration=Math.max(behavior.duration[0],Math.min(behavior.duration[1],Math.round(distance*70)));
         actor.behavior=behavior.id;applyPose(actor,behavior,null);actor.facing=destination.x<actor.x?"left":"right";
@@ -268,6 +273,12 @@
     function forceActivity(id,activity,spotId){
       var actor=actors[id];if(!actor)return false;
       cancel(id);actor.episodeQueue=[];actor.activity=activity;
+      if(reducedMotion){
+        var finalBehavior=activity==="READ"||activity==="BOOK_READING"?behaviors.READ_BOOK:activity==="BOOKSHELF"?behaviors.TAKE_BOOK:activity==="WINDOW"?behaviors.LOOK_OUT_WINDOW:null;
+        var finalSpot=finalBehavior&&pickSpot(finalBehavior,activity==="READ"?spotId:activity==="BOOKSHELF"?"bookshelf-front":activity==="WINDOW"?"window":spotId);
+        if(!finalBehavior||!finalSpot){actor.activity=null;return false;}
+        settle(id,finalBehavior,finalSpot);actor.activity=null;return true;
+      }
       if(activity==="READ")actor.episodeQueue=[{behaviorId:"READ_BOOK",spotId:spotId||"table"}];
       else if(activity==="BOOKSHELF")actor.episodeQueue=[{behaviorId:"TAKE_BOOK",spotId:"bookshelf-front"}];
       else if(activity==="WINDOW")actor.episodeQueue=[{behaviorId:"LOOK_OUT_WINDOW",spotId:"window"}];
