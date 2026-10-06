@@ -1,5 +1,6 @@
 "use strict";
 var assert=require("node:assert/strict");
+var fs=require("node:fs"),path=require("node:path");
 var Capture=require("../../capture-ocr.js");
 
 async function run(){
@@ -16,6 +17,14 @@ async function run(){
   var fetched=0;
   var lines=await Capture.requestOcr({endpoint:"/ocr",token:"t",blob:new Blob(["x"],{type:"image/jpeg"}),fetch:function(_url,options){fetched++;assert.equal(options.method,"POST");assert.equal(options.headers.Authorization,"Bearer t");return Promise.resolve(new Response(JSON.stringify({lines:[" a ","b"]}),{status:200,headers:{"Content-Type":"application/json"}}));}});
   assert.equal(fetched,1);assert.deepEqual(lines,["a","b"]);
+  var html=fs.readFileSync(path.join(__dirname,"../../index.html"),"utf8");
+  assert.match(html,/class="traces-heading"><div class="section-title">북로그<\/div><span class="traces-count">/,"closed composer has no capture action");
+  assert.match(html,/class="capture-camera"[^>]*data-opencapture/,"open composer exposes camera action");
+  assert.match(html,/var CAPTURE_STATUS = "coming_soon"/,"Production capture capability is explicitly gated");
+  assert.match(html,/measurementRepository\.record\("capture_entry_clicked"/,"capture tap records one demand signal");
+  assert.match(html,/CAPTURE_STATUS === "coming_soon"\)\{showCaptureComingSoon/,"camera entry uses the Coming Soon gate before openCapture");
+  assert.match(html,/사진으로 문장 가져오기는 준비 중이에요\./,"Coming Soon copy is present");
+  assert.doesNotMatch(html,/문장 스캔<\/button> ·/,"Capture entry is absent from the closed composer heading");
   console.log("PASS Capture OCR client tests");
 }
 run().catch(function(error){console.error(error);process.exit(1);});
