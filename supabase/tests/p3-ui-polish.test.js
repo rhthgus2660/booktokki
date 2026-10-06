@@ -57,12 +57,23 @@ const markedDay = calendar.cells.find(function(cell){ return cell.date === "2026
 assert.equal(markedDay.hasRead, true);
 assert.equal(markedDay.hasNote, true);
 
+const pastBook = { id:"past", title:"과거 책", status:"done", completedAt:"2024-06-01T15:00:00Z", pageLogs:[{delta:3,date:"2025-01-02",at:"2025-01-02T02:00:00Z"}], notes:[{createdAt:"2023-06-01T02:00:00Z"}] };
+const statsAvailableYears = new Function("getBooks", "validStatsDate", functionSource("statsAvailableYears") + "; return statsAvailableYears;")(
+  function(){ return [pastBook]; }, function(value){ return /^\d{4}-\d{2}-\d{2}$/.test(value); }
+);
+const years = statsAvailableYears(2022);
+assert.ok(years.includes(2025) && years.includes(2024) && years.includes(2023) && years.includes(2022), "record and selected years are navigable");
+const shiftStatsMonth = new Function(functionSource("shiftStatsMonth") + "; return shiftStatsMonth;")();
+assert.equal(shiftStatsMonth("2026-01",-1),"2025-12","January previous crosses into prior year");
+assert.equal(shiftStatsMonth("2026-12",1),"2027-01","December next crosses into following year");
+assert.equal(statsMonthData("2022-02").readDays,0,"empty historical month is safe");
+
 /* Execute the Stats renderer and verify that Book Log presence stays inside
    Calendar/date detail instead of expanding a monthly panel above Calendar. */
 const statsEl = { innerHTML:"" };
 const state = { statsFrom:"home", statsMonth:"2026-09", statsSelectedDate:null, statsArchivePanel:"notes" };
 const renderStats = new Function(
-  "document", "state", "dateKey", "statsMonthData", "statsMonthCalendar", "getBooks", "statsCover", "esc", "fmtMonthDay", "statsDateLabel",
+  "document", "state", "dateKey", "statsMonthData", "statsMonthCalendar", "statsAvailableYears", "getBooks", "statsCover", "esc", "fmtMonthDay", "statsDateLabel",
   functionSource("renderStats") + "; return renderStats;"
 )(
   { getElementById:function(){ return statsEl; } },
@@ -74,6 +85,7 @@ const renderStats = new Function(
     return { days:{ "2026-09-29":{ "book-1":true } }, notesByDate:{ "2026-09-29":[{ book:book, note:note }] }, books:[], noteGroups:[{ book:book, notes:[note] }], readDays:1, notes:1, completed:0 };
   },
   function(){ return { label:"9월", leadBlanks:0, cells:[{ date:"2026-09-29", day:29, isToday:true, hasRead:true, hasNote:true }] }; },
+  function(){ return [2026,2025]; },
   function(){ return []; },
   function(){ return "<span class=\"stats-cover\"></span>"; },
   function(value){ return String(value); },
@@ -91,6 +103,13 @@ assert.match(statsEl.innerHTML, /class="stats-day-note-title">책<\/span>/);
 assert.match(statsEl.innerHTML, /class="stats-day-note-meta">p\.31<\/span>/);
 assert.match(statsEl.innerHTML, /class="stats-day-note-text">기록<\/span>/);
 assert.doesNotMatch(statsEl.innerHTML, /data-stats-panel="notes"/, "Book Log metric is a monthly count, not a toggle");
+assert.match(statsEl.innerHTML, /data-stats-year/, "Calendar exposes year navigation");
+assert.match(statsEl.innerHTML, /<option value="2026" selected>2026년<\/option>/);
+
+/* Detail completion remains fully data-driven while its decorative marker is gone. */
+assert.doesNotMatch(html, /b\.status === "done" \? bunnyEarMarker\(\)/);
+assert.match(html, /b\.status === "done"[\s\S]*?data-undo/);
+assert.match(html, /completedAt/);
 
 state.statsFrom = "my";
 renderStats();
