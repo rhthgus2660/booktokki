@@ -72,7 +72,10 @@
     function setConnections(next){
       generation+=1;inFlight=null;clearAllSeen();
       connections=normalizeConnections(next);
-      if(!hasAllowedConnection()){clearHeartbeat();emitVisitors([]);return Promise.resolve(snapshot());}
+      if(!hasAllowedConnection()){
+        clearHeartbeat();emitVisitors([]);
+        return enabled&&current.userId?leave().then(snapshot):Promise.resolve(snapshot());
+      }
       if(enabled&&current.userId&&isVisible()){lastInteractionAt=now();return touch();}
       return Promise.resolve(snapshot());
     }
@@ -85,6 +88,7 @@
       return Promise.resolve().then(function(){return repo.getConnections();}).then(function(rows){
         if(callGeneration!==generation||userId!==current.userId)return snapshot();
         connections=normalizeConnections(rows);
+        if(!hasAllowedConnection())return leave().then(snapshot);
         return isVisible()?touch():snapshot();
       }).catch(function(){return snapshot();});
     }
@@ -101,7 +105,8 @@
     }
     function onVisibility(visible){
       if(!enabled||!current.userId)return Promise.resolve();
-      if(!visible){clearHeartbeat();emitVisitors([]);return leave();}
+      clearHeartbeat();
+      if(!visible){emitVisitors([]);return Promise.resolve(snapshot());}
       lastInteractionAt=now();return hasAllowedConnection()?touch():Promise.resolve(snapshot());
     }
     function markRabbitRendered(connectionId){

@@ -18,10 +18,12 @@ function clock(){var now=0,next=1,timers=new Map();return {now:function(){return
   assert.equal(touches,1);assert.deepEqual(visit.getState().visitors.map(function(v){return v.connectionId;}),["a","b"]);
   visit.markRabbitRendered("a");visit.markRabbitRendered("a");await c.advance(1000);assert.deepEqual(seen,["a"],"only the rendered connection is recorded once");
   await c.advance(59000);assert.equal(touches,2,"allowed connections heartbeat at 60 seconds");
-  visible=false;await visit.onVisibility(false);assert.equal(leaves,1);assert.deepEqual(visit.getState().visitors,[]);
+  visible=false;await visit.onVisibility(false);assert.equal(leaves,0,"hidden keeps server presence for the freshness grace period");assert.deepEqual(visit.getState().visitors,[]);
+  await visit.onVisibility(false);assert.equal(leaves,0,"pagehide-style repeated hidden notification does not leave presence");
   visible=true;await visit.onVisibility(true);assert.equal(touches,3);
-  await visit.setConnections([{connectionId:"a",myVisitState:"declined"}]);assert.deepEqual(visit.getState().visitors,[]);assert.equal(c.count(),0);
-  await visit.stop({leave:true});assert.equal(leaves,2);assert.equal(visit.getState().userId,null);
+  assert.equal(c.count(),1,"foreground return maintains one heartbeat");
+  await visit.setConnections([{connectionId:"a",myVisitState:"declined"}]);assert.deepEqual(visit.getState().visitors,[]);assert.equal(c.count(),0);assert.equal(leaves,1,"consent off removes server presence immediately");
+  await visit.stop({leave:true});assert.equal(leaves,2,"explicit logout leaves presence immediately");assert.equal(visit.getState().userId,null);
 
   var disabledCalls=0,disabled=visitApi.create({repo:{getConnections:function(){disabledCalls++;return Promise.resolve([]);},touchFriendPresence:function(){disabledCalls++;}},enabled:false});
   await disabled.start("user");await disabled.setConnections([{connectionId:"a",myVisitState:"allowed"}]);disabled.noteInteraction();await disabled.onVisibility(true);disabled.markRabbitRendered("a");assert.equal(disabledCalls,0,"kill switch blocks all visit and presence RPCs");
@@ -29,6 +31,9 @@ function clock(){var now=0,next=1,timers=new Map();return {now:function(){return
   var deferredResolve,staleRepo={getConnections:function(){return Promise.resolve([{connectionId:"old",myVisitState:"allowed"}]);},touchFriendPresence:function(){return new Promise(function(resolve){deferredResolve=resolve;});},leavePresence:function(){return Promise.resolve();}};
   var stale=visitApi.create({repo:staleRepo});var pending=stale.start("old");await flush();await stale.stop();deferredResolve([{connectionId:"old",friendDisplayName:"old"}]);await pending;
   assert.equal(stale.getState().userId,null);assert.deepEqual(stale.getState().visitors,[],"late account response is ignored");
+
+  var noEligibleLeaves=0,noEligible=visitApi.create({repo:{getConnections:function(){return Promise.resolve([{connectionId:"off",myVisitState:"declined"}]);},leavePresence:function(){noEligibleLeaves++;return Promise.resolve();}}});
+  await noEligible.start("user-off");assert.equal(noEligibleLeaves,1,"session restore clears stale server presence when no eligible connection remains");
 
   var rpcCalls=[],client={rpc:function(name,args){rpcCalls.push([name,args]);var data=name==="get_friend_connections"?[{connection_id:"b",friend_display_name:"B",connected_at:"2026-01-02",my_visit_state:"allowed"},{connection_id:"a",friend_display_name:"A",connected_at:"2026-01-01",my_visit_state:"undecided"}]:name==="touch_friend_presence"?[{connection_id:"b",friend_display_name:"B"},{connection_id:"a",friend_display_name:"A"}]:true;return Promise.resolve({data:data,error:null});}};
   var repository=coApi.create(client);
