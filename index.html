@@ -761,7 +761,7 @@
   #view-home .home-scene{
     position:relative; width:100%; height:min(58svh,480px); min-height:390px; overflow:hidden;
     border:1px solid #d7c2a4; border-radius:8px;
-    background:#b77f4e url("assets/backgrounds/Starter_Room_Clean_v1.png") center/cover no-repeat;
+    background:#b77f4e url("assets/backgrounds/R01_Clean_Room_v1.png") center/cover no-repeat;
     isolation:isolate;
   }
   #view-home .home-scene-wall, #view-home .home-scene-floor{ display:none; }
@@ -810,10 +810,6 @@
   }
   #view-home .home-scene-friend-name{
     max-width:72px; margin-top:1px; padding:1px 4px; overflow:hidden; border-radius:3px; background:rgba(255,250,241,.78); color:#584938; font-size:.56rem; text-overflow:ellipsis; white-space:nowrap;
-  }
-  #view-home .home-scene-status{
-    position:absolute; right:9px; bottom:8px; z-index:50; padding:3px 5px; border-radius:4px;
-    background:rgba(255,250,240,.7); color:#6f5a45; font-size:.56rem; line-height:1.4; text-align:right;
   }
   @media (prefers-reduced-motion:reduce){ #view-home .home-scene-rabbit, #view-home .home-scene-rabbit img{ transition:none; } }
   @media (max-height:700px){ #view-home .home-scene{ height:380px; min-height:380px; } }
@@ -2472,6 +2468,7 @@
   function ensureHomeAmbient(){
     if(homeAmbient||!window.BooktokkiHomeAmbient)return homeAmbient;
     homeAmbient=window.BooktokkiHomeAmbient.create({
+      spots:window.BooktokkiHomeAmbient.spotsForVisibleObjects([]),
       reducedMotion:window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches,
       onChange:applyHomeAmbientSnapshot
     });
@@ -2524,13 +2521,6 @@
       bookCount:getBooks().length
     });
     var bookshelf = scene.bookshelf;
-    var status;
-    if (logged){
-      var todayPages = todayPagesRead();
-      status = "오늘 기록 있음" + (todayPages > 0 ? "<br>오늘 " + todayPages + "p 읽음" : "");
-    } else {
-      status = "오늘 기록 없음";
-    }
     return '<section class="home-scene" aria-label="내 서재">' +
       '<div class="home-scene-wall" aria-hidden="true"></div>' +
       '<div class="home-scene-floor" aria-hidden="true"></div>' +
@@ -2541,7 +2531,6 @@
       '</button>' +
       homeSceneRabbit(scene.owner,true) +
       scene.visitors.map(function(visitor){return homeSceneRabbit(visitor,false);}).join("") +
-      '<div class="home-scene-status">'+status+'</div>' +
     '</section>';
   }
 

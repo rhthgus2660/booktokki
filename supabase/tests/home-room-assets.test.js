@@ -17,7 +17,10 @@ Object.keys(assets.FURNITURE_ASSETS).forEach(function(id){
   assert.equal(crypto.createHash("sha256").update(fs.readFileSync(path.join(__dirname,"../..",item.asset))).digest("hex"),item.sha256,"approved asset hash: "+id);
 });
 
-assert.deepEqual(assets.starterFurniture().map(function(item){return item.id;}),["F01","F02","F03","F04","F05","F06","F08"]);
+assert.deepEqual(assets.starterFurniture(),[],"Starter entitlement grants no purchasable furniture");
+assert.equal(assets.BACKGROUND.id,"R01_CLEAN_ROOM");
+assert.equal(assets.BACKGROUND.type,"room_background");
+assert.equal(assets.BACKGROUND.starter,true);assert.equal(assets.BACKGROUND.movable,false);
 assert.equal(assets.CORE.movable,false);assert.equal(assets.CORE.removable,false);assert.equal(assets.CORE.width,73.791705069124);
 assert.deepEqual(assets.CORE.interactionSpot,{x:29,y:44});
 assert.deepEqual([assets.FURNITURE_ASSETS.F02.width,assets.FURNITURE_ASSETS.F03.width,assets.FURNITURE_ASSETS.F04.width],[24.75,45.5,24]);

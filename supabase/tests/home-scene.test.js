@@ -32,13 +32,7 @@ scene.visitors.forEach(function(visitor){
   assert.equal(visitor.layer,2000);
   assert.match(sceneApi.projectionAttributes(visitor),/data-room-x=/);
 });
-assert.deepEqual(scene.furniture.map(function(item){return item.id;}),["F01","F02","F03","F04","F05","F06","F08"],"FINAL Starter Room objects enter the independent layer");
-scene.furniture.forEach(function(item){
-  assert.equal(item.type,"furniture");assert.equal(typeof item.x,"number");assert.equal(typeof item.y,"number");
-  assert.match(sceneApi.styleFor(item),/z-index:\d+;transform:translate/);
-  assert.match(sceneApi.projectionAttributes(item),/data-room-width=/);
-});
-assert.equal(scene.furniture.find(function(item){return item.id==="F05";}).width,40);
+assert.deepEqual(scene.furniture,[],"Starter Room contains no purchasable furniture");
 assert.deepEqual(scene.decorations,[]);assert.deepEqual(scene.traces,[]);
 
 var rerendered=sceneApi.build({visitors:visitors.slice().reverse()});
@@ -74,11 +68,12 @@ assert.match(html,/script src="\.\/home-scene\.js"/);
 assert.match(html,/script src="\.\/home-ambient\.js"/);
 assert.match(html,/script src="\.\/home-room-assets\.js"/);
 assert.match(html,/script src="\.\/room-depth\.js"/);
-assert.match(html,/assets\/backgrounds\/Starter_Room_Clean_v1\.png/);
-assert.equal(fs.existsSync(path.join(__dirname,"../../assets/backgrounds/Starter_Room_Clean_v1.png")),true,"FINAL clean Room production background exists");
+assert.match(html,/assets\/backgrounds\/R01_Clean_Room_v1\.png/);
+assert.equal(fs.existsSync(path.join(__dirname,"../../assets/backgrounds/R01_Clean_Room_v1.png")),true,"R01 clean Room production background exists");
 assert.match(html,/home-scene-wall, #view-home \.home-scene-floor\{ display:none; \}/,"legacy flat wall and floor no longer cover the room");
 assert.match(html,/function homeScene\(\)/);
 assert.match(html,/scene\.furniture\.map\(homeSceneFurniture\)/,"independent furniture layer renders before character objects");
+assert.doesNotMatch(html,/home-scene-status/,"legacy reading status badge is removed from the Room presentation");
 assert.match(html,/data-scene-object="fixed-core"/);
 assert.match(html,/data-scene-object="furniture"/);
 assert.match(html,/data-scene-object="bookshelf"/);

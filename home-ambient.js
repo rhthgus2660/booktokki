@@ -19,6 +19,12 @@
     {id:"floor-b",type:"OPEN_FLOOR",x:51,y:84,facing:"left",allowedBehaviors:["IDLE","REST","LOUNGE","LOOK_AROUND","READ_BOOK"]}
   ];
 
+  function spotsForVisibleObjects(objectIds){
+    var visible={CORE:true,"open-floor":true};
+    (Array.isArray(objectIds)?objectIds:[]).forEach(function(id){visible[String(id)]=true;});
+    return ROOM_SPOTS.filter(function(spot){return !spot.objectId||visible[spot.objectId];});
+  }
+
   var BEHAVIOR_SPOT_POSITIONS={
     READ_BOOK:{
       table:{x:66,y:62},
@@ -289,5 +295,5 @@
     return {setActors:setActors,onVisibility:onVisibility,stop:stop,getSnapshot:snapshot,advance:function(id){cancel(id);advance(id);},forceBehavior:forceBehavior,forceAt:forceAt,forcePeekEdge:forcePeekEdge,forceActivity:forceActivity};
   }
 
-  return {ROOM_SPOTS:ROOM_SPOTS,BEHAVIOR_SPOT_POSITIONS:BEHAVIOR_SPOT_POSITIONS,POSE_CONTACTS:POSE_CONTACTS,POSES:POSES,BEHAVIORS:BEHAVIORS,create:create};
+  return {ROOM_SPOTS:ROOM_SPOTS,spotsForVisibleObjects:spotsForVisibleObjects,BEHAVIOR_SPOT_POSITIONS:BEHAVIOR_SPOT_POSITIONS,POSE_CONTACTS:POSE_CONTACTS,POSES:POSES,BEHAVIORS:BEHAVIORS,create:create};
 });

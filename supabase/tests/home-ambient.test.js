@@ -34,6 +34,17 @@ assert.ok(ambientApi.ROOM_SPOTS.some(function(spot){return spot.type==="TABLE";}
 assert.ok(ambientApi.ROOM_SPOTS.some(function(spot){return spot.type==="REST_SPOT";}));
 assert.deepEqual(ambientApi.ROOM_SPOTS.map(function(spot){return spot.id;}),["bookshelf-front","window","table","cushion","rocking-chair","open-floor-center","floor-a","floor-b"],"FINAL object spots are connected without removing generic floor spots");
 assert.deepEqual(ambientApi.ROOM_SPOTS.filter(function(spot){return spot.objectId;}).map(function(spot){return [spot.id,spot.objectId];}),[["bookshelf-front","CORE"],["window","window"],["table","F03"],["cushion","F02"],["rocking-chair","F08"],["open-floor-center","open-floor"]]);
+assert.deepEqual(ambientApi.spotsForVisibleObjects([]).map(function(spot){return spot.id;}),["bookshelf-front","open-floor-center","floor-a","floor-b"],"Starter Room only exposes CORE and open-floor semantic spots");
+assert.deepEqual(ambientApi.spotsForVisibleObjects(["F02","F03","F08","window"]).map(function(spot){return spot.id;}),ambientApi.ROOM_SPOTS.map(function(spot){return spot.id;}),"visible furniture can reactivate its preserved canonical spots");
+assert.match(productionSource,/spots:window\.BooktokkiHomeAmbient\.spotsForVisibleObjects\(\[\]\)/,"Production Starter Ambient uses only visible Starter objects");
+var starterAmbient=ambientApi.create({spots:ambientApi.spotsForVisibleObjects([]),reducedMotion:true,onChange:function(){}});
+starterAmbient.setActors([{id:"owner",role:"owner"}]);
+assert.equal(starterAmbient.forceActivity("owner","WINDOW"),false,"Starter rabbit cannot target an absent Window");
+assert.equal(starterAmbient.forceAt("owner","READ_BOOK","table"),false,"Starter rabbit cannot target an absent Table");
+assert.equal(starterAmbient.forceAt("owner","REST","cushion"),false,"Starter rabbit cannot target an absent Cushion");
+assert.equal(starterAmbient.forceAt("owner","REST","rocking-chair"),false,"Starter rabbit cannot target an absent Rocking Chair");
+assert.equal(starterAmbient.forceActivity("owner","BOOKSHELF"),true,"Fixed Core Bookshelf interaction remains available");
+assert.equal(starterAmbient.forceAt("owner","READ_BOOK","floor-a"),true,"open-floor reading remains available");
 assert.equal(ambientApi.BEHAVIORS.WALK.available,true);
 assert.equal(ambientApi.BEHAVIORS.IDLE.available,true);
 assert.equal(ambientApi.BEHAVIORS.REST.available,true);

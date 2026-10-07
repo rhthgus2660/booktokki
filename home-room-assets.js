@@ -16,6 +16,9 @@
     F07:item("F07","Stool","assets/furniture/F07_Stool_v1.png","stool",{x:null,y:null,width:null,anchor:{x:.510458567981,y:.694861660079},layer:null,zone:null,role:"small_aux_seat",enabled:false,movable:true,placementSurface:"floor",sha256:"fd18da8a0c2a0cb20b79ce6a2df93907d260843a0990033d923bd8c2056c5070"}),
     F08:item("F08","Rocking Chair","assets/furniture/F08_Rocking_Chair_v1.png","chair",{x:23,y:61,width:32,anchor:{x:.520917135961,y:.812648221344},layer:1549,zone:"MID",role:"rocking_rest",enabled:true,movable:true,placementSurface:"floor",semanticSpotType:"REST_SPOT",interactionType:"rest",interactionSpot:{x:23,y:55},sha256:"43aea64ba0f2800ee192d1fa743c261f36f6e143de49e872352e1e003e4f7479"})
   };
-  function characterPath(id,fallback){return CHARACTER_ASSETS[id]?CHARACTER_ASSETS[id].asset:fallback;}function starterFurniture(){return Object.keys(FURNITURE_ASSETS).map(function(id){return FURNITURE_ASSETS[id];}).filter(function(entry){return entry.enabled;});}function furnitureById(id){return FURNITURE_ASSETS[id]||null;}
-  return {BACKGROUND:{asset:"assets/backgrounds/Starter_Room_Clean_v1.png",sha256:"be626969e5dcf1a64393d60eb729754b931afc0dc7a6c0bf25f9b419396d1087"},CORE:CORE,CHARACTER_ASSETS:CHARACTER_ASSETS,FURNITURE_ASSETS:FURNITURE_ASSETS,characterPath:characterPath,furnitureById:furnitureById,starterFurniture:starterFurniture};
+  function characterPath(id,fallback){return CHARACTER_ASSETS[id]?CHARACTER_ASSETS[id].asset:fallback;}
+  /* Catalog metadata is preserved independently from Starter entitlement. */
+  function starterFurniture(){return [];}
+  function furnitureById(id){return FURNITURE_ASSETS[id]||null;}
+  return {BACKGROUND:{id:"R01_CLEAN_ROOM",asset:"assets/backgrounds/R01_Clean_Room_v1.png",type:"room_background",starter:true,movable:false,sha256:"d1eb25aac8341c49aaed6d10d0c95a428e102f8d676fc88482a6b5cac7c6e1bb"},CORE:CORE,CHARACTER_ASSETS:CHARACTER_ASSETS,FURNITURE_ASSETS:FURNITURE_ASSETS,characterPath:characterPath,furnitureById:furnitureById,starterFurniture:starterFurniture};
 });
