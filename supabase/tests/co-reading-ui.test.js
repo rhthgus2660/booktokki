@@ -2,7 +2,7 @@
 var assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path"),vm=require("node:vm");
 var api=require("../../co-reading-repository.js");
 (async function(){
-  var calls=[],client={rpc:function(name,args){calls.push([name,args]);return Promise.resolve({data:name==="get_friend_connections"?[{connection_id:"c2",friend_display_name:"둘",connected_at:"2026-01-02",my_visit_state:"allowed"},{connection_id:"c1",friend_display_name:"하나",connected_at:"2026-01-01",my_visit_state:"undecided"}]:"ok",error:null});}};
+  var calls=[],client={rpc:function(name,args){calls.push([name,args]);var mutations=["disconnect_friend_connection","block_friend_connection","unblock_user","record_friend_rabbit_seen_v2"];return Promise.resolve({data:name==="get_friend_connections"?[{connection_id:"c2",friend_display_name:"둘",friend_intro:"두번째",connected_at:"2026-01-02",my_visit_state:"allowed"},{connection_id:"c1",friend_display_name:"하나",friend_intro:"첫번째",connected_at:"2026-01-01",my_visit_state:"undecided"}]:name==="get_friend_profile"?[{display_name:"하나",intro:"첫번째"}]:name==="get_blocked_users"?[{block_handle:"block-1",display_name:"차단 사용자",intro:"",blocked_at:"2026-01-01"}]:mutations.indexOf(name)!==-1?true:"ok",error:null});}};
   var r=api.create(client);
   calls=[];var existingInvite=await r.createInviteWithDisplayName("기존 이름","");
   assert.deepEqual(calls.map(function(x){return x[0];}),["create_friend_invite"],"an existing profile name must not be written again");
@@ -22,6 +22,15 @@ var api=require("../../co-reading-repository.js");
   assert.deepEqual((await r.getConnections()).map(function(row){return row.connectionId;}),["c1","c2"]);
   await r.setConnectionVisit("c1",true);await r.disconnectConnection("c2");await r.recordRabbitSeenV2("c1");
   assert.deepEqual(calls.slice(-3).map(function(x){return x[0];}),["set_friend_connection_visit","disconnect_friend_connection","record_friend_rabbit_seen_v2"]);
+  assert.deepEqual(await r.getFriendProfile("c1"),{displayName:"하나",intro:"첫번째"});
+  await r.blockConnection("c1");await r.reportConnection("c1","spam","");
+  assert.deepEqual(calls.slice(-2).map(function(x){return x[0];}),["block_friend_connection","report_friend_connection"]);
+  assert.equal((await r.getBlockedUsers())[0].displayName,"차단 사용자");
+  assert.equal((await r.getBlockedUsers())[0].handle,"block-1");
+  await r.unblockUser("block-1");
+  assert.deepEqual(calls[calls.length-1],["unblock_user",{p_block_handle:"block-1"}]);
+  var falseRepo=api.create({rpc:function(){return Promise.resolve({data:false,error:null});}});
+  await assert.rejects(falseRepo.blockConnection("c1"),/완료하지 못했어요/);
   assert.equal(api.isAlreadyConnectedError({code:"PT409"}),true);
   var cleared=0,ctx=api.createInviteContext("token",function(){cleared++;});
   assert.equal(ctx.consumeAutoNavigation(),true);assert.equal(ctx.consumeAutoNavigation(),false);
@@ -52,9 +61,9 @@ var api=require("../../co-reading-repository.js");
   function rendered(connections,name,nameOpen,status){var el={innerHTML:""},context={state:{coReadingConnections:connections,coReadingStatus:status||"ready",coReadingPreviewName:"",coReadingDisplayName:name===undefined?"나":name,coReadingInviteNameOpen:!!nameOpen,coReadingBusyConnections:{},coReadingBusyAccept:false,coReadingBusyCreate:false,coReadingInviteUrl:"",coReadingMessage:""},document:{getElementById:function(){return el;}},esc:function(x){return String(x);},friendVisitEnabled:function(){return true;},myHeader:function(){return "";}};vm.runInNewContext(renderSource+"\nrenderCoReading();",context);return el.innerHTML;}
   var empty=rendered([]);assert.match(empty,/아직 연결된 친구가 없어요/);assert.match(empty,/새로운 친구 초대/);
   var one=rendered([{connectionId:"one",friendDisplayName:"한 명",myVisitState:"allowed"}]);
-  assert.equal((one.match(/data-friend-row=/g)||[]).length,1);assert.match(one,/data-friend-avatar/);assert.match(one,/data-friend-disconnect="one"/);assert.match(one,/data-friend-visit-toggle="one"/);
+  assert.equal((one.match(/data-friend-row=/g)||[]).length,1);assert.match(one,/data-friend-avatar/);assert.match(one,/data-friend-profile="one"/);assert.match(one,/data-friend-visit-toggle="one"/);
   var multi=rendered([{connectionId:"one",friendDisplayName:"한 명",myVisitState:"allowed"},{connectionId:"two",friendDisplayName:"두 명",myVisitState:"declined"}]);
-  assert.equal((multi.match(/data-friend-row=/g)||[]).length,2);assert.match(multi,/친구 초대 링크 만들기/);assert.match(multi,/data-friend-visit-toggle="one"/);assert.match(multi,/data-friend-disconnect="two"/);assert.doesNotMatch(multi,/상대방의 설정/);assert.match(multi,/보고 있는 화면, 방문 이력과 마지막 사용 시각은 친구에게 보여주지 않아요/);
+  assert.equal((multi.match(/data-friend-row=/g)||[]).length,2);assert.match(multi,/친구 초대 링크 만들기/);assert.match(multi,/data-friend-visit-toggle="one"/);assert.match(multi,/data-friend-profile="two"/);assert.doesNotMatch(multi,/상대방의 설정/);assert.match(multi,/보고 있는 화면, 방문 이력과 마지막 사용 시각은 친구에게 보여주지 않아요/);
   assert.doesNotMatch(multi,/같이 읽을 친구로 연결되어 있어요/);assert.match(multi,/읽는 책, 페이지, 북로그는 공유되지 않아요/);
   assert.doesNotMatch(rendered([],"기존 이름"),/id="friendDisplayName"/);
   var unnamedClosed=rendered([],"",false);assert.match(unnamedClosed,/data-friend-invite/);assert.doesNotMatch(unnamedClosed,/id="friendDisplayName"/);

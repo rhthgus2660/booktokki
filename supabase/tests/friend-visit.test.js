@@ -44,7 +44,7 @@ function clock(){var now=0,next=1,timers=new Map();return {now:function(){return
   assert.deepEqual(rpcCalls[2][1],{p_connection_id:"a",p_allowed:false});assert.deepEqual(rpcCalls[4][1],{p_connection_id:"b"});
 
   var html=fs.readFileSync(path.join(__dirname,"../../index.html"),"utf8");
-  assert.match(html,/coReadingConnections/);assert.match(html,/data-friend-disconnect=/);assert.match(html,/data-friend-visit-toggle=/);
+  assert.match(html,/coReadingConnections/);assert.match(html,/data-friend-profile=/);assert.match(html,/data-social-unfriend=/);assert.match(html,/data-friend-visit-toggle=/);
   assert.doesNotMatch(html,/data-friend-consent|maybeShowFriendVisitConsent|friendVisitConsentDeferred/);
   assert.match(html,/BooktokkiHomeScene\.build\(\{visitors:state\.friendVisit&&state\.friendVisit\.visitors\}\)/);assert.match(html,/markRabbitRendered\(visitor\.connectionId\)/);
   assert.match(html,/friendVisitEnabled\(\).*setConnectionVisit|setConnectionVisit\(visitId,allow\)/s);

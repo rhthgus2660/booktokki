@@ -52,7 +52,7 @@ assert.doesNotMatch(source, /id="logoutBtn"/);
 var showAuthenticated = source.slice(source.indexOf("function showAuthenticated("), source.indexOf("function showSignedOut("));
 assert.match(showAuthenticated, /activeAuthUser = session && session\.user \? session\.user : null/);
 assert.match(showAuthenticated, /ensureAccountRepositories\(\);\s*startApp\(session\);/);
-assert.match(source, /MY에서 직접 설정한 북토끼 닉네임: Kakao 계정 정보와 구분된 별도 항목으로 Supabase Auth user metadata에 저장돼요/);
+assert.match(source, /MY에서 직접 설정한 소셜 프로필 닉네임과 한줄 소개: Kakao 계정 정보와 분리해 저장돼요/);
 var startApp = source.slice(source.indexOf("function startApp("), source.indexOf("function showAuthenticated("));
 assert.match(startApp, /if \(appStarted && bootstrappedUserId === userId\)[\s\S]*return Promise\.resolve\(\)/);
 

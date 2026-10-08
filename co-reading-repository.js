@@ -11,6 +11,7 @@
     return {
       connectionId:String(row&&row.connection_id||""),
       friendDisplayName:String(row&&row.friend_display_name||""),
+      friendIntro:String(row&&row.friend_intro||""),
       connectedAt:row&&row.connected_at||null,
       myVisitState:/^(allowed|declined|undecided)$/.test(row&&row.my_visit_state||"")?row.my_visit_state:"undecided"
     };
@@ -27,6 +28,8 @@
     var seen={};
     return list.map(visitor).filter(function(item){if(!item.connectionId||seen[item.connectionId])return false;seen[item.connectionId]=true;return true;}).sort(function(a,b){return a.connectionId.localeCompare(b.connectionId);});
   }
+  function blocked(row){return {handle:String(row&&row.block_handle||""),displayName:String(row&&row.display_name||""),intro:String(row&&row.intro||""),blockedAt:row&&row.blocked_at||null};}
+  function requireTrue(result){var ok=value(result);if(ok!==true)throw new Error("요청을 완료하지 못했어요. 목록을 새로고침해 주세요.");return true;}
   function create(client){
     if(!client||typeof client.rpc!=="function") throw new Error("Supabase client is required");
     return {
@@ -49,9 +52,14 @@
         return self.setDisplayName(enteredName).then(function(){return self.acceptInvite(token);});
       },
       getConnections:function(){return client.rpc("get_friend_connections").then(rows).then(stableConnections);},
+      getFriendProfile:function(connectionId){return client.rpc("get_friend_profile",{p_connection_id:connectionId}).then(rows).then(function(list){var row=list[0];return row?{displayName:String(row.display_name||""),intro:String(row.intro||"")}:null;});},
       touchFriendPresence:function(){return client.rpc("touch_friend_presence").then(rows).then(stableVisitors);},
       setConnectionVisit:function(connectionId,allowed){return client.rpc("set_friend_connection_visit",{p_connection_id:connectionId,p_allowed:!!allowed}).then(value);},
-      disconnectConnection:function(connectionId){return client.rpc("disconnect_friend_connection",{p_connection_id:connectionId}).then(value);},
+      disconnectConnection:function(connectionId){return client.rpc("disconnect_friend_connection",{p_connection_id:connectionId}).then(requireTrue);},
+      blockConnection:function(connectionId){return client.rpc("block_friend_connection",{p_connection_id:connectionId}).then(requireTrue);},
+      getBlockedUsers:function(){return client.rpc("get_blocked_users").then(rows).then(function(list){return list.map(blocked).filter(function(item){return !!item.handle;});});},
+      reportConnection:function(connectionId,category,detail){return client.rpc("report_friend_connection",{p_connection_id:connectionId,p_category:category,p_detail:String(detail||"").trim()||null}).then(value);},
+      unblockUser:function(handle){return client.rpc("unblock_user",{p_block_handle:handle}).then(requireTrue);},
       recordRabbitSeenV2:function(connectionId){return client.rpc("record_friend_rabbit_seen_v2",{p_connection_id:connectionId}).then(value);},
       disconnect:function(){ return client.rpc("disconnect_friend").then(value); },
       touchPresence:function(){ return client.rpc("touch_app_presence").then(function(result){ var rows=value(result); return Array.isArray(rows)?(rows[0]||null):rows; }); },

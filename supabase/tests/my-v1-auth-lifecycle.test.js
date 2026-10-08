@@ -87,6 +87,13 @@ function createHarness(options){
   var user = { id:USER_ID, user_metadata:{ name:"카카오 이름" } };
   function session(){ return { user:JSON.parse(JSON.stringify(user)), access_token:"test-token" }; }
   var client = {
+    rpc:function(name,args){
+      if(name==="get_my_social_profile")return Promise.resolve({data:[],error:null});
+      if(name==="update_my_social_profile"){counters.updateUser.push(args);return Promise.resolve({data:[{display_name:args.p_display_name,intro:args.p_intro}],error:null});}
+      if(name==="get_friend_connections")return Promise.resolve({data:[],error:null});
+      if(name==="get_friend_display_name")return Promise.resolve({data:null,error:null});
+      return Promise.resolve({data:null,error:null});
+    },
     auth:{
       onAuthStateChange:function(callback){ authCallback = callback; return { data:{ subscription:{ unsubscribe:function(){} } } }; },
       getSession:function(){ return Promise.resolve({ data:{ session:session() }, error:null }); },
@@ -257,7 +264,7 @@ function createHarness(options){
   app.el("nicknameSave").onclick.call(app.el("nicknameSave"));
   await wait();
   assert.equal(app.el("nicknameError").hidden, true, "profileRepository must be restored after re-login");
-  assert.deepEqual(app.counters.updateUser, [{ data:{ booktokki_nickname:"다시 온 토끼" } }]);
+  assert.deepEqual(app.counters.updateUser, [{ p_display_name:"다시 온 토끼",p_intro:null }]);
   assert.equal(app.el("modalOverlay").hidden, true);
   assert.match(app.el("view-my").innerHTML, /다시 온 토끼/);
   assert.equal(app.counters.bootstrap, 2, "USER_UPDATED must not re-run bootstrap");

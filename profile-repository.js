@@ -24,19 +24,34 @@
     catch (_error) { return ""; }
   }
 
+  function normalizeIntro(value){
+    var intro = typeof value === "string" ? value.trim() : "";
+    if (/[\u0000-\u001f\u007f-\u009f]/.test(intro)) throw new Error("한줄 소개에는 줄바꿈을 사용할 수 없어요.");
+    if (Array.from(intro).length > 60) throw new Error("한줄 소개는 60자 이하로 입력해 주세요.");
+    return intro;
+  }
+
+  function value(result){ if(result.error) throw result.error; return result.data; }
+  function first(result){ var data=value(result); return Array.isArray(data)?(data[0]||null):data; }
+
   function create(client){
-    if (!client || !client.auth || typeof client.auth.updateUser !== "function") throw new Error("Supabase auth client is required");
+    if (!client || typeof client.rpc !== "function") throw new Error("Supabase client is required");
     return {
-      updateNickname:function(value){
-        var nickname;
-        try { nickname = normalizeNickname(value); }
-        catch (error) { return Promise.reject(error); }
-        var data = {};
-        data[METADATA_KEY] = nickname;
-        return client.auth.updateUser({ data:data }).then(function(result){
-          if (result.error) throw result.error;
-          return { nickname:nickname, user:result.data && result.data.user ? result.data.user : null };
+      load:function(){
+        return client.rpc("get_my_social_profile").then(first).then(function(row){
+          return row ? {displayName:String(row.display_name||""),intro:String(row.intro||"")} : null;
         });
+      },
+      save:function(displayName,intro){
+        var nickname,bio;
+        try { nickname=normalizeNickname(displayName); bio=normalizeIntro(intro); }
+        catch(error){ return Promise.reject(error); }
+        return client.rpc("update_my_social_profile",{p_display_name:nickname,p_intro:bio||null}).then(first).then(function(row){
+          return {displayName:String(row&&row.display_name||nickname),intro:String(row&&row.intro||"")};
+        });
+      },
+      updateNickname:function(value){
+        return this.save(value,"").then(function(profile){return {nickname:profile.displayName,user:null};});
       }
     };
   }
@@ -44,6 +59,7 @@
   return {
     create:create,
     normalizeNickname:normalizeNickname,
+    normalizeIntro:normalizeIntro,
     nicknameFromUser:nicknameFromUser,
     displayNickname:function(user){ return nicknameFromUser(user) || EMPTY_LABEL; },
     METADATA_KEY:METADATA_KEY,

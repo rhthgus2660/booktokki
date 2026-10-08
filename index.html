@@ -1210,11 +1210,28 @@
   body.my-prototype .topbar h1{ display:none; }
   body.my-prototype .icon-nav-btn{ border:0; border-radius:3px; background:transparent; }
   body.my-prototype .icon-nav-btn:hover{ background:#f5f5f5; }
-  #view-my, #view-feedback, #view-data-info, #view-co-reading{ min-width:0; color:#171717; }
+  #view-my, #view-feedback, #view-data-info, #view-co-reading, #view-profile-edit, #view-friend-profile, #view-blocked-users{ min-width:0; color:#171717; }
   .my-header{ gap:8px; }
   .my-header h2{ font-size:.95rem; font-weight:600; }
   .my-profile{ display:flex; flex-direction:column; align-items:center; padding:36px 0 34px; }
   .my-profile img{ width:104px; height:82px; object-fit:contain; image-rendering:pixelated; }
+  .my-profile-entry{ width:100%; padding:0; border:0; background:none; color:inherit; cursor:pointer; }
+  .my-profile-intro,.friend-row-intro{ margin-top:5px; color:#737373; font-size:.72rem; line-height:1.45; }
+  .social-profile-form{ margin-top:24px; }
+  .social-profile-preview{ display:flex; justify-content:center; padding:20px 0; }
+  .social-profile-preview img,.friend-profile-rabbit{ width:104px; height:82px; object-fit:contain; image-rendering:pixelated; }
+  .social-profile-form .field{ margin-top:16px; }
+  .social-profile-form .field input{ width:100%; min-height:46px; padding:0 12px; border:1px solid #d9d9d9; border-radius:4px; font:inherit; font-size:16px; }
+  .social-profile-form .btn{ width:100%; margin-top:22px; }
+  .friend-profile{ display:flex; flex-direction:column; align-items:center; padding:32px 0 20px; text-align:center; }
+  .friend-profile h3{ margin-top:14px; font-size:1.05rem; }
+  .friend-profile p{ min-height:20px; margin-top:6px; color:#737373; font-size:.78rem; }
+  .friend-profile-actions{ display:flex; gap:8px; width:100%; margin-top:24px; }
+  .friend-profile-actions .btn{ flex:1; }
+  .friend-more{ width:44px; flex:none!important; }
+  .friend-profile-entry{ display:flex; align-items:center; gap:10px; flex:1; min-width:0; padding:0; border:0; background:none; color:inherit; text-align:left; cursor:pointer; }
+  .friend-row-copy{ min-width:0; flex:1; }
+  .friend-row-copy strong,.friend-row-copy span{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .my-nickname{ margin-top:17px; font-size:1.05rem; font-weight:600; }
   .my-edit-nickname{ min-height:44px; padding:8px 12px; border:0; background:none; color:#737373; font-size:.75rem; cursor:pointer; }
   .my-section{ padding:22px 0; border-top:1px solid #e9e9e9; }
@@ -1359,6 +1376,9 @@
     <section id="view-feedback" class="view" hidden></section>
     <section id="view-data-info" class="view" hidden></section>
     <section id="view-co-reading" class="view" hidden></section>
+    <section id="view-profile-edit" class="view" hidden></section>
+    <section id="view-friend-profile" class="view" hidden></section>
+    <section id="view-blocked-users" class="view" hidden></section>
   </main>
 </div>
 
@@ -1426,6 +1446,11 @@
     coReadingBusyCreate: false,
     coReadingBusyAccept: false,
     coReadingBusyConnections: {},
+    socialProfile: { displayName:"", intro:"" },
+    socialProfileStatus: "loading",
+    selectedFriendConnectionId: null,
+    blockedUsers: [],
+    blockedUsersStatus: "idle",
     friendVisit: { userId:null, visitors:[] },
     homeAmbient: { actors:[] },
     dbMode: null /* 'db' | 'local' */
@@ -2267,6 +2292,8 @@
     renderAll();
     if (enteringHome) enterHomeCharacterMoment();
     if(view === "co-reading") loadCoReading();
+    if(view === "profile-edit") loadSocialProfile();
+    if(view === "blocked-users") loadBlockedUsers();
   }
   function openMyBooklogs(){
     state.statsFrom = "my";
@@ -2298,7 +2325,7 @@
     document.body.classList.toggle("detail-prototype", state.view === "detail");
     document.body.classList.toggle("library-prototype", state.view === "library");
     document.body.classList.toggle("stats-prototype", state.view === "stats");
-    document.body.classList.toggle("my-prototype", state.view === "my" || state.view === "feedback" || state.view === "data-info" || state.view === "co-reading");
+    document.body.classList.toggle("my-prototype", ["my","feedback","data-info","co-reading","profile-edit","friend-profile","blocked-users"].indexOf(state.view)!==-1);
     document.querySelector(".topbar h1").textContent = state.view === "home" ? "내 서재" : "내 독서 기록";
     // Keep unsaved inputs only when the same book/input survives the render.
     var detail = document.getElementById("view-detail");
@@ -2325,9 +2352,12 @@
     document.getElementById("view-feedback").hidden = state.view !== "feedback";
     document.getElementById("view-data-info").hidden = state.view !== "data-info";
     document.getElementById("view-co-reading").hidden = state.view !== "co-reading";
+    document.getElementById("view-profile-edit").hidden = state.view !== "profile-edit";
+    document.getElementById("view-friend-profile").hidden = state.view !== "friend-profile";
+    document.getElementById("view-blocked-users").hidden = state.view !== "blocked-users";
     document.getElementById("libraryNavBtn").hidden = state.view === "library";
     document.getElementById("statsNavBtn").hidden = state.view === "stats";
-    document.getElementById("myNavBtn").hidden = state.view === "my" || state.view === "feedback" || state.view === "data-info" || state.view === "co-reading";
+    document.getElementById("myNavBtn").hidden = ["my","feedback","data-info","co-reading","profile-edit","friend-profile","blocked-users"].indexOf(state.view)!==-1;
 
     renderOffline();
     renderHome();
@@ -2338,6 +2368,9 @@
     renderFeedback();
     renderDataInfo();
     renderCoReading();
+    renderProfileEdit();
+    renderFriendProfile();
+    renderBlockedUsers();
     if (draftBookId === state.selectedBookId){
       drafts.forEach(function(draft){
         var input = detail.querySelector(draft.selector);
@@ -3119,15 +3152,14 @@
 
   function renderMy(){
     var el = document.getElementById("view-my");
-    var nickname = window.BooktokkiProfileRepository
-      ? window.BooktokkiProfileRepository.displayNickname(activeAuthUser)
-      : "닉네임을 정해줘";
+    var nickname = state.socialProfile.displayName || (window.BooktokkiProfileRepository ? window.BooktokkiProfileRepository.displayNickname(activeAuthUser) : "닉네임을 정해줘");
     el.innerHTML = myHeader("MY", "home") +
-      '<section class="my-profile">' +
+      '<button class="my-profile my-profile-entry" type="button" data-nav="profile-edit" aria-label="내 프로필 수정">' +
         '<img src="' + esc(MY_RABBIT_ASSET) + '" alt="북토끼">' +
         '<div class="my-nickname">' + esc(nickname) + '</div>' +
-        '<button class="my-edit-nickname" type="button" data-edit-nickname>수정 &gt;</button>' +
-      '</section>' +
+        '<div class="my-profile-intro">' + esc(state.socialProfile.intro || "한줄 소개를 적어보세요") + '</div>' +
+        '<span class="my-edit-nickname">프로필 수정 &gt;</span>' +
+      '</button>' +
       '<section class="my-section">' +
         '<button class="my-menu my-booklog" type="button" data-my-booklogs><span class="my-menu-copy"><span class="my-menu-label">내 북로그</span><span class="my-menu-note">월별로 남긴 기록 보기</span></span><span class="my-menu-arrow">›</span></button>' +
       '</section>' +
@@ -3137,10 +3169,50 @@
         '<button class="my-menu" type="button" data-nav="feedback"><span class="my-menu-label">의견 보내기</span><span class="my-menu-arrow">›</span></button>' +
       '</section>' +
       '<section class="my-section"><div class="my-section-title">계정</div>' +
+        '<button class="my-menu" type="button" data-nav="blocked-users"><span class="my-menu-label">차단한 사용자</span><span class="my-menu-arrow">›</span></button>' +
         '<button class="my-menu" type="button" data-nav="data-info"><span class="my-menu-label">개인정보 · 데이터 안내</span><span class="my-menu-arrow">›</span></button>' +
         '<button class="my-menu my-logout" type="button" data-logout><span class="my-menu-label">로그아웃</span></button>' +
       '</section>' +
       '<div class="my-version">Booktokki Alpha</div>';
+  }
+
+  function loadSocialProfile(){
+    if(!profileRepository)return;
+    var userId=activeAuthUserId;
+    state.socialProfileStatus="loading";
+    profileRepository.load().then(function(profile){
+      if(userId!==activeAuthUserId)return;
+      if(profile)state.socialProfile=profile;
+      else state.socialProfile={displayName:window.BooktokkiProfileRepository.nicknameFromUser(activeAuthUser),intro:""};
+      state.socialProfileStatus="ready";
+    }).catch(function(){if(userId===activeAuthUserId)state.socialProfileStatus="error";}).finally(function(){if(userId===activeAuthUserId&&appStarted)renderAll();});
+  }
+
+  function renderProfileEdit(){
+    var el=document.getElementById("view-profile-edit");if(!el)return;
+    el.innerHTML=myHeader("프로필 수정","my")+'<form class="social-profile-form" id="socialProfileForm">'+
+      '<div class="social-profile-preview"><img src="'+esc(MY_RABBIT_ASSET)+'" alt="내 Personal Librarian"></div>'+
+      '<div class="field"><label for="socialDisplayName">닉네임</label><input id="socialDisplayName" maxlength="20" required value="'+esc(state.socialProfile.displayName)+'"></div>'+
+      '<div class="field"><label for="socialIntro">한줄 소개</label><input id="socialIntro" maxlength="60" value="'+esc(state.socialProfile.intro)+'" placeholder="친구에게 보여줄 한줄 소개"></div>'+
+      '<p class="my-form-error" id="socialProfileError" hidden></p><button class="btn btn-dark" type="submit">저장</button></form>';
+  }
+
+  function selectedFriend(){return state.coReadingConnections.find(function(c){return c.connectionId===state.selectedFriendConnectionId;})||null;}
+  function renderFriendProfile(){
+    var el=document.getElementById("view-friend-profile");if(!el)return;var friend=selectedFriend();
+    el.innerHTML=myHeader("친구 프로필","co-reading")+(friend?'<section class="friend-profile"><img class="friend-profile-rabbit" src="'+esc(MY_RABBIT_ASSET)+'" alt="친구의 Personal Librarian"><h3>'+esc(friend.friendDisplayName)+'</h3><p>'+esc(friend.friendIntro||"소개가 아직 없어요.")+'</p><div class="friend-profile-actions"><button class="btn btn-outline" type="button" disabled aria-disabled="true">메시지 보내기</button><button class="btn btn-outline friend-more" type="button" data-friend-more="'+esc(friend.connectionId)+'" aria-label="친구 관리">···</button></div></section>':'<p class="friend-status">친구 프로필을 볼 수 없어요.</p>');
+  }
+  function loadBlockedUsers(){
+    if(!coReadingRepository)return;var userId=activeAuthUserId;state.blockedUsersStatus="loading";renderAll();
+    coReadingRepository.getBlockedUsers().then(function(list){if(userId!==activeAuthUserId)return;state.blockedUsers=list;state.blockedUsersStatus="ready";}).catch(function(){if(userId===activeAuthUserId)state.blockedUsersStatus="error";}).finally(function(){if(userId===activeAuthUserId&&state.view==="blocked-users")renderAll();});
+  }
+  function renderBlockedUsers(){
+    var el=document.getElementById("view-blocked-users");if(!el)return;var body="";
+    if(state.blockedUsersStatus==="loading")body='<p class="friend-status">차단 목록을 불러오고 있어요.</p>';
+    else if(state.blockedUsersStatus==="error")body='<p class="friend-status">차단 목록을 불러오지 못했어요.</p><button class="btn btn-outline" type="button" data-blocked-retry>다시 시도</button>';
+    else if(!state.blockedUsers.length)body='<p class="friend-empty">차단한 사용자가 없어요.</p>';
+    else body='<div class="friend-list">'+state.blockedUsers.map(function(item){return '<div class="friend-row"><div class="friend-row-primary"><span class="friend-avatar" aria-hidden="true">🐰</span><span class="friend-row-copy"><strong>'+esc(item.displayName)+'</strong><span class="friend-row-intro">'+esc(item.intro||"소개가 아직 없어요.")+'</span></span><button class="friend-disconnect" type="button" data-social-unblock="'+esc(item.handle)+'">차단 해제</button></div></div>';}).join("")+'</div><p class="friend-section-copy">차단을 해제해도 친구 관계는 자동으로 복구되지 않아요.</p>';
+    el.innerHTML=myHeader("차단한 사용자","my")+body+(state.coReadingMessage?'<p class="friend-status" aria-live="polite">'+esc(state.coReadingMessage)+'</p>':'');
   }
 
   function renderFeedback(){
@@ -3165,7 +3237,7 @@
       '<div class="data-guide">' +
         '<section><h3>북토끼가 저장하는 정보</h3><p>로그인 식별 정보, 직접 설정한 닉네임, 등록한 책과 읽은 페이지 기록, 북로그, 완독 상태와 소감, 서비스 이용 중 남긴 의견을 저장할 수 있어요.</p></section>' +
         '<section><h3>왜 사용하는지</h3><p>기기에서 읽던 책과 기록을 이어서 보여주고, 독서 캘린더와 북로그를 구성하며, Public Alpha를 개선하기 위해 사용해요.</p></section>' +
-        '<section><h3>클라우드에 저장되는 정보</h3><ul><li>Supabase Auth의 사용자 UUID와 Kakao 로그인 과정에서 Kakao가 전달한 계정 정보(metadata)</li><li>MY에서 직접 설정한 북토끼 닉네임: Kakao 계정 정보와 구분된 별도 항목으로 Supabase Auth user metadata에 저장돼요</li><li>책 정보, 페이지 기록, 북로그, 완독 상태와 소감</li><li>책 추가·독서 기록 저장 여부와 시각 등 Minimal Analytics</li><li>의견 보내기로 직접 작성한 내용과 접수 시각</li></ul></section>' +
+        '<section><h3>클라우드에 저장되는 정보</h3><ul><li>Supabase Auth의 사용자 UUID와 Kakao 로그인 과정에서 Kakao가 전달한 계정 정보(metadata)</li><li>MY에서 직접 설정한 소셜 프로필 닉네임과 한줄 소개: Kakao 계정 정보와 분리해 저장돼요</li><li>책 정보, 페이지 기록, 북로그, 완독 상태와 소감</li><li>책 추가·독서 기록 저장 여부와 시각 등 Minimal Analytics</li><li>의견 보내기로 직접 작성한 내용과 접수 시각</li></ul></section>' +
         '<section><h3>현재 기기에 저장되는 정보</h3><p>IndexedDB에는 책과 독서 기록, 북로그, 직접 올린 표지 이미지가 남을 수 있어요. localStorage에는 로그인 세션, Local Owner 정보와 안전한 이전·복원을 위한 진행 정보가 저장될 수 있어요.</p></section>' +
         '<section><h3>Minimal Analytics</h3><p>책 추가와 독서 기록 저장 같은 최소 행동을 사용자 UUID와 연결해 기록해요. 서비스 개선과 오류 확인을 위해 최초 유입 경로, 로그인 성공·실패 같은 최소 이용 상태, 친구 초대·연결 과정의 최소 상태도 기록할 수 있어요. 익명 통계가 아니며, 책 제목·검색어·실제 페이지 숫자·북로그 본문은 Analytics event에 넣지 않아요.</p></section>' +
         '<section><h3>친구 토끼 방문</h3><p>친구와 둘 다 허용한 경우에만 북토끼를 사용하는 동안 마지막으로 확인된 시각 하나를 잠시 저장해요. 이전 기록은 남기지 않고 몇 분 뒤 효력을 잃어요. 친구에게는 시각이 아니라 토끼가 놀러 왔는지만 전달돼요. 서비스 개선을 위해 두 사람의 사용 시간이 겹쳤는지와 친구 토끼가 화면에 보였는지만 30분 단위로 기록해요.</p></section>' +
@@ -3180,9 +3252,9 @@
     if(!coReadingRepository){state.coReadingStatus="error";state.coReadingMessage="친구 연결을 불러오지 못했어요.";renderAll();return;}
     var loadEpoch=++coReadingLoadEpoch,userId=activeAuthUserId;
     state.coReadingStatus="loading"; state.coReadingMessage=""; renderAll();
-    Promise.all([coReadingRepository.getDisplayName(),coReadingRepository.getConnections()]).then(function(values){
+    Promise.all([profileRepository.load(),coReadingRepository.getConnections()]).then(function(values){
       if(loadEpoch!==coReadingLoadEpoch||userId!==activeAuthUserId)return;
-      state.coReadingDisplayName=values[0]||""; state.coReadingConnections=values[1]; state.coReadingStatus="ready";
+      if(values[0])state.socialProfile=values[0]; state.coReadingDisplayName=values[0]?values[0].displayName:""; state.coReadingConnections=values[1]; state.coReadingStatus="ready";
       if(friendVisit&&friendVisitEnabled())friendVisit.setConnections(values[1]);
       if(friendInviteContext.getToken()) return coReadingRepository.previewInvite(friendInviteContext.getToken()).then(function(name){
         if(loadEpoch===coReadingLoadEpoch&&userId===activeAuthUserId)state.coReadingPreviewName=name;
@@ -3210,7 +3282,7 @@
         body+='<div class="friend-list">';
         state.coReadingConnections.forEach(function(c){
           var id=c.connectionId,busy=!!state.coReadingBusyConnections[id],visitOn=c.myVisitState==="allowed";
-          body+='<div class="friend-row" data-friend-row="'+esc(id)+'"><div class="friend-row-primary"><span class="friend-avatar" data-friend-avatar aria-hidden="true">🐰</span><strong class="friend-row-name">'+esc(c.friendDisplayName||"연결된 친구")+'</strong><button class="friend-disconnect" type="button" data-friend-disconnect="'+esc(id)+'"'+(busy?' disabled':'')+'>연결 끊기</button></div>'+
+          body+='<div class="friend-row" data-friend-row="'+esc(id)+'"><div class="friend-row-primary"><button class="friend-profile-entry" type="button" data-friend-profile="'+esc(id)+'"><span class="friend-avatar" data-friend-avatar aria-hidden="true">🐰</span><span class="friend-row-copy"><strong class="friend-row-name">'+esc(c.friendDisplayName||"연결된 친구")+'</strong><span class="friend-row-intro">'+esc(c.friendIntro||"소개가 아직 없어요.")+'</span></span><span class="my-menu-arrow">›</span></button></div>'+
             (friendVisitEnabled()?'<div class="friend-row-secondary"><span class="friend-visit-label-group"><span class="friend-visit-label">토끼 방문</span><details class="friend-visit-help"><summary aria-label="토끼 방문 도움말">?</summary><p>둘 다 허용한 동안에만 서로의 서재에 토끼가 잠깐 놀러 올 수 있어요. 내가 북토끼를 쓰는 동안에는 내 토끼도 이 친구의 서재에 나타날 수 있어요. 읽는 책·페이지·북로그, 보고 있는 화면, 방문 이력과 마지막 사용 시각은 친구에게 보여주지 않아요.</p></details></span><button class="friend-visit-toggle" type="button" data-friend-visit-toggle="'+esc(id)+'" aria-pressed="'+(visitOn?'true':'false')+'"'+(busy?' disabled':'')+'>'+(visitOn?'ON':'OFF')+'</button></div>':'')+'</div>';
         });
         body+='</div>';
@@ -3847,6 +3919,23 @@
   }
 
   /* ---------------- event delegation ---------------- */
+  function removeFriendFromUi(connectionId,message){
+    state.coReadingConnections=state.coReadingConnections.filter(function(c){return c.connectionId!==connectionId;});
+    state.selectedFriendConnectionId=null;state.coReadingMessage=message;
+    if(friendVisit&&friendVisitEnabled())friendVisit.setConnections(state.coReadingConnections);
+    goTo("co-reading");
+  }
+  function emitSocialHook(name){
+    if(typeof window.CustomEvent!=="function")return;
+    document.dispatchEvent(new window.CustomEvent("booktokki:social-hook",{detail:{eventName:name}}));
+  }
+  function openFriendActions(connectionId){
+    var friend=state.coReadingConnections.find(function(c){return c.connectionId===connectionId;});if(!friend)return;
+    openModal('<div class="modal"><h2>'+esc(friend.friendDisplayName)+' 관리</h2><p class="modal-error" id="socialActionError" hidden></p><div class="modal-actions" style="flex-direction:column"><button class="btn btn-outline" type="button" data-social-unfriend="'+esc(connectionId)+'">친구 끊기</button><button class="btn btn-outline" type="button" data-social-block="'+esc(connectionId)+'">차단</button><button class="btn btn-outline" type="button" data-social-report="'+esc(connectionId)+'">신고</button><button class="btn btn-dark" type="button" data-closemodal>닫기</button></div></div>');
+  }
+  function openReport(connectionId){
+    openModal('<div class="modal"><h2>사용자 신고</h2><div class="field"><label for="socialReportCategory">이유</label><select id="socialReportCategory"><option value="spam">스팸</option><option value="harassment">괴롭힘</option><option value="inappropriate_content">부적절한 콘텐츠</option><option value="other">기타</option></select></div><div class="field"><label for="socialReportDetail">추가 설명 (선택)</label><textarea id="socialReportDetail" maxlength="500"></textarea></div><div class="modal-error" id="socialReportError" hidden></div><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>취소</button><button class="btn btn-dark" type="button" data-social-report-submit="'+esc(connectionId)+'">신고</button></div></div>');
+  }
   document.body.addEventListener("click", function(e){
     var ownerRabbit=e.target.closest("[data-owner-rabbit-tap]");
     if(ownerRabbit){tapOwnerRabbit();return;}
@@ -3880,6 +3969,21 @@
     t = e.target.closest("[data-edit-nickname]");
     if (t){ modalEditNickname(); return; }
 
+    t=e.target.closest("[data-friend-profile]");
+    if(t){state.selectedFriendConnectionId=t.getAttribute("data-friend-profile");emitSocialHook("friend_profile_viewed");goTo("friend-profile");return;}
+    t=e.target.closest("[data-friend-more]");
+    if(t){openFriendActions(t.getAttribute("data-friend-more"));return;}
+    t=e.target.closest("[data-social-unfriend]");
+    if(t){var unfriendId=t.getAttribute("data-social-unfriend"),unfriendUser=activeAuthUserId;if(state.coReadingBusyConnections[unfriendId]||!window.confirm("친구 연결을 끊으면 서로의 서재에 나타나지 않습니다. 계속할까요?"))return;state.coReadingBusyConnections[unfriendId]=true;t.disabled=true;coReadingRepository.disconnectConnection(unfriendId).then(function(){if(unfriendUser===activeAuthUserId){emitSocialHook("friend_unfriended");closeModal();removeFriendFromUi(unfriendId,"친구 연결을 끊었어요.");}}).catch(function(error){if(unfriendUser!==activeAuthUserId)return;var out=document.getElementById("socialActionError");if(out){out.textContent=error.message||"친구 연결을 끊지 못했어요.";out.hidden=false;t.disabled=false;}}).finally(function(){if(unfriendUser===activeAuthUserId)delete state.coReadingBusyConnections[unfriendId];});return;}
+    t=e.target.closest("[data-social-block]");
+    if(t){var blockId=t.getAttribute("data-social-block"),blockUser=activeAuthUserId;if(state.coReadingBusyConnections[blockId]||!window.confirm("이 사용자를 차단할까요? 친구 연결과 토끼 방문이 함께 해제됩니다."))return;state.coReadingBusyConnections[blockId]=true;t.disabled=true;coReadingRepository.blockConnection(blockId).then(function(){if(blockUser===activeAuthUserId){emitSocialHook("user_blocked");closeModal();removeFriendFromUi(blockId,"사용자를 차단했어요.");}}).catch(function(error){if(blockUser!==activeAuthUserId)return;var out=document.getElementById("socialActionError");if(out){out.textContent=error.message||"사용자를 차단하지 못했어요.";out.hidden=false;t.disabled=false;}}).finally(function(){if(blockUser===activeAuthUserId)delete state.coReadingBusyConnections[blockId];});return;}
+    t=e.target.closest("[data-social-report]");if(t){openReport(t.getAttribute("data-social-report"));return;}
+    t=e.target.closest("[data-social-report-submit]");
+    if(t){var reportId=t.getAttribute("data-social-report-submit"),cat=document.getElementById("socialReportCategory"),detail=document.getElementById("socialReportDetail"),reportUser=activeAuthUserId;if(state.coReadingBusyConnections["report:"+reportId])return;state.coReadingBusyConnections["report:"+reportId]=true;t.disabled=true;coReadingRepository.reportConnection(reportId,cat.value,detail.value).then(function(){if(reportUser!==activeAuthUserId)return;emitSocialHook("user_reported");openModal('<div class="modal"><h2>신고했어요.</h2><p>이 사용자를 차단할까요?</p><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>닫기</button><button class="btn btn-dark" type="button" data-social-block="'+esc(reportId)+'">차단</button></div></div>');}).catch(function(error){if(reportUser!==activeAuthUserId)return;var out=document.getElementById("socialReportError");if(out){out.textContent=error.message||"신고하지 못했어요.";out.hidden=false;t.disabled=false;}}).finally(function(){if(reportUser===activeAuthUserId)delete state.coReadingBusyConnections["report:"+reportId];});return;}
+    t=e.target.closest("[data-social-unblock]");
+    if(t){var unblockId=t.getAttribute("data-social-unblock"),unblockUser=activeAuthUserId;if(state.coReadingBusyConnections["unblock:"+unblockId])return;state.coReadingBusyConnections["unblock:"+unblockId]=true;t.disabled=true;coReadingRepository.unblockUser(unblockId).then(function(){if(unblockUser!==activeAuthUserId)return;state.blockedUsers=state.blockedUsers.filter(function(item){return item.userId!==unblockId;});state.coReadingMessage="차단을 해제했어요. 친구 관계는 복구되지 않습니다.";renderAll();}).catch(function(error){if(unblockUser!==activeAuthUserId)return;state.coReadingMessage=error.message||"차단을 해제하지 못했어요.";t.disabled=false;renderAll();}).finally(function(){if(unblockUser===activeAuthUserId)delete state.coReadingBusyConnections["unblock:"+unblockId];});return;}
+    t=e.target.closest("[data-blocked-retry]");if(t){loadBlockedUsers();return;}
+
     t = e.target.closest("[data-my-booklogs]");
     if (t){ openMyBooklogs(); return; }
 
@@ -3899,7 +4003,7 @@
     t=e.target.closest("[data-friend-copy]");
     if(t&&state.coReadingInviteUrl){copyInviteLink(state.coReadingInviteUrl).then(function(){state.coReadingMessage="초대 링크를 복사했어요.";}).catch(function(){state.coReadingMessage="링크를 복사하지 못했어요.";}).finally(function(){renderAll();});return;}
     t=e.target.closest("[data-friend-accept]");
-    if(t){var recipientName=document.getElementById("friendRecipientName"),acceptUser=activeAuthUserId;var recipientNameValue=recipientName?recipientName.value:"";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyAccept",function(){renderAll();return coReadingRepository.acceptInviteWithDisplayName(friendInviteContext.getToken(),state.coReadingDisplayName,recipientNameValue).then(function(){if(acceptUser!==activeAuthUserId)return;if(measurementRepository)measurementRepository.record("friend_invite_accepted",null,"friend_invite");if(!state.coReadingDisplayName)state.coReadingDisplayName=recipientNameValue.trim();cleanupFriendInvite();loadCoReading();state.coReadingMessage="친구와 연결했어요.";});}).catch(function(error){if(acceptUser!==activeAuthUserId)return;if(measurementRepository)measurementRepository.record("friend_invite_failed","unknown","friend_invite");if(window.BooktokkiCoReadingRepository.isAlreadyConnectedError(error)){cleanupFriendInvite();state.coReadingMessage="이미 연결된 친구예요.";}else state.coReadingMessage=error.message||"초대를 수락하지 못했어요.";}).finally(function(){if(acceptUser===activeAuthUserId&&state.view==="co-reading")renderAll();});return;}
+    if(t){var recipientName=document.getElementById("friendRecipientName"),acceptUser=activeAuthUserId;var recipientNameValue=recipientName?recipientName.value:"";window.BooktokkiCoReadingRepository.runOnce(state,"coReadingBusyAccept",function(){renderAll();return coReadingRepository.acceptInviteWithDisplayName(friendInviteContext.getToken(),state.coReadingDisplayName,recipientNameValue).then(function(){if(acceptUser!==activeAuthUserId)return;if(measurementRepository)measurementRepository.record("friend_invite_accepted",null,"friend_invite");emitSocialHook("friend_connected");if(!state.coReadingDisplayName)state.coReadingDisplayName=recipientNameValue.trim();cleanupFriendInvite();loadCoReading();state.coReadingMessage="친구와 연결했어요.";});}).catch(function(error){if(acceptUser!==activeAuthUserId)return;if(measurementRepository)measurementRepository.record("friend_invite_failed","unknown","friend_invite");if(window.BooktokkiCoReadingRepository.isAlreadyConnectedError(error)){cleanupFriendInvite();state.coReadingMessage="이미 연결된 친구예요.";}else state.coReadingMessage=error.message||"초대를 수락하지 못했어요.";}).finally(function(){if(acceptUser===activeAuthUserId&&state.view==="co-reading")renderAll();});return;}
     t=e.target.closest("[data-friend-invite-later]");
     if(t){cleanupFriendInvite();state.coReadingMessage="";goTo("my");return;}
     t=e.target.closest("[data-friend-disconnect]");
@@ -4093,6 +4197,10 @@
   });
 
   document.body.addEventListener("submit", function(e){
+    if(e.target.id==="socialProfileForm"){
+      e.preventDefault();var profileUser=activeAuthUserId,form=e.target,button=form.querySelector('button[type="submit"]'),error=document.getElementById("socialProfileError");button.disabled=true;error.hidden=true;
+      profileRepository.save(document.getElementById("socialDisplayName").value,document.getElementById("socialIntro").value).then(function(profile){if(profileUser!==activeAuthUserId)return;var completed=!state.socialProfile.displayName;state.socialProfile=profile;state.coReadingDisplayName=profile.displayName;emitSocialHook(completed?"profile_completed":"profile_updated");goTo("my");}).catch(function(saveError){if(profileUser!==activeAuthUserId)return;error.textContent=saveError.message||"프로필을 저장하지 못했어요.";error.hidden=false;button.disabled=false;});return;
+    }
     if (e.target.id !== "feedbackForm") return;
     e.preventDefault();
     if (state.feedbackSubmitting) return;
@@ -4319,6 +4427,7 @@
     document.getElementById("app").inert = false;
     syncHomeAmbientActors();
     renderAll();
+    loadSocialProfile();
     if(state.view==="home")enterHomeCharacterMoment();
   }
 
@@ -4480,6 +4589,11 @@
     state.coReadingBusyCreate = false;
     state.coReadingBusyAccept = false;
     state.coReadingBusyConnections = {};
+    state.socialProfile = {displayName:"",intro:""};
+    state.socialProfileStatus = "loading";
+    state.selectedFriendConnectionId = null;
+    state.blockedUsers = [];
+    state.blockedUsersStatus = "idle";
     state.friendVisit = {userId:null,visitors:[]};
     state.homeAmbient = {actors:[]};
     if (db) db.close();

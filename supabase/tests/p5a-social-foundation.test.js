@@ -1,0 +1,55 @@
+"use strict";
+var assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path");
+var root=path.join(__dirname,"../..");
+var sql=fs.readFileSync(path.join(root,"supabase/migrations/202610070001_p5a_social_foundation.sql"),"utf8");
+var html=fs.readFileSync(path.join(root,"index.html"),"utf8");
+
+assert.match(sql,/add column if not exists intro text/);
+assert.match(sql,/char_length\(intro\) <= 60/);
+assert.match(sql,/raw_user_meta_data->>'booktokki_nickname'/);
+["user_blocks","social_reports"].forEach(function(table){assert.match(sql,new RegExp("alter table public\\."+table+" enable row level security"));});
+assert.match(sql,/revoke all on table public\.friend_profiles,public\.user_blocks,public\.social_reports from public,anon,authenticated/);
+assert.match(sql,/revoke all on table public\.user_blocks from service_role/);
+assert.match(sql,/revoke all on table public\.social_reports from service_role/);
+["get_my_social_profile","update_my_social_profile","get_friend_profile","block_friend_connection","unblock_user","report_friend_connection"].forEach(function(name){assert.match(sql,new RegExp("function public\\."+name));});
+assert.match(sql,/not exists\(select 1 from public\.user_blocks/);
+assert.match(sql,/delete from public\.friend_links where connection_id=p_connection_id/);
+assert.match(sql,/if p_category not in\('spam','harassment','inappropriate_content','other'\)/);
+assert.match(sql,/grant select on table public\.social_reports to service_role/);
+assert.match(sql,/grant update\(review_status,reviewed_at\) on table public\.social_reports to service_role/);
+var previewBody=sql.match(/create or replace function public\.preview_friend_invite\(p_token text\)[\s\S]*?\$\$;/i)?.[0]||"";
+assert.match(previewBody,/errcode='PT404'/);
+assert.doesNotMatch(previewBody,/errcode='P0002'/);
+var acceptBody=sql.match(/create or replace function public\.accept_friend_invite\(p_token text\)[\s\S]*?\$\$;/i)?.[0]||"";
+assert.match(acceptBody,/errcode='PT404'/);
+assert.doesNotMatch(acceptBody,/errcode='P0002'|message='Connection not available'/);
+assert.match(sql,/blocked_display_name text not null/);
+assert.match(sql,/returns table\(block_handle uuid,display_name text,intro text,blocked_at timestamptz\)/);
+assert.match(sql,/delete from public\.user_blocks where blocker_id=auth\.uid\(\) and source_connection_id=p_block_handle/);
+assert.doesNotMatch(sql,/grant (?:select|insert|update|delete) on table public\.(?:friend_profiles|user_blocks|social_reports) to authenticated/i);
+assert.match(sql,/set search_path=''/g);
+assert.match(sql,/pg_advisory_xact_lock/g);
+assert.ok(sql.indexOf("pg_advisory_xact_lock")<sql.lastIndexOf("Connection not available"));
+assert.match(sql,/reported_display_name text not null/);
+assert.match(sql,/review_status text not null default 'received'/);
+
+assert.match(html,/id="view-profile-edit"/);
+assert.match(html,/id="view-friend-profile"/);
+assert.match(html,/data-friend-profile=/);
+assert.match(html,/메시지 보내기[\s\S]*disabled/);
+assert.match(html,/친구 끊기/);assert.match(html,/차단/);assert.match(html,/신고/);
+assert.doesNotMatch(html,/friend-row[^\n]*(?:온라인|오프라인|마지막 접속|읽는 중)/);
+assert.match(html,/profileRepository\.save/);
+assert.match(html,/data-nav="blocked-users"/);
+assert.match(html,/data-social-unblock=/);
+assert.doesNotMatch(html,/data-close(?:[\s=>])/);
+assert.match(html,/if \(e\.target === overlay\) closeModal\(\)/);
+assert.match(html,/e\.key === "Escape"[\s\S]*closeModal\(\)/);
+assert.match(html,/data-closemodal/);
+assert.match(html,/coReadingBusyConnections\[blockId\]/);
+assert.match(html,/socialActionError/);
+if(process.env.BOOKTOKKI_PGLITE_MODULE){
+  var child=require("node:child_process").spawnSync(process.execPath,[path.join(__dirname,"p5a-social-foundation.runtime.js")],{stdio:"inherit",env:process.env});
+  assert.equal(child.status,0,"P5-A runtime migration suite must pass");
+}
+console.log("PASS P5-A social foundation contract tests");
