@@ -1210,7 +1210,7 @@
   body.my-prototype .topbar h1{ display:none; }
   body.my-prototype .icon-nav-btn{ border:0; border-radius:3px; background:transparent; }
   body.my-prototype .icon-nav-btn:hover{ background:#f5f5f5; }
-  #view-my, #view-feedback, #view-data-info, #view-co-reading, #view-profile-edit, #view-friend-profile, #view-blocked-users{ min-width:0; color:#171717; }
+  #view-my, #view-feedback, #view-data-info, #view-co-reading, #view-profile-edit, #view-friend-profile, #view-blocked-users, #view-conversations, #view-conversation{ min-width:0; color:#171717; }
   .my-header{ gap:8px; }
   .my-header h2{ font-size:.95rem; font-weight:600; }
   .my-profile{ display:flex; flex-direction:column; align-items:center; padding:36px 0 34px; }
@@ -1288,6 +1288,34 @@
   .friend-visit-help p{ position:absolute; z-index:2; left:0; top:24px; width:min(240px,calc(100vw - 96px)); margin:0; padding:9px 10px; border:1px solid #e2e2e2; border-radius:4px; background:#fff; color:#737373; font-size:.68rem; line-height:1.55; box-shadow:0 4px 14px rgba(0,0,0,.07); }
   .friend-section-copy{ margin-top:8px; color:#737373; font-size:.72rem; line-height:1.55; }
   .friend-empty{ padding:13px 0; border-block:1px solid #e9e9e9; color:#909090; font-size:.72rem; }
+  .conversation-list{ margin-top:12px; border-top:1px solid #e9e9e9; }
+  .conversation-row{ display:flex; width:100%; min-height:68px; padding:13px 0; border:0; border-bottom:1px solid #e9e9e9; background:none; color:inherit; text-align:left; cursor:pointer; }
+  .conversation-row-copy{ min-width:0; flex:1; }
+  .conversation-row-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  .conversation-row-name{ overflow:hidden; font-size:.86rem; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+  .conversation-time{ flex:none; color:#a0a0a0; font-size:.64rem; font-weight:400; }
+  .conversation-preview{ display:block; margin-top:6px; overflow:hidden; color:#737373; font-size:.72rem; text-overflow:ellipsis; white-space:nowrap; }
+  .conversation-readonly-label{ flex:none; color:#909090; font-size:.64rem; font-weight:400; }
+  .conversation-screen{ display:flex; width:100%; min-width:0; min-height:calc(100dvh - 100px); flex-direction:column; }
+  .conversation-messages{ display:flex; width:100%; min-width:0; flex:1; flex-direction:column; gap:10px; padding:18px 0 22px; }
+  .conversation-message{ align-self:flex-start; min-width:0; max-width:82%; }
+  .conversation-message.mine{ align-self:flex-end; }
+  .conversation-bubble{ padding:9px 11px; border:1px solid #e4e4e4; border-radius:12px 12px 12px 3px; background:#fff; font-size:.82rem; line-height:1.5; overflow-wrap:anywhere; white-space:pre-wrap; }
+  .conversation-message.mine .conversation-bubble{ border-color:#252525; border-radius:12px 12px 3px 12px; background:#252525; color:#fff; }
+  .conversation-message .conversation-time{ display:block; margin-top:0; text-align:left; }
+  .conversation-message.mine .conversation-time{ text-align:right; }
+  .conversation-older{ align-self:center; min-height:44px; margin:0 auto 4px; }
+  .conversation-message-meta{ display:flex; align-items:center; gap:8px; margin-top:4px; }
+  .conversation-message-report{ min-width:44px; min-height:44px; margin:-14px 0; padding:0; border:0; background:none; color:#909090; font:inherit; font-size:.64rem; text-decoration:underline; text-underline-offset:2px; }
+  .conversation-message.mine .conversation-message-meta{ justify-content:flex-end; }
+  .conversation-empty{ margin:auto 0; padding:48px 0; color:#909090; font-size:.76rem; line-height:1.6; text-align:center; }
+  .conversation-error{ padding:16px 0; color:#a34b4b; font-size:.74rem; line-height:1.55; }
+  .conversation-readonly{ padding:16px 0 max(16px,env(safe-area-inset-bottom)); border-top:1px solid #e9e9e9; color:#737373; font-size:.72rem; line-height:1.55; text-align:center; }
+  .conversation-composer{ position:sticky; bottom:0; display:flex; align-items:flex-end; gap:8px; padding:12px 0 max(12px,env(safe-area-inset-bottom)); border-top:1px solid #e9e9e9; background:#fff; }
+  .conversation-composer input{ width:0; min-width:0; min-height:44px; flex:1; padding:10px 12px; border:1px solid #d3d3d3; border-radius:12px; background:#fff; color:#171717; font:inherit; font-size:16px; line-height:1.4; }
+  .conversation-composer input:focus{ outline:0; border-color:#171717; }
+  .conversation-send{ min-width:58px; min-height:44px; padding:0 13px; border:0; border-radius:12px; background:#252525; color:#fff; font:inherit; font-size:.76rem; font-weight:600; }
+  .conversation-send:disabled{ opacity:.45; }
   .friend-invite-panel{ margin-top:22px; padding-top:0; }
   .friend-invite-panel h3{ font-size:.86rem; font-weight:600; }
   .friend-invite-panel > .btn{ width:100%; min-height:44px; margin-top:12px; }
@@ -1379,6 +1407,8 @@
     <section id="view-profile-edit" class="view" hidden></section>
     <section id="view-friend-profile" class="view" hidden></section>
     <section id="view-blocked-users" class="view" hidden></section>
+    <section id="view-conversations" class="view" hidden></section>
+    <section id="view-conversation" class="view" hidden></section>
   </main>
 </div>
 
@@ -1394,6 +1424,8 @@
 <script src="./profile-repository.js"></script>
 <script src="./feedback-repository.js"></script>
 <script src="./co-reading-repository.js"></script>
+<script src="./conversation-repository.js"></script>
+<script src="./conversation-polling.js"></script>
 <script src="./friend-visit.js"></script>
 <script src="./room-depth.js"></script>
 <script src="./home-room-assets.js"></script>
@@ -1451,6 +1483,18 @@
     selectedFriendConnectionId: null,
     blockedUsers: [],
     blockedUsersStatus: "idle",
+    conversations: [],
+    conversationsStatus: "idle",
+    selectedConversationId: null,
+    conversationMessages: [],
+    conversationMessagesStatus: "idle",
+    conversationCanSend: true,
+    conversationMessageDraft: "",
+    conversationSending: false,
+    conversationError: "",
+    conversationSendAttempt: null,
+    conversationHasMore: false,
+    conversationLoadingOlder: false,
     friendVisit: { userId:null, visitors:[] },
     homeAmbient: { actors:[] },
     dbMode: null /* 'db' | 'local' */
@@ -1492,11 +1536,14 @@
   var profileRepository = null;
   var feedbackRepository = null;
   var coReadingRepository = null;
+  var conversationRepository = null;
   var friendVisit = null;
   var homeAmbient = null;
   var P4_SPEECH_MS = 4000;
   var p4Session = {userId:null,momentEvaluated:false,dailyShown:false,speech:null,speechTimer:null,tapBusyUntil:0,tapCount:0};
   var coReadingLoadEpoch = 0;
+  var conversationLoadEpoch = 0;
+  var conversationPolling = null;
   var measurementRepository = null;
   var cloudMutationQueues = {};
   var pendingBookCreates = {};
@@ -2274,6 +2321,7 @@
      home (요즘 읽는 책), 통계, or 서재, and that back button returns there. */
   function goTo(view, bookId){
     var enteringHome = view === "home" && state.view !== "home";
+    if(state.view==="conversation"&&view!=="conversation")stopConversationPolling();
     if(enteringHome)hideReadingReaction();
     if (view === "stats" && state.view !== "stats"){
       state.statsMonth = null;
@@ -2294,6 +2342,8 @@
     if(view === "co-reading") loadCoReading();
     if(view === "profile-edit") loadSocialProfile();
     if(view === "blocked-users") loadBlockedUsers();
+    if(view === "conversations") loadConversations();
+    if(view === "conversation") startConversationPolling();
   }
   function openMyBooklogs(){
     state.statsFrom = "my";
@@ -2325,7 +2375,7 @@
     document.body.classList.toggle("detail-prototype", state.view === "detail");
     document.body.classList.toggle("library-prototype", state.view === "library");
     document.body.classList.toggle("stats-prototype", state.view === "stats");
-    document.body.classList.toggle("my-prototype", ["my","feedback","data-info","co-reading","profile-edit","friend-profile","blocked-users"].indexOf(state.view)!==-1);
+    document.body.classList.toggle("my-prototype", ["my","feedback","data-info","co-reading","profile-edit","friend-profile","blocked-users","conversations","conversation"].indexOf(state.view)!==-1);
     document.querySelector(".topbar h1").textContent = state.view === "home" ? "내 서재" : "내 독서 기록";
     // Keep unsaved inputs only when the same book/input survives the render.
     var detail = document.getElementById("view-detail");
@@ -2355,9 +2405,11 @@
     document.getElementById("view-profile-edit").hidden = state.view !== "profile-edit";
     document.getElementById("view-friend-profile").hidden = state.view !== "friend-profile";
     document.getElementById("view-blocked-users").hidden = state.view !== "blocked-users";
+    document.getElementById("view-conversations").hidden = state.view !== "conversations";
+    document.getElementById("view-conversation").hidden = state.view !== "conversation";
     document.getElementById("libraryNavBtn").hidden = state.view === "library";
     document.getElementById("statsNavBtn").hidden = state.view === "stats";
-    document.getElementById("myNavBtn").hidden = ["my","feedback","data-info","co-reading","profile-edit","friend-profile","blocked-users"].indexOf(state.view)!==-1;
+    document.getElementById("myNavBtn").hidden = ["my","feedback","data-info","co-reading","profile-edit","friend-profile","blocked-users","conversations","conversation"].indexOf(state.view)!==-1;
 
     renderOffline();
     renderHome();
@@ -2371,6 +2423,8 @@
     renderProfileEdit();
     renderFriendProfile();
     renderBlockedUsers();
+    renderConversations();
+    renderConversation();
     if (draftBookId === state.selectedBookId){
       drafts.forEach(function(draft){
         var input = detail.querySelector(draft.selector);
@@ -3165,6 +3219,7 @@
       '</section>' +
       '<section class="my-section"><div class="my-section-title">도움</div>' +
         '<button class="my-menu" type="button" data-nav="co-reading"><span class="my-menu-label">같이 읽는 친구</span><span class="my-menu-arrow">›</span></button>' +
+        '<button class="my-menu" type="button" data-nav="conversations"><span class="my-menu-label">대화</span><span class="my-menu-arrow">›</span></button>' +
         '<button class="my-menu" type="button" data-guide><span class="my-menu-label">북토끼 사용법</span><span class="my-menu-arrow">↗</span></button>' +
         '<button class="my-menu" type="button" data-nav="feedback"><span class="my-menu-label">의견 보내기</span><span class="my-menu-arrow">›</span></button>' +
       '</section>' +
@@ -3200,7 +3255,7 @@
   function selectedFriend(){return state.coReadingConnections.find(function(c){return c.connectionId===state.selectedFriendConnectionId;})||null;}
   function renderFriendProfile(){
     var el=document.getElementById("view-friend-profile");if(!el)return;var friend=selectedFriend();
-    el.innerHTML=myHeader("친구 프로필","co-reading")+(friend?'<section class="friend-profile"><img class="friend-profile-rabbit" src="'+esc(MY_RABBIT_ASSET)+'" alt="친구의 Personal Librarian"><h3>'+esc(friend.friendDisplayName)+'</h3><p>'+esc(friend.friendIntro||"소개가 아직 없어요.")+'</p><div class="friend-profile-actions"><button class="btn btn-outline" type="button" disabled aria-disabled="true">메시지 보내기</button><button class="btn btn-outline friend-more" type="button" data-friend-more="'+esc(friend.connectionId)+'" aria-label="친구 관리">···</button></div></section>':'<p class="friend-status">친구 프로필을 볼 수 없어요.</p>');
+    el.innerHTML=myHeader("친구 프로필","co-reading")+(friend?'<section class="friend-profile"><img class="friend-profile-rabbit" src="'+esc(MY_RABBIT_ASSET)+'" alt="친구의 Personal Librarian"><h3>'+esc(friend.friendDisplayName)+'</h3><p>'+esc(friend.friendIntro||"소개가 아직 없어요.")+'</p><div class="friend-profile-actions"><button class="btn btn-outline" type="button" data-open-conversation="'+esc(friend.connectionId)+'">메시지 보내기</button><button class="btn btn-outline friend-more" type="button" data-friend-more="'+esc(friend.connectionId)+'" aria-label="친구 관리">···</button></div></section>':'<p class="friend-status">친구 프로필을 볼 수 없어요.</p>');
   }
   function loadBlockedUsers(){
     if(!coReadingRepository)return;var userId=activeAuthUserId;state.blockedUsersStatus="loading";renderAll();
@@ -3213,6 +3268,179 @@
     else if(!state.blockedUsers.length)body='<p class="friend-empty">차단한 사용자가 없어요.</p>';
     else body='<div class="friend-list">'+state.blockedUsers.map(function(item){return '<div class="friend-row"><div class="friend-row-primary"><span class="friend-avatar" aria-hidden="true">🐰</span><span class="friend-row-copy"><strong>'+esc(item.displayName)+'</strong><span class="friend-row-intro">'+esc(item.intro||"소개가 아직 없어요.")+'</span></span><button class="friend-disconnect" type="button" data-social-unblock="'+esc(item.handle)+'">차단 해제</button></div></div>';}).join("")+'</div><p class="friend-section-copy">차단을 해제해도 친구 관계는 자동으로 복구되지 않아요.</p>';
     el.innerHTML=myHeader("차단한 사용자","my")+body+(state.coReadingMessage?'<p class="friend-status" aria-live="polite">'+esc(state.coReadingMessage)+'</p>':'');
+  }
+
+  function conversationPeer(connectionId){
+    var friend=state.coReadingConnections.find(function(item){return item.connectionId===connectionId;});
+    if(friend)return {displayName:friend.friendDisplayName,intro:friend.friendIntro};
+    var conversation=state.conversations.find(function(item){return item.connectionId===connectionId;});
+    return conversation?{displayName:conversation.friendDisplayName,intro:conversation.friendIntro}:null;
+  }
+  function conversationTime(value){
+    if(!value)return "";
+    var date=new Date(value);if(Number.isNaN(date.getTime()))return "";
+    var now=new Date();
+    return date.toDateString()===now.toDateString()
+      ? new Intl.DateTimeFormat("ko-KR",{hour:"2-digit",minute:"2-digit",hour12:false}).format(date)
+      : new Intl.DateTimeFormat("ko-KR",{month:"numeric",day:"numeric"}).format(date);
+  }
+  function sameConversationMessages(left,right){
+    if(left.length!==right.length)return false;
+    return left.every(function(item,index){var other=right[index];return other&&item.id===other.id&&item.body===other.body&&item.createdAt===other.createdAt&&item.senderIsMe===other.senderIsMe&&item.canSend===other.canSend;});
+  }
+  function mergeConversationMessages(left,right){
+    var byId={};
+    return left.concat(right).filter(function(item){if(!item||!item.id||byId[item.id])return false;byId[item.id]=true;return true;}).sort(function(a,b){
+      var time=new Date(a.createdAt).getTime()-new Date(b.createdAt).getTime();
+      return time||String(a.id).localeCompare(String(b.id));
+    });
+  }
+  function conversationNearBottom(){return window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-96;}
+  function restoreConversationViewport(keepFocus,scrollLatest){
+    window.requestAnimationFrame(function(){
+      if(scrollLatest){var items=document.querySelectorAll(".conversation-message");if(items.length)items[items.length-1].scrollIntoView({block:"end"});}
+      if(keepFocus){var input=document.getElementById("conversationInput");if(input){input.focus({preventScroll:true});var end=input.value.length;try{input.setSelectionRange(end,end);}catch(_){}}}
+    });
+  }
+  function renderConversationUpdate(options){
+    options=options||{};var keepFocus=document.activeElement&&document.activeElement.id==="conversationInput";
+    renderAll();restoreConversationViewport(keepFocus,!!options.scrollLatest);
+  }
+  function conversationErrorMessage(error){
+    var code=String(error&&error.code||""),status=Number(error&&error.status||error&&error.statusCode||0);
+    if(code==="42501")return "친구 연결이 종료되어 새 메시지를 보낼 수 없어요.";
+    if(status===401||code==="PGRST301"||code==="PGRST302")return "로그인이 만료되었어요. 다시 로그인해 주세요.";
+    if(code==="PT429")return "메시지를 너무 자주 보냈어요. 잠시 후 다시 시도해 주세요.";
+    if(code==="PT409")return "전송 상태를 확인하지 못했어요. 내용을 바꾼 뒤 다시 보내 주세요.";
+    return "메시지를 보내지 못했어요. 연결을 확인한 뒤 다시 시도해 주세요.";
+  }
+  function conversationLoadErrorMessage(error){
+    var code=String(error&&error.code||""),status=Number(error&&error.status||error&&error.statusCode||0);
+    if(status===401||code==="PGRST301"||code==="PGRST302")return "로그인이 만료되었어요. 다시 로그인해 주세요.";
+    if(code==="42501")return "이 대화를 볼 수 없어요.";
+    return "새 메시지를 확인하지 못했어요. 연결되면 다시 확인할게요.";
+  }
+  function stopConversationPolling(){
+    if(conversationPolling)conversationPolling.stop();
+  }
+  function ensureConversationPolling(){
+    if(!conversationPolling&&window.BooktokkiConversationPolling){
+      conversationPolling=window.BooktokkiConversationPolling.create({
+        intervalMs:10000,
+        isActive:function(){return state.view==="conversation"&&!!activeAuthUserId&&!!state.selectedConversationId;},
+        isVisible:function(){return !document.hidden;},
+        poll:function(){return pollConversationMessages();}
+      });
+    }
+    return conversationPolling;
+  }
+  function pollConversationMessages(options){
+    options=options||{};
+    if(state.view!=="conversation"||document.hidden||!state.selectedConversationId||!conversationRepository)return Promise.resolve(false);
+    var connectionId=state.selectedConversationId,userId=activeAuthUserId,epoch=++conversationLoadEpoch;
+    var initialLoad=state.conversationMessagesStatus==="loading"&&!state.conversationMessages.length;
+    var wasNearBottom=conversationNearBottom();
+    if(options.showLoading){state.conversationMessagesStatus="loading";state.conversationError="";renderAll();}
+    return conversationRepository.messages(connectionId).then(function(messages){
+      if(userId!==activeAuthUserId||epoch!==conversationLoadEpoch||connectionId!==state.selectedConversationId||state.view!=="conversation")return false;
+      var listed=state.conversations.find(function(item){return item.connectionId===connectionId;});
+      var canSend=window.BooktokkiConversationRepository.resolveCanSend(messages,listed,state.conversationCanSend);
+      var nextMessages=(state.conversationHasMore||state.conversationMessages.length>50)?mergeConversationMessages(state.conversationMessages,messages):messages;
+      var changed=!sameConversationMessages(state.conversationMessages,nextMessages)||state.conversationCanSend!==canSend||state.conversationMessagesStatus!=="ready"||!!state.conversationError;
+      state.conversationMessages=nextMessages;state.conversationCanSend=canSend;state.conversationMessagesStatus="ready";state.conversationError="";
+      if(initialLoad)state.conversationHasMore=messages.length===50;
+      if(changed)renderConversationUpdate({scrollLatest:initialLoad||!!options.showLoading||wasNearBottom});
+      return changed;
+    }).catch(function(error){
+      if(userId!==activeAuthUserId||epoch!==conversationLoadEpoch||connectionId!==state.selectedConversationId||state.view!=="conversation")return false;
+      var message=conversationLoadErrorMessage(error);
+      var wasLoading=state.conversationMessagesStatus==="loading",changed=state.conversationError!==message;
+      state.conversationError=message;
+      if(options.showLoading||wasLoading)state.conversationMessagesStatus="error";
+      if(changed||options.showLoading||wasLoading)renderAll();
+      return false;
+    });
+  }
+  function startConversationPolling(){
+    var polling=ensureConversationPolling();
+    if(!polling)return Promise.resolve(false);
+    var showLoading=state.conversationMessagesStatus==="idle";
+    if(showLoading){state.conversationMessagesStatus="loading";state.conversationError="";renderAll();}
+    return polling.start();
+  }
+  function handleConversationVisibility(){
+    var polling=ensureConversationPolling();
+    if(polling)polling.visibilityChanged();
+  }
+  document.addEventListener("visibilitychange",handleConversationVisibility);
+  function openConversation(connectionId){
+    if(!connectionId)return;
+    state.selectedConversationId=connectionId;
+    state.conversationMessages=[];
+    state.conversationMessagesStatus="idle";
+    state.conversationCanSend=true;
+    state.conversationMessageDraft="";
+    state.conversationError="";
+    state.conversationSendAttempt=null;
+    state.conversationHasMore=false;
+    state.conversationLoadingOlder=false;
+    goTo("conversation");
+  }
+  function loadConversations(){
+    var userId=activeAuthUserId,epoch=++conversationLoadEpoch;
+    if(!conversationRepository){state.conversationsStatus="error";renderAll();return;}
+    state.conversationsStatus="loading";state.conversationError="";renderAll();
+    conversationRepository.list().then(function(list){
+      if(userId!==activeAuthUserId||epoch!==conversationLoadEpoch)return;
+      state.conversations=list;state.conversationsStatus="ready";
+    }).catch(function(error){
+      if(userId!==activeAuthUserId||epoch!==conversationLoadEpoch)return;
+      state.conversationsStatus="error";state.conversationError=error&&error.message||"대화를 불러오지 못했어요.";
+    }).finally(function(){if(userId===activeAuthUserId&&epoch===conversationLoadEpoch&&state.view==="conversations")renderAll();});
+  }
+  function loadConversationMessages(connectionId){
+    if(connectionId!==state.selectedConversationId)return Promise.resolve(false);
+    state.conversationMessagesStatus="idle";
+    return startConversationPolling();
+  }
+  function loadOlderConversationMessages(){
+    if(state.conversationLoadingOlder||!state.conversationHasMore||!state.conversationMessages.length||!conversationRepository)return;
+    var connectionId=state.selectedConversationId,userId=activeAuthUserId,epoch=conversationLoadEpoch;
+    var oldest=state.conversationMessages[0];
+    state.conversationLoadingOlder=true;renderConversationUpdate();
+    conversationRepository.messages(connectionId,{beforeCreatedAt:oldest.createdAt,beforeId:oldest.id,limit:50}).then(function(messages){
+      if(userId!==activeAuthUserId||epoch!==conversationLoadEpoch||connectionId!==state.selectedConversationId)return;
+      state.conversationMessages=mergeConversationMessages(messages,state.conversationMessages);
+      state.conversationHasMore=messages.length===50;
+    }).catch(function(){
+      if(userId===activeAuthUserId&&connectionId===state.selectedConversationId)state.conversationError="이전 메시지를 불러오지 못했어요.";
+    }).finally(function(){
+      if(userId===activeAuthUserId&&connectionId===state.selectedConversationId){state.conversationLoadingOlder=false;renderConversationUpdate();}
+    });
+  }
+  function renderConversations(){
+    var el=document.getElementById("view-conversations");if(!el)return;var body="";
+    if(state.conversationsStatus==="loading")body='<p class="friend-status">대화를 불러오고 있어요.</p>';
+    else if(state.conversationsStatus==="error")body='<p class="conversation-error">'+esc(state.conversationError||"대화를 불러오지 못했어요.")+'</p><button class="btn btn-outline" type="button" data-conversations-retry>다시 시도</button>';
+    else if(!state.conversations.length)body='<p class="conversation-empty">아직 대화가 없어요.<br>친구 프로필에서 책 이야기를 건네보세요.</p>';
+    else body='<div class="conversation-list">'+state.conversations.map(function(item){return '<button class="conversation-row" type="button" data-conversation-open="'+esc(item.connectionId)+'"><span class="conversation-row-copy"><span class="conversation-row-head"><strong class="conversation-row-name">'+esc(item.friendDisplayName)+'</strong>'+(item.canSend?'<time class="conversation-time">'+esc(conversationTime(item.lastMessageAt))+'</time>':'<span class="conversation-readonly-label">읽기 전용</span>')+'</span><span class="conversation-preview">'+esc((item.lastMessageIsMine?"나: ":"")+item.lastMessage)+'</span></span></button>';}).join("")+'</div>';
+    el.innerHTML=myHeader("대화","my")+body;
+  }
+  function renderConversation(){
+    var el=document.getElementById("view-conversation");if(!el)return;
+    var peer=conversationPeer(state.selectedConversationId),name=peer&&peer.displayName||"대화";
+    var messages="";
+    if(state.conversationMessagesStatus==="loading")messages='<p class="conversation-empty">대화를 불러오고 있어요.</p>';
+    else if(state.conversationMessagesStatus==="error")messages='<p class="conversation-error">'+esc(state.conversationError||"이 대화를 이용할 수 없어요.")+'</p><button class="btn btn-outline" type="button" data-conversation-retry>다시 시도</button>';
+    else if(!state.conversationMessages.length)messages='<p class="conversation-empty">아직 대화가 없어요.<br>책 이야기를 건네보세요.</p>';
+    else messages=(state.conversationHasMore?'<button class="btn btn-outline conversation-older" type="button" data-conversation-older'+(state.conversationLoadingOlder?' disabled':'')+'>'+(state.conversationLoadingOlder?'불러오는 중':'이전 메시지 보기')+'</button>':'')+state.conversationMessages.map(function(item){return '<div class="conversation-message'+(item.senderIsMe?' mine':'')+'" data-message-id="'+esc(item.id)+'"><div class="conversation-bubble">'+esc(item.body)+'</div><div class="conversation-message-meta"><time class="conversation-time">'+esc(conversationTime(item.createdAt))+'</time>'+(item.senderIsMe?'':'<button class="conversation-message-report" type="button" data-conversation-report="'+esc(item.id)+'">신고</button>')+'</div></div>';}).join("");
+    var composer=state.conversationMessagesStatus==="error"?'':(state.conversationCanSend?'<form class="conversation-composer" id="conversationForm"><input id="conversationInput" maxlength="1000" aria-label="메시지" placeholder="메시지 입력" value="'+esc(state.conversationMessageDraft)+'"><button class="conversation-send" type="submit"'+(state.conversationSending?' disabled':'')+'>'+(state.conversationSending?'전송 중':'보내기')+'</button></form>':'<p class="conversation-readonly">친구 연결이 종료되어 지난 대화만 볼 수 있어요.</p>');
+    el.innerHTML='<div class="conversation-screen">'+myHeader(name,"conversations")+'<div class="conversation-messages" aria-live="polite">'+messages+'</div>'+(state.conversationError&&state.conversationMessagesStatus!=="error"?'<p class="conversation-error">'+esc(state.conversationError)+'</p>':'')+composer+'</div>';
+  }
+  function openConversationMessageReport(messageId){
+    var message=state.conversationMessages.find(function(item){return item.id===messageId&&!item.senderIsMe;});
+    if(!message||!state.selectedConversationId)return;
+    openModal('<div class="modal"><h2>메시지 신고</h2><p>이 메시지를 운영 검토 대상으로 신고할까요?</p><p class="my-form-hint">신고한 메시지 본문, 작성 시각과 신고 사유가 증거로 저장되며 접수 후 최대 90일 보관돼요. 상대방에게는 알리지 않아요.</p><div class="field"><label for="conversationReportCategory">이유</label><select id="conversationReportCategory"><option value="spam">스팸</option><option value="harassment">괴롭힘</option><option value="inappropriate_content">부적절한 콘텐츠</option><option value="other">기타</option></select></div><div class="field"><label for="conversationReportDetail">추가 설명 (선택)</label><textarea id="conversationReportDetail" maxlength="500"></textarea></div><div class="modal-error" id="conversationReportError" hidden></div><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>취소</button><button class="btn btn-dark" type="button" data-conversation-report-submit="'+esc(messageId)+'">신고</button></div></div>');
   }
 
   function renderFeedback(){
@@ -3235,14 +3463,15 @@
     var el = document.getElementById("view-data-info");
     el.innerHTML = myHeader("개인정보 · 데이터 안내", "my") +
       '<div class="data-guide">' +
-        '<section><h3>북토끼가 저장하는 정보</h3><p>로그인 식별 정보, 직접 설정한 닉네임, 등록한 책과 읽은 페이지 기록, 북로그, 완독 상태와 소감, 서비스 이용 중 남긴 의견을 저장할 수 있어요.</p></section>' +
+        '<section><h3>북토끼가 저장하는 정보</h3><p>로그인 식별 정보, 직접 설정한 닉네임, 등록한 책과 읽은 페이지 기록, 북로그, 완독 상태와 소감, 친구와 주고받은 대화, 서비스 이용 중 남긴 의견을 저장할 수 있어요.</p></section>' +
         '<section><h3>왜 사용하는지</h3><p>기기에서 읽던 책과 기록을 이어서 보여주고, 독서 캘린더와 북로그를 구성하며, Public Alpha를 개선하기 위해 사용해요.</p></section>' +
-        '<section><h3>클라우드에 저장되는 정보</h3><ul><li>Supabase Auth의 사용자 UUID와 Kakao 로그인 과정에서 Kakao가 전달한 계정 정보(metadata)</li><li>MY에서 직접 설정한 소셜 프로필 닉네임과 한줄 소개: Kakao 계정 정보와 분리해 저장돼요</li><li>책 정보, 페이지 기록, 북로그, 완독 상태와 소감</li><li>책 추가·독서 기록 저장 여부와 시각 등 Minimal Analytics</li><li>의견 보내기로 직접 작성한 내용과 접수 시각</li></ul></section>' +
+        '<section><h3>클라우드에 저장되는 정보</h3><ul><li>Supabase Auth의 사용자 UUID와 Kakao 로그인 과정에서 Kakao가 전달한 계정 정보(metadata)</li><li>MY에서 직접 설정한 소셜 프로필 닉네임과 한줄 소개: Kakao 계정 정보와 분리해 저장돼요</li><li>책 정보, 페이지 기록, 북로그, 완독 상태와 소감</li><li>친구와 주고받은 대화 내용과 작성 시각</li><li>책 추가·독서 기록 저장 여부와 시각 등 Minimal Analytics</li><li>의견 보내기로 직접 작성한 내용과 접수 시각</li></ul></section>' +
         '<section><h3>현재 기기에 저장되는 정보</h3><p>IndexedDB에는 책과 독서 기록, 북로그, 직접 올린 표지 이미지가 남을 수 있어요. localStorage에는 로그인 세션, Local Owner 정보와 안전한 이전·복원을 위한 진행 정보가 저장될 수 있어요.</p></section>' +
         '<section><h3>Minimal Analytics</h3><p>책 추가와 독서 기록 저장 같은 최소 행동을 사용자 UUID와 연결해 기록해요. 서비스 개선과 오류 확인을 위해 최초 유입 경로, 로그인 성공·실패 같은 최소 이용 상태, 친구 초대·연결 과정의 최소 상태도 기록할 수 있어요. 익명 통계가 아니며, 책 제목·검색어·실제 페이지 숫자·북로그 본문은 Analytics event에 넣지 않아요.</p></section>' +
         '<section><h3>친구 토끼 방문</h3><p>친구와 둘 다 허용한 경우에만 북토끼를 사용하는 동안 마지막으로 확인된 시각 하나를 잠시 저장해요. 이전 기록은 남기지 않고 몇 분 뒤 효력을 잃어요. 친구에게는 시각이 아니라 토끼가 놀러 왔는지만 전달돼요. 서비스 개선을 위해 두 사람의 사용 시간이 겹쳤는지와 친구 토끼가 화면에 보였는지만 30분 단위로 기록해요.</p></section>' +
+        '<section><h3>메시지 신고 증거</h3><p>메시지를 신고하면 신고 메시지 본문, 작성 시각과 신고 사유를 신고 검토와 서비스 안전 운영을 위해 별도 증거로 저장해요. 일반 대화 원본은 계정 삭제 정책을 따르며, 신고 증거는 접수 후 최대 90일 보관한 뒤 자동 삭제돼요. 신고자나 신고 대상 계정이 삭제되면 더 일찍 삭제될 수 있어요.</p></section>' +
         '<section><h3>의견 보내기</h3><p>보낸 의견은 로그인한 사용자 UUID와 함께 저장돼요. 의견 확인과 Public Alpha 개선에 사용하며, 비밀번호나 민감한 개인정보는 적지 말아줘.</p></section>' +
-        '<section><h3>로그아웃과 데이터 삭제</h3><p>로그아웃은 계정 삭제가 아니에요. 로그아웃 후에도 현재 기기의 로컬 데이터가 남을 수 있고, 서버 데이터와 기기 데이터는 별도로 관리될 수 있어요. 현재 앱에는 자동 회원탈퇴나 전체 데이터 삭제 기능이 없어요.</p></section>' +
+        '<section><h3>로그아웃과 데이터 삭제</h3><p>로그아웃은 계정 삭제가 아니에요. 로그아웃 후에도 현재 기기의 로컬 데이터가 남을 수 있고, 서버 데이터와 기기 데이터는 별도로 관리될 수 있어요. 계정 삭제가 처리되면 참여한 대화도 삭제되어 상대방 화면에서 사라질 수 있어요. 현재 앱에는 자동 회원탈퇴나 전체 데이터 삭제 기능이 없어요.</p></section>' +
         '<section><h3>외부 서비스</h3><p>Kakao Login과 Kakao Book Search, Supabase, GitHub Pages, Cloudflare Worker를 사용해 로그인, 책 검색, 데이터 저장과 앱 제공 기능을 운영해요.</p></section>' +
         '<section><h3>데이터 삭제 요청</h3><p>데이터 삭제를 원한다면 MY → 의견 보내기를 통해 요청해줘. 확인 후 계정과 연결된 데이터 삭제를 진행할게. 외부 서비스의 로그나 백업까지 즉시 삭제된다는 의미는 아니에요.</p></section>' +
       '</div>';
@@ -3971,6 +4200,14 @@
 
     t=e.target.closest("[data-friend-profile]");
     if(t){state.selectedFriendConnectionId=t.getAttribute("data-friend-profile");emitSocialHook("friend_profile_viewed");goTo("friend-profile");return;}
+    t=e.target.closest("[data-open-conversation], [data-conversation-open]");
+    if(t){openConversation(t.getAttribute("data-open-conversation")||t.getAttribute("data-conversation-open"));return;}
+    t=e.target.closest("[data-conversations-retry]");if(t){loadConversations();return;}
+    t=e.target.closest("[data-conversation-retry]");if(t){loadConversationMessages(state.selectedConversationId);return;}
+    t=e.target.closest("[data-conversation-older]");if(t){loadOlderConversationMessages();return;}
+    t=e.target.closest("[data-conversation-report]");if(t){openConversationMessageReport(t.getAttribute("data-conversation-report"));return;}
+    t=e.target.closest("[data-conversation-report-submit]");
+    if(t){var messageReportId=t.getAttribute("data-conversation-report-submit"),messageReportConnection=state.selectedConversationId,messageReportUser=activeAuthUserId,messageReportCategory=document.getElementById("conversationReportCategory"),messageReportDetail=document.getElementById("conversationReportDetail"),messageReportKey="message-report:"+messageReportId;if(state.coReadingBusyConnections[messageReportKey]||!conversationRepository)return;state.coReadingBusyConnections[messageReportKey]=true;t.disabled=true;conversationRepository.report(messageReportConnection,messageReportId,messageReportCategory.value,messageReportDetail.value).then(function(){if(messageReportUser!==activeAuthUserId)return;openModal('<div class="modal"><h2>신고했어요.</h2><p>접수된 메시지는 운영 검토에만 사용돼요.</p><div class="modal-actions"><button class="btn btn-dark" type="button" data-closemodal>확인</button></div></div>');}).catch(function(error){if(messageReportUser!==activeAuthUserId)return;var out=document.getElementById("conversationReportError");if(out){out.textContent=error&&error.code==="PT409"?"이미 신고한 메시지예요.":"신고하지 못했어요. 잠시 후 다시 시도해 주세요.";out.hidden=false;t.disabled=false;}}).finally(function(){if(messageReportUser===activeAuthUserId)delete state.coReadingBusyConnections[messageReportKey];});return;}
     t=e.target.closest("[data-friend-more]");
     if(t){openFriendActions(t.getAttribute("data-friend-more"));return;}
     t=e.target.closest("[data-social-unfriend]");
@@ -4194,9 +4431,31 @@
     if (t && t.hasAttribute("data-reflectiondraft")){
       state.completionReflectionDrafts[t.getAttribute("data-reflectiondraft")] = t.value;
     }
+    if(t&&t.id==="conversationInput")state.conversationMessageDraft=t.value;
   });
 
   document.body.addEventListener("submit", function(e){
+    if(e.target.id==="conversationForm"){
+      e.preventDefault();
+      if(state.conversationSending||!conversationRepository||!state.selectedConversationId)return;
+      var conversationUser=activeAuthUserId,connectionId=state.selectedConversationId,input=document.getElementById("conversationInput"),body=input?input.value:state.conversationMessageDraft,attempt;
+      try{attempt=window.BooktokkiConversationRepository.sendAttempt(state.conversationSendAttempt,connectionId,body);}catch(error){state.conversationError=error.message;renderConversationUpdate();return;}
+      state.conversationSendAttempt=attempt;state.conversationMessageDraft=attempt.body;
+      state.conversationSending=true;state.conversationError="";renderConversationUpdate();
+      conversationRepository.send(connectionId,attempt.body,attempt.clientId).then(function(message){
+        if(conversationUser!==activeAuthUserId||connectionId!==state.selectedConversationId)return;
+        state.conversationMessages=mergeConversationMessages(state.conversationMessages,[message]);state.conversationMessageDraft="";state.conversationSendAttempt=null;state.conversationMessagesStatus="ready";
+        return conversationRepository.list().then(function(list){if(conversationUser===activeAuthUserId)state.conversations=list;});
+      }).catch(function(error){
+        if(conversationUser!==activeAuthUserId||connectionId!==state.selectedConversationId)return;
+        if(error&&error.code==="42501"){
+          state.conversationCanSend=false;state.conversationSendAttempt=null;
+          state.conversations=state.conversations.map(function(item){return item.connectionId===connectionId?Object.assign({},item,{canSend:false}):item;});
+        }
+        state.conversationError=conversationErrorMessage(error);
+      }).finally(function(){if(conversationUser===activeAuthUserId){state.conversationSending=false;if(state.view==="conversation")renderConversationUpdate({scrollLatest:!state.conversationError});}});
+      return;
+    }
     if(e.target.id==="socialProfileForm"){
       e.preventDefault();var profileUser=activeAuthUserId,form=e.target,button=form.querySelector('button[type="submit"]'),error=document.getElementById("socialProfileError");button.disabled=true;error.hidden=true;
       profileRepository.save(document.getElementById("socialDisplayName").value,document.getElementById("socialIntro").value).then(function(profile){if(profileUser!==activeAuthUserId)return;var completed=!state.socialProfile.displayName;state.socialProfile=profile;state.coReadingDisplayName=profile.displayName;emitSocialHook(completed?"profile_completed":"profile_updated");goTo("my");}).catch(function(saveError){if(profileUser!==activeAuthUserId)return;error.textContent=saveError.message||"프로필을 저장하지 못했어요.";error.hidden=false;button.disabled=false;});return;
@@ -4508,12 +4767,15 @@
      an authenticated session (including re-login without a reload) restores
      them here, without touching bootstrap or IndexedDB. */
   function ensureAccountRepositories(){
-    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository && friendVisit)) return;
+    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository && conversationRepository && friendVisit)) return;
     try {
       profileRepository = window.BooktokkiProfileRepository.create(supabaseClient);
       feedbackRepository = window.BooktokkiFeedbackRepository.create(supabaseClient);
       coReadingRepository = window.BooktokkiCoReadingRepository
         ? window.BooktokkiCoReadingRepository.create(supabaseClient)
+        : null;
+      conversationRepository = window.BooktokkiConversationRepository
+        ? window.BooktokkiConversationRepository.create(supabaseClient)
         : null;
       friendVisit = window.BooktokkiFriendVisit && coReadingRepository
         ? window.BooktokkiFriendVisit.create({
@@ -4532,6 +4794,7 @@
       profileRepository = null;
       feedbackRepository = null;
       coReadingRepository = null;
+      conversationRepository = null;
       friendVisit = null;
       console.error("북토끼 MY 연결 초기화 실패", { code:repositoryError && repositoryError.code ? repositoryError.code : null });
     }
@@ -4562,8 +4825,11 @@
     if (continueReadingObserver) continueReadingObserver.disconnect();
     if(friendVisit)friendVisit.stop();
     if(homeAmbient)homeAmbient.stop();
+    stopConversationPolling();
+    conversationPolling=null;
     resetP4Session(null);
     coReadingLoadEpoch+=1;
+    conversationLoadEpoch+=1;
     activeAuthUserId = null;
     activeAuthUser = null;
     appStarted = false;
@@ -4573,6 +4839,7 @@
     profileRepository = null;
     feedbackRepository = null;
     coReadingRepository = null;
+    conversationRepository = null;
     friendVisit = null;
     cloudMutationQueues = {};
     pendingBookCreates = {};
@@ -4594,6 +4861,18 @@
     state.selectedFriendConnectionId = null;
     state.blockedUsers = [];
     state.blockedUsersStatus = "idle";
+    state.conversations = [];
+    state.conversationsStatus = "idle";
+    state.selectedConversationId = null;
+    state.conversationMessages = [];
+    state.conversationMessagesStatus = "idle";
+    state.conversationCanSend = true;
+    state.conversationMessageDraft = "";
+    state.conversationSending = false;
+    state.conversationError = "";
+    state.conversationSendAttempt = null;
+    state.conversationHasMore = false;
+    state.conversationLoadingOlder = false;
     state.friendVisit = {userId:null,visitors:[]};
     state.homeAmbient = {actors:[]};
     if (db) db.close();
