@@ -6,9 +6,10 @@
 })(typeof globalThis!=="undefined"?globalThis:this,function(){
   "use strict";
 
-  var HEARTBEAT_MS=60000;
+  var HEARTBEAT_MS=10000;
   var ACTIVE_WINDOW_MS=300000;
   var RABBIT_SEEN_MS=1000;
+  var HOME_EXIT_GRACE_MS=5000;
 
   function normalizeConnections(rows){
     return (Array.isArray(rows)?rows:[]).filter(function(row){return row&&row.connectionId;});
@@ -27,13 +28,14 @@
     var repo=options.repo;
     var now=options.now||function(){return Date.now();};
     var isVisible=options.isVisible||function(){return true;};
+    var isHomeActive=options.isHomeActive||isVisible;
     var isRabbitVisible=options.isRabbitVisible||isVisible;
     var setTimer=options.setTimer||setTimeout;
     var clearTimer=options.clearTimer||clearTimeout;
     var onChange=options.onChange||function(){};
     var enabled=options.enabled!==false;
     var current={userId:null,visitors:[]};
-    var connections=[],lastInteractionAt=0,timer=null,inFlight=null,generation=0;
+    var connections=[],lastInteractionAt=0,timer=null,homeExitTimer=null,inFlight=null,connectionInFlight=null,generation=0;
     var seenTimers={},seenEpisodes={};
 
     function snapshot(){return {userId:current.userId,visitors:current.visitors.map(function(row){return Object.assign({},row);})};}
@@ -47,13 +49,15 @@
       if(JSON.stringify(current.visitors)!==JSON.stringify(visitors)){current={userId:current.userId,visitors:visitors};onChange(snapshot());}
     }
     function clearHeartbeat(){if(timer){clearTimer(timer);timer=null;}}
+    function clearHomeExit(){if(homeExitTimer){clearTimer(homeExitTimer);homeExitTimer=null;}}
+    function active(){return isVisible()&&isHomeActive();}
     function schedule(delay){
       clearHeartbeat();
-      if(!enabled||!current.userId||!hasAllowedConnection()||!isVisible()||now()-lastInteractionAt>ACTIVE_WINDOW_MS)return;
+      if(!enabled||!current.userId||!hasAllowedConnection()||!active()||now()-lastInteractionAt>ACTIVE_WINDOW_MS)return;
       timer=setTimer(function(){timer=null;touch();},delay);
     }
     function touch(){
-      if(!enabled||!repo||!current.userId||!hasAllowedConnection()||!isVisible()||now()-lastInteractionAt>ACTIVE_WINDOW_MS){clearHeartbeat();emitVisitors([]);return Promise.resolve(snapshot());}
+      if(!enabled||!repo||!current.userId||!hasAllowedConnection()||!active()||now()-lastInteractionAt>ACTIVE_WINDOW_MS){clearHeartbeat();emitVisitors([]);return Promise.resolve(snapshot());}
       if(inFlight)return inFlight;
       var userId=current.userId,callGeneration=generation;
       var request=Promise.resolve().then(function(){return repo.touchFriendPresence();}).then(function(visitors){
@@ -69,6 +73,18 @@
       if(!repo||typeof repo.leavePresence!=="function")return Promise.resolve();
       return Promise.resolve().then(function(){return repo.leavePresence();}).catch(function(){});
     }
+    function reloadConnections(){
+      if(!repo||typeof repo.getConnections!=="function")return Promise.resolve(snapshot());
+      if(connectionInFlight)return connectionInFlight;
+      var userId=current.userId,callGeneration=generation;
+      var request=Promise.resolve().then(function(){return repo.getConnections();}).then(function(rows){
+        if(callGeneration!==generation||userId!==current.userId)return snapshot();
+        connections=normalizeConnections(rows);
+        if(!hasAllowedConnection()){clearHeartbeat();emitVisitors([]);return leave().then(snapshot);}
+        return active()?touch():snapshot();
+      }).catch(function(){return snapshot();}).finally(function(){if(connectionInFlight===request)connectionInFlight=null;});
+      connectionInFlight=request;return request;
+    }
     function setConnections(next){
       generation+=1;inFlight=null;clearAllSeen();
       connections=normalizeConnections(next);
@@ -76,7 +92,7 @@
         clearHeartbeat();emitVisitors([]);
         return enabled&&current.userId?leave().then(snapshot):Promise.resolve(snapshot());
       }
-      if(enabled&&current.userId&&isVisible()){lastInteractionAt=now();return touch();}
+      if(enabled&&current.userId&&active()){lastInteractionAt=now();return touch();}
       return Promise.resolve(snapshot());
     }
     function start(userId){
@@ -89,11 +105,11 @@
         if(callGeneration!==generation||userId!==current.userId)return snapshot();
         connections=normalizeConnections(rows);
         if(!hasAllowedConnection())return leave().then(snapshot);
-        return isVisible()?touch():snapshot();
+        return active()?touch():snapshot();
       }).catch(function(){return snapshot();});
     }
     function stop(stopOptions){
-      stopOptions=stopOptions||{};generation+=1;clearHeartbeat();clearAllSeen();connections=[];
+      stopOptions=stopOptions||{};generation+=1;clearHeartbeat();clearHomeExit();clearAllSeen();connections=[];connectionInFlight=null;
       var shouldLeave=!!stopOptions.leave&&!!current.userId;
       current={userId:null,visitors:[]};inFlight=null;onChange(snapshot());
       return shouldLeave?leave():Promise.resolve();
@@ -101,13 +117,27 @@
     function noteInteraction(){
       if(!enabled||!current.userId)return;
       lastInteractionAt=now();
-      if(isVisible()&&!timer&&!inFlight&&hasAllowedConnection())touch();
+      if(active()&&!timer&&!inFlight&&hasAllowedConnection())touch();
     }
     function onVisibility(visible){
       if(!enabled||!current.userId)return Promise.resolve();
       clearHeartbeat();
       if(!visible){emitVisitors([]);return Promise.resolve(snapshot());}
-      lastInteractionAt=now();return hasAllowedConnection()?touch():Promise.resolve(snapshot());
+      lastInteractionAt=now();return active()?reloadConnections():Promise.resolve(snapshot());
+    }
+    function onHomeActive(homeActive){
+      if(!enabled||!current.userId)return Promise.resolve(snapshot());
+      clearHeartbeat();clearHomeExit();emitVisitors([]);
+      if(homeActive&&active()){
+        lastInteractionAt=now();return reloadConnections();
+      }
+      var userId=current.userId,callGeneration=generation;
+      homeExitTimer=setTimer(function(){
+        homeExitTimer=null;
+        if(callGeneration!==generation||userId!==current.userId||isHomeActive())return;
+        leave();
+      },HOME_EXIT_GRACE_MS);
+      return Promise.resolve(snapshot());
     }
     function markRabbitRendered(connectionId){
       connectionId=String(connectionId||"");
@@ -125,11 +155,11 @@
     }
     function refresh(){
       if(!enabled||!current.userId)return Promise.resolve(snapshot());
-      lastInteractionAt=now();clearHeartbeat();return hasAllowedConnection()?touch():Promise.resolve(snapshot());
+      lastInteractionAt=now();clearHeartbeat();return active()&&hasAllowedConnection()?touch():Promise.resolve(snapshot());
     }
 
-    return {start:start,stop:stop,noteInteraction:noteInteraction,onVisibility:onVisibility,markRabbitRendered:markRabbitRendered,refresh:refresh,setConnections:setConnections,getState:snapshot};
+    return {start:start,stop:stop,noteInteraction:noteInteraction,onVisibility:onVisibility,onHomeActive:onHomeActive,markRabbitRendered:markRabbitRendered,refresh:refresh,setConnections:setConnections,getState:snapshot};
   }
 
-  return {create:create,selectVisitor:selectVisitor,normalizeVisitors:normalizeVisitors,HEARTBEAT_MS:HEARTBEAT_MS,ACTIVE_WINDOW_MS:ACTIVE_WINDOW_MS,RABBIT_SEEN_MS:RABBIT_SEEN_MS};
+  return {create:create,selectVisitor:selectVisitor,normalizeVisitors:normalizeVisitors,HEARTBEAT_MS:HEARTBEAT_MS,ACTIVE_WINDOW_MS:ACTIVE_WINDOW_MS,RABBIT_SEEN_MS:RABBIT_SEEN_MS,HOME_EXIT_GRACE_MS:HOME_EXIT_GRACE_MS};
 });

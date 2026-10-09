@@ -6,24 +6,29 @@ function flush(){return new Promise(function(resolve){setImmediate(resolve);});}
 function clock(){var now=0,next=1,timers=new Map();return {now:function(){return now;},set:function(fn,delay){var id=next++;timers.set(id,{at:now+delay,fn:fn});return id;},clear:function(id){timers.delete(id);},advance:async function(ms){var end=now+ms;while(true){var due=Array.from(timers.entries()).filter(function(x){return x[1].at<=end;}).sort(function(a,b){return a[1].at-b[1].at;})[0];if(!due)break;timers.delete(due[0]);now=due[1].at;due[1].fn();await flush();}now=end;await flush();},count:function(){return timers.size;}};}
 (async function(){
   assert.equal(visitApi.selectVisitor([{connectionId:"b",friendDisplayName:"B"},{connectionId:"a",friendDisplayName:"A"}]).connectionId,"a","temporary Home visitor is deterministic");
-  var c=clock(),visible=true,homeVisible=true,touches=0,leaves=0,seen=[],changes=[];
+  var c=clock(),visible=true,homeVisible=true,touches=0,connectionLoads=0,leaves=0,seen=[],changes=[];
   var repo={
-    getConnections:function(){return Promise.resolve([{connectionId:"b",myVisitState:"allowed"},{connectionId:"a",myVisitState:"allowed"}]);},
+    getConnections:function(){connectionLoads++;return Promise.resolve([{connectionId:"b",myVisitState:"allowed"},{connectionId:"a",myVisitState:"allowed"}]);},
     touchFriendPresence:function(){touches++;return Promise.resolve([{connectionId:"b",friendDisplayName:"B"},{connectionId:"a",friendDisplayName:"A"}]);},
     leavePresence:function(){leaves++;return Promise.resolve(true);},
     recordRabbitSeenV2:function(id){seen.push(id);return Promise.resolve(true);}
   };
-  var visit=visitApi.create({repo:repo,now:c.now,isVisible:function(){return visible;},isRabbitVisible:function(){return visible&&homeVisible;},setTimer:c.set,clearTimer:c.clear,onChange:function(x){changes.push(x);}});
+  var visit=visitApi.create({repo:repo,now:c.now,isVisible:function(){return visible;},isHomeActive:function(){return visible&&homeVisible;},isRabbitVisible:function(){return visible&&homeVisible;},setTimer:c.set,clearTimer:c.clear,onChange:function(x){changes.push(x);}});
   await visit.start("user-a");
   assert.equal(touches,1);assert.deepEqual(visit.getState().visitors.map(function(v){return v.connectionId;}),["a","b"]);
   visit.markRabbitRendered("a");visit.markRabbitRendered("a");await c.advance(1000);assert.deepEqual(seen,["a"],"only the rendered connection is recorded once");
-  await c.advance(59000);assert.equal(touches,2,"allowed connections heartbeat at 60 seconds");
+  await c.advance(9000);assert.equal(touches,2,"Home presence refreshes within 10 seconds");
   visible=false;await visit.onVisibility(false);assert.equal(leaves,0,"hidden keeps server presence for the freshness grace period");assert.deepEqual(visit.getState().visitors,[]);
   await visit.onVisibility(false);assert.equal(leaves,0,"pagehide-style repeated hidden notification does not leave presence");
   visible=true;await visit.onVisibility(true);assert.equal(touches,3);
+  assert.equal(connectionLoads,2,"foreground return refreshes cached consent and connection eligibility");
   assert.equal(c.count(),1,"foreground return maintains one heartbeat");
-  await visit.setConnections([{connectionId:"a",myVisitState:"declined"}]);assert.deepEqual(visit.getState().visitors,[]);assert.equal(c.count(),0);assert.equal(leaves,1,"consent off removes server presence immediately");
-  await visit.stop({leave:true});assert.equal(leaves,2,"explicit logout leaves presence immediately");assert.equal(visit.getState().userId,null);
+  homeVisible=false;await visit.onHomeActive(false);await c.advance(4999);assert.equal(leaves,0,"Home exit keeps a short local grace period");
+  await c.advance(1);assert.equal(leaves,1,"Home exit removes server presence after the grace period");
+  homeVisible=true;await visit.onHomeActive(true);assert.equal(touches,4,"returning Home touches presence immediately");
+  assert.equal(connectionLoads,3,"Home return refreshes eligibility before touching presence");
+  await visit.setConnections([{connectionId:"a",myVisitState:"declined"}]);assert.deepEqual(visit.getState().visitors,[]);assert.equal(c.count(),0);assert.equal(leaves,2,"consent off removes server presence immediately");
+  await visit.stop({leave:true});assert.equal(leaves,3,"explicit logout leaves presence immediately");assert.equal(visit.getState().userId,null);
 
   var disabledCalls=0,disabled=visitApi.create({repo:{getConnections:function(){disabledCalls++;return Promise.resolve([]);},touchFriendPresence:function(){disabledCalls++;}},enabled:false});
   await disabled.start("user");await disabled.setConnections([{connectionId:"a",myVisitState:"allowed"}]);disabled.noteInteraction();await disabled.onVisibility(true);disabled.markRabbitRendered("a");assert.equal(disabledCalls,0,"kill switch blocks all visit and presence RPCs");
@@ -48,5 +53,7 @@ function clock(){var now=0,next=1,timers=new Map();return {now:function(){return
   assert.doesNotMatch(html,/data-friend-consent|maybeShowFriendVisitConsent|friendVisitConsentDeferred/);
   assert.match(html,/BooktokkiHomeScene\.build\(\{visitors:state\.friendVisit&&state\.friendVisit\.visitors\}\)/);assert.match(html,/markRabbitRendered\(visitor\.connectionId\)/);
   assert.match(html,/friendVisitEnabled\(\).*setConnectionVisit|setConnectionVisit\(visitId,allow\)/s);
+  assert.match(html,/isHomeActive:function\(\)\{return state\.view==="home"&&!document\.hidden;\}/);
+  assert.match(html,/friendVisit\)friendVisit\.onHomeActive\(view==="home"\)/);
   console.log("PASS friend visit collection lifecycle and UI contract tests");
 })().catch(function(error){console.error(error);process.exit(1);});

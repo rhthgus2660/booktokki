@@ -14,6 +14,7 @@ test("P5-B UI exposes conversations only through authenticated friend surfaces",
   assert.match(html, /id="view-conversations"/);
   assert.match(html, /id="view-conversation"/);
   assert.match(html, /id="conversationForm"/);
+  assert.match(html, /<textarea id="conversationInput" rows="1" maxlength="1000" enterkeyhint="send"/);
   assert.match(html, /친구 연결이 종료되어 지난 대화만 볼 수 있어요/);
   assert.match(html, /conversation-readonly-label/);
   assert.doesNotMatch(html, /메시지 보내기<\/button><button[^>]+disabled/);
@@ -129,9 +130,22 @@ test("received messages expose a confirmed privacy-aware report flow", () => {
   assert.match(html,/conversationRepository\.report\(messageReportConnection,messageReportId/);
 });
 
-test("conversation rendering preserves focus, de-duplicates messages and paginates", () => {
+test("conversation rendering preserves the composer DOM, de-duplicates messages and paginates", () => {
   assert.match(html, /document\.activeElement&&document\.activeElement\.id==="conversationInput"/);
   assert.match(html, /focus\(\{preventScroll:true\}\)/);
+  assert.match(html, /function focusConversationInput\(input\)/);
+  assert.match(html, /function resizeConversationInput\(input\)/);
+  assert.match(html, /Math\.min\(Math\.max\(input\.scrollHeight\|\|44,44\),112\)/);
+  assert.match(html, /state\.conversationMessageDraft=t\.value;resizeConversationInput\(t\)/);
+  assert.match(html, /e\.target\.id!=="conversationInput"\|\|e\.key!=="Enter"[\s\S]*form\.requestSubmit\(\)/);
+  assert.match(html, /sendAttempt\(state\.conversationSendAttempt,connectionId,body\);\}catch[\s\S]*focusConversationInput\(input\);[\s\S]*state\.conversationSending=true/);
+  assert.match(html, /function dismissConversationKeyboardForUserScroll\(event\)/);
+  assert.match(html, /target\.closest\("\.conversation-messages"\)[\s\S]*input\.blur\(\)/);
+  assert.match(html, /state\.view==="conversation"&&view!=="conversation"[\s\S]*leavingConversationInput\.blur\(\)/);
+  assert.match(html, /var keepFocus=document\.activeElement&&document\.activeElement\.id==="conversationInput"/);
+  assert.match(html, /data-conversation-composer/);
+  assert.match(html, /if\(!form\)\{[\s\S]*composerHost\.innerHTML='<form class="conversation-composer"/);
+  assert.match(html, /if\(input\.value!==state\.conversationMessageDraft\)input\.value=state\.conversationMessageDraft/);
   assert.match(html, /byId\[item\.id\]/);
   assert.match(html, /data-conversation-older/);
   assert.match(html, /conversationNearBottom\(\)/);

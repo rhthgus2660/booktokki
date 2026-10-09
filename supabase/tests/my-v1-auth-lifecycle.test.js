@@ -131,6 +131,11 @@ function createHarness(options){
       setItem:function(){ throw new Error("diagnostic/auth lifecycle test must not write localStorage"); },
       removeItem:function(){ throw new Error("diagnostic/auth lifecycle test must not remove localStorage"); }
     },
+    sessionStorage:(function(){var values={};return {
+      getItem:function(key){return Object.prototype.hasOwnProperty.call(values,key)?values[key]:null;},
+      setItem:function(key,value){values[key]=String(value);},
+      removeItem:function(key){delete values[key];}
+    };})(),
     location:{ href:"http://localhost:8000/" },
     history:{ replaceState:function(){} },
     URL:URL, crypto:globalThis.crypto, structuredClone:structuredClone,
@@ -154,8 +159,9 @@ function createHarness(options){
       }
     },
     BooktokkiConflictResolution:{
+      recover:function(){ return Promise.resolve(null); },
       prepare:function(){ counters.conflictPrepare++; return Promise.resolve({state:"READY"}); },
-      downloadPreparedBackup:function(context){ counters.conflictDownload++; context.backupDownloaded=true; },
+      downloadPreparedBackup:function(context){ counters.conflictDownload++; context.backupDownloaded=true;context.recoveryProof={payloadFingerprint:"test"}; },
       resolve:function(){ counters.conflictResolve++; return Promise.resolve({success:true,bootstrap:{state:"SYNCED",canStart:true}}); }
     },
     BooktokkiCloudRepository:{
@@ -296,6 +302,7 @@ function createHarness(options){
   });
   await wait();
   assert.equal(blocked.el("app").hidden, true);
+
   assert.equal(blocked.el("authGate").hidden, false);
   assert.equal(blocked.el("kakaoLoginBtn").hidden, true);
   assert.equal(blocked.el("ownerMismatchRecovery").hidden, false);

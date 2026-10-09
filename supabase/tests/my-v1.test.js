@@ -18,7 +18,8 @@ assert.match(source, /id="conflictContinueBtn"[^>]*>저장된 기록으로 계�
 assert.match(source, /id="conflictBackupConfirmedBtn"[^>]*hidden>백업 확인 후 계속하기/);
 assert.match(source, /<script src="\.\/supabase\/conflict-resolution\.js"><\/script>/);
 assert.match(source, /if\(conflict\)return prepareConflictResolution\(userId\)/);
-assert.match(source, /downloadPreparedBackup\(pendingConflictResolution,"booktokki-conflict-local-backup\.json"\)/);
+assert.match(source, /downloadPreparedBackup\(pendingConflictResolution,"booktokki-conflict-local-backup\.json",null,\{recoveryStorage:window\.sessionStorage,userId:activeAuthUserId\}\)/);
+assert.match(source, /BooktokkiConflictResolution\.recover\(options\)/);
 assert.match(source, /백업 파일을 저장했어요\. 다운로드된 파일을 확인한 뒤 계속해주세요\./);
 assert.match(source, /conflictBackupConfirmedBtn[\s\S]*conflictResolutionLocked=true;[\s\S]*button\.disabled=true/);
 assert.match(source, /var MY_RABBIT_ASSET = "assets\/bunny-sleep\.png"/);
