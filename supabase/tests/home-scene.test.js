@@ -85,6 +85,8 @@ assert.match(html,/state\.view === "home" \? "내 서재"/);
 assert.match(html,/<h2>내 책장<\/h2>/);
 assert.match(html,/data-nav="home" title="내 서재로" aria-label="내 서재로"/);
 assert.match(html,/scene\.visitors\.map/);
+assert.match(html,/data-visitor-rabbit=/,"visitor rabbit exposes the approved P5-B.1 DM entry affordance");
+assert.match(html,/data-visitor-message=/,"visitor bubble links to the existing persistent conversation");
 assert.doesNotMatch(html,/home-depth-scale|scale\(var\(--depth-scale/,"Rabbit rendering has no y-based scale multiplier");
 assert.match(html,/\.home-scene-rabbit img\{\s*width:62px/);
 assert.doesNotMatch(html,/home-scene-owner img\{ width:/,"owner and visitors share the same base image size");

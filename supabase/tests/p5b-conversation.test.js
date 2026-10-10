@@ -70,8 +70,8 @@ test("latest message permission overrides stale conversation list permission", (
   assert.equal(repository.resolveCanSend([{canSend:false}], {canSend:true}, true), false);
   assert.equal(repository.resolveCanSend([{canSend:true}], {canSend:false}, false), true);
   assert.equal(repository.resolveCanSend([], {canSend:false}, true), false);
-  assert.match(html, /error&&error\.code==="42501"[\s\S]*conversationCanSend=false/);
-  assert.match(html, /Object\.assign\(\{\},item,\{canSend:false\}\)/);
+  assert.match(html, /error&&error\.code==="42501"[\s\S]*conversationRepository\.messages\(connectionId\)[\s\S]*resolveCanSend\(messages,listed,state\.conversationCanSend\)/,"a generic send denial rechecks current relation state without exposing receive preferences");
+  assert.match(html, /Object\.assign\(\{\},item,\{canSend:state\.conversationCanSend\}\)/);
 });
 
 test("migration enforces friendship, two-way blocks, idempotency, rate limit and private table ACL", () => {
@@ -122,7 +122,12 @@ test("message report retention uses an hourly service-only purge with a maximum 
 });
 
 test("received messages expose a confirmed privacy-aware report flow", () => {
-  assert.match(html,/item\.senderIsMe\?'':'<button class="conversation-message-report"/);
+  assert.doesNotMatch(html,/class="conversation-message-report"/);
+  assert.match(html,/data-message-report-target tabindex="0" role="button" aria-haspopup="menu"/);
+  assert.match(html,/messageLongPressTimer=setTimeout\(function\(\)[\s\S]*?openConversationMessageMenu\([\s\S]*?\},600\)/);
+  assert.match(html,/document\.addEventListener\("contextmenu"[\s\S]*?e\.preventDefault\(\);openConversationMessageMenu/);
+  assert.match(html,/e\.key==="Enter"\|\|e\.key===" "\|\|\(e\.shiftKey&&e\.key==="F10"\)/);
+  assert.match(html,/data-message-menu-report/);
   assert.match(html,/data-conversation-report-submit/);
   assert.match(html,/신고한 메시지 본문, 작성 시각과 신고 사유가 증거로 저장되며 접수 후 최대 90일 보관돼요/);
   assert.match(html,/일반 대화 원본은 계정 삭제 정책을 따르며, 신고 증거는 접수 후 최대 90일 보관한 뒤 자동 삭제돼요/);

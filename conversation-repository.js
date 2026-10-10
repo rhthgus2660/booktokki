@@ -36,17 +36,47 @@
     lastMessage:String(row&&row.last_message||""),
     lastMessageAt:row&&row.last_message_at||null,
     lastMessageIsMine:!!(row&&row.last_message_is_mine),
-    canSend:row&&typeof row.can_send==="boolean"?row.can_send:true
+    canSend:row&&typeof row.can_send==="boolean"?row.can_send:true,
+    unreadCount:Math.max(0,Number(row&&row.unread_count)||0)
   };}
   function message(row){return {
     id:String(row&&row.id||""),body:String(row&&row.body||""),
     createdAt:row&&row.created_at||null,senderIsMe:!!(row&&row.sender_is_me),
     canSend:row&&typeof row.can_send==="boolean"?row.can_send:true
   };}
+  function preferences(row){return {
+    receiveMessages:row&&typeof row.receive_messages==="boolean"?row.receive_messages:true,
+    inAppNotifications:row&&typeof row.in_app_notifications==="boolean"?row.in_app_notifications:true,
+    previewMessage:row&&typeof row.preview_message==="boolean"?row.preview_message:false
+  };}
+  function inboxState(row){var pref=preferences(row);return {
+    totalUnread:Math.max(0,Number(row&&row.total_unread)||0),
+    latestMessageId:String(row&&row.latest_message_id||""),
+    latestConnectionId:String(row&&row.latest_connection_id||""),
+    latestSenderDisplayName:String(row&&row.latest_sender_display_name||""),
+    latestBody:String(row&&row.latest_body||""),
+    latestCreatedAt:row&&row.latest_created_at||null,
+    receiveMessages:pref.receiveMessages,
+    inAppNotifications:pref.inAppNotifications,
+    previewMessage:pref.previewMessage
+  };}
+  function bannerText(previewMessage,body){
+    if(!previewMessage)return "새 메시지가 도착했어요";
+    var chars=Array.from(String(body||""));
+    return chars.length>40?chars.slice(0,40).join("")+"…":chars.join("");
+  }
   function create(client){
     if(!client||typeof client.rpc!=="function")throw new Error("Supabase client is required");
     return {
       list:function(){return client.rpc("list_friend_conversations").then(rows).then(function(list){return list.map(conversation);});},
+      preferences:function(){return client.rpc("get_my_message_preferences").then(rows).then(function(list){return preferences(list[0]);});},
+      updatePreferences:function(next){return client.rpc("update_my_message_preferences",{
+        p_receive_messages:!!next.receiveMessages,p_in_app_notifications:!!next.inAppNotifications,p_preview_message:!!next.previewMessage
+      }).then(rows).then(function(list){return preferences(list[0]);});},
+      inboxState:function(){return client.rpc("get_message_inbox_state").then(rows).then(function(list){return inboxState(list[0]);});},
+      markRead:function(connectionId,messageId){return client.rpc("mark_friend_conversation_read",{
+        p_connection_id:connectionId,p_through_message_id:messageId
+      }).then(rows).then(function(list){return list[0]||null;});},
       messages:function(connectionId,options){
         options=options||{};
         return client.rpc("get_friend_messages",{
@@ -73,5 +103,5 @@
       }
     };
   }
-  return {create:create,normalizeBody:normalizeBody,sendAttempt:sendAttempt,resolveCanSend:resolveCanSend,conversation:conversation,message:message,uuid:uuid};
+  return {create:create,normalizeBody:normalizeBody,sendAttempt:sendAttempt,resolveCanSend:resolveCanSend,conversation:conversation,message:message,preferences:preferences,inboxState:inboxState,bannerText:bannerText,uuid:uuid};
 });

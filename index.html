@@ -104,7 +104,7 @@
   .topbar-actions{ display:flex; align-items:center; gap:8px; flex:none; }
   .icon-nav-btn{
     flex:none;
-    width:38px; height:38px;
+    width:44px; height:44px;
     border-radius:12px;
     border:1.5px solid var(--border);
     background:var(--surface);
@@ -114,6 +114,16 @@
   }
   .icon-nav-btn:hover{ border-color:var(--ink-faint); }
   .icon-nav-btn svg{ width:19px; height:19px; }
+  .topbar-emoji{ font-size:1.05rem; line-height:1; }
+  .inbox-nav-btn{ position:relative; }
+  .inbox-unread{ position:absolute; top:-5px; right:-6px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#252525; color:#fff; font-size:.58rem; font-weight:700; line-height:18px; text-align:center; }
+  .message-banner{ box-sizing:border-box; position:fixed; z-index:5000; top:max(12px,env(safe-area-inset-top)); left:50%; width:min(366px,calc(100vw - 24px)); max-width:calc(100vw - 24px); transform:translateX(-50%); display:flex; align-items:center; gap:8px; padding:10px 8px 10px 14px; overflow:hidden; border:1px solid var(--border); border-radius:14px; background:var(--surface); box-shadow:0 5px 16px rgba(0,0,0,.09); color:var(--ink); }
+  .message-banner-copy{ min-width:0; min-height:44px; flex:1; padding:4px 2px; border:0; background:none; color:inherit; text-align:left; cursor:pointer; }
+  .message-banner-copy strong,.message-banner-copy span{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .message-banner-copy strong{ color:var(--ink); font-size:.8rem; font-weight:700; }
+  .message-banner-copy span{ margin-top:3px; color:var(--ink-soft); font-size:.7rem; line-height:1.4; }
+  .message-banner-close{ width:44px; height:44px; flex:none; padding:0; border:0; border-radius:50%; background:transparent; color:var(--ink-soft); font-size:1.05rem; cursor:pointer; }
+  .message-banner-close:active{ background:var(--surface-muted); }
   .back-btn{
     flex:none;
     width:34px; height:34px;
@@ -764,6 +774,7 @@
     background:#b77f4e url("assets/backgrounds/R01_Clean_Room_v1.png") center/cover no-repeat;
     isolation:isolate;
   }
+  #view-home .home-scene-shell{ position:relative; width:100%; }
   #view-home .home-scene-wall, #view-home .home-scene-floor{ display:none; }
   #view-home .home-scene-object{ position:absolute; transform:translate(-50%,-100%); }
   #view-home .home-scene-furniture{ height:auto; pointer-events:none; image-rendering:pixelated; }
@@ -785,6 +796,12 @@
     width:60px; display:flex; flex-direction:column; align-items:center; pointer-events:none;
     transition:left var(--home-rabbit-move-ms,0ms) linear,top var(--home-rabbit-move-ms,0ms) linear;
   }
+  #view-home .home-scene-visitor{ pointer-events:auto; cursor:pointer; }
+  #view-home .home-scene-visitor:focus-visible{ outline:2px solid #fff8ea; outline-offset:3px; }
+  #view-home .home-scene-overlay-root{ position:absolute; z-index:1; inset:0; overflow:hidden; pointer-events:none; }
+  #view-home .visitor-message-bubble{ box-sizing:border-box; position:absolute; width:144px; max-width:calc(100% - 20px); overflow:hidden; border:1px solid rgba(0,0,0,.12); border-radius:12px; background:#fff; color:#171717; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.10); pointer-events:auto; }
+  #view-home .visitor-message-bubble strong{ display:block; padding:9px 10px 7px; overflow:hidden; font-size:.68rem; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+  #view-home .visitor-message-bubble button{ width:100%; min-height:44px; padding:8px 10px; border:0; border-top:1px solid #e9e9e9; background:#fff; color:#171717; font:inherit; font-size:.68rem; font-weight:700; cursor:pointer; }
   #view-home .home-scene-rabbit img{
     width:62px; max-height:65px; object-fit:contain; image-rendering:pixelated;
     filter:drop-shadow(0 2px 1px rgba(74,47,27,.14)); transform-origin:50% 100%;
@@ -1242,6 +1259,12 @@
   .my-menu-label{ font-size:.87rem; font-weight:500; }
   .my-menu-note{ color:#909090; font-size:.7rem; font-weight:400; }
   .my-menu-arrow{ flex:none; color:#a0a0a0; font-size:1rem; }
+  .message-setting{ display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:58px; padding:8px 0; }
+  .message-setting-copy{ min-width:0; }
+  .message-setting-copy strong{ display:block; font-size:.84rem; font-weight:500; }
+  .message-setting-copy span{ display:block; margin-top:4px; color:#909090; font-size:.68rem; line-height:1.45; }
+  .message-setting-toggle{ min-width:56px; min-height:44px; flex:none; padding:0 10px; border:1px solid #d1d1d1; border-radius:22px; background:#fff; color:#737373; font:inherit; font-size:.72rem; cursor:pointer; }
+  .message-setting-toggle[aria-pressed="true"]{ border-color:#c8bfb2; background:#f2ede5; color:#514b44; }
   .my-booklog{ min-height:70px; }
   .my-booklog .my-menu-label{ font-size:.96rem; font-weight:600; }
   .my-logout{ color:#737373; }
@@ -1293,12 +1316,13 @@
   .conversation-row-copy{ min-width:0; flex:1; }
   .conversation-row-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
   .conversation-row-name{ overflow:hidden; font-size:.86rem; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+  .conversation-row-unread{ display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; margin-left:7px; padding:0 6px; border-radius:10px; background:#252525; color:#fff; font-size:.6rem; }
   .conversation-time{ flex:none; color:#a0a0a0; font-size:.64rem; font-weight:400; }
   .conversation-preview{ display:block; margin-top:6px; overflow:hidden; color:#737373; font-size:.72rem; text-overflow:ellipsis; white-space:nowrap; }
   .conversation-readonly-label{ flex:none; color:#909090; font-size:.64rem; font-weight:400; }
   .conversation-screen{ display:flex; width:100%; min-width:0; min-height:calc(100dvh - 100px); flex-direction:column; }
   .conversation-messages{ display:flex; width:100%; min-width:0; flex:1; flex-direction:column; gap:10px; padding:18px 0 22px; }
-  .conversation-message{ align-self:flex-start; min-width:0; max-width:82%; }
+  .conversation-message{ position:relative; align-self:flex-start; min-width:0; max-width:82%; }
   .conversation-message.mine{ align-self:flex-end; }
   .conversation-bubble{ padding:9px 11px; border:1px solid #e4e4e4; border-radius:12px 12px 12px 3px; background:#fff; font-size:.82rem; line-height:1.5; overflow-wrap:anywhere; white-space:pre-wrap; }
   .conversation-message.mine .conversation-bubble{ border-color:#252525; border-radius:12px 12px 3px 12px; background:#252525; color:#fff; }
@@ -1306,8 +1330,14 @@
   .conversation-message.mine .conversation-time{ text-align:right; }
   .conversation-older{ align-self:center; min-height:44px; margin:0 auto 4px; }
   .conversation-message-meta{ display:flex; align-items:center; gap:8px; margin-top:4px; }
-  .conversation-message-report{ min-width:44px; min-height:44px; margin:-14px 0; padding:0; border:0; background:none; color:#909090; font:inherit; font-size:.64rem; text-decoration:underline; text-underline-offset:2px; }
+  .conversation-message.received .conversation-bubble{ touch-action:pan-y; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  .conversation-message.received .conversation-bubble:focus-visible{ outline:2px solid #4f463d; outline-offset:2px; }
+  .conversation-message-menu{ position:fixed; z-index:5100; width:112px; padding:3px; border:1px solid #e3e3e3; border-radius:9px; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,.10); }
+  .conversation-message-menu button{ width:100%; min-height:44px; padding:8px 10px; border:0; border-radius:6px; background:transparent; color:#333; font:inherit; font-size:.74rem; font-weight:500; text-align:left; }
+  .conversation-message-menu button:focus-visible{ outline:2px solid #171717; }
   .conversation-message.mine .conversation-message-meta{ justify-content:flex-end; }
+  .my-header h2{ min-width:0; flex:1; }
+  .conversation-more{ width:44px; height:44px; flex:none; padding:0; border:0; border-radius:50%; background:transparent; color:#56504a; font:inherit; font-size:1.1rem; letter-spacing:.08em; cursor:pointer; }
   .conversation-empty{ margin:auto 0; padding:48px 0; color:#909090; font-size:.76rem; line-height:1.6; text-align:center; }
   .conversation-error{ padding:16px 0; color:#a34b4b; font-size:.74rem; line-height:1.55; }
   .conversation-readonly{ padding:16px 0 max(16px,env(safe-area-inset-bottom)); border-top:1px solid #e9e9e9; color:#737373; font-size:.72rem; line-height:1.55; text-align:center; }
@@ -1373,20 +1403,14 @@
   <div class="topbar">
     <h1>내 독서 기록</h1>
     <div class="topbar-actions">
-      <button class="icon-nav-btn" id="statsNavBtn" data-nav="stats" title="독서 통계" aria-label="독서 통계로 이동">
-        <svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
-          <rect x="4" y="14" width="4" height="7"/>
-          <rect x="10" y="9" width="4" height="12"/>
-          <rect x="16" y="4" width="4" height="17"/>
-        </svg>
+      <button class="icon-nav-btn" id="statsNavBtn" data-nav="stats" title="독서 캘린더" aria-label="독서 캘린더로 이동">
+        <span class="topbar-emoji" aria-hidden="true">🗓️</span>
       </button>
       <button class="icon-nav-btn" id="libraryNavBtn" data-nav="library" title="내 책장" aria-label="내 책장으로 이동">
-        <svg viewBox="0 0 24 24" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
-          <rect x="3" y="6" width="4" height="14"/>
-          <rect x="9" y="3" width="4" height="17"/>
-          <rect x="15" y="8" width="4" height="12"/>
-          <rect x="3" y="20" width="18" height="1.6"/>
-        </svg>
+        <span class="topbar-emoji" aria-hidden="true">📚</span>
+      </button>
+      <button class="icon-nav-btn inbox-nav-btn" id="inboxNavBtn" data-nav="conversations" title="대화" aria-label="대화로 이동">
+        <span class="topbar-emoji" aria-hidden="true">💬</span><span class="inbox-unread" id="inboxUnread" hidden></span>
       </button>
       <button class="icon-nav-btn profile-nav-btn" id="myNavBtn" data-nav="my" type="button" title="MY" aria-label="MY로 이동">
         <img id="myNavRabbit" alt="">
@@ -1414,6 +1438,7 @@
 
 <div class="modal-overlay" id="modalOverlay" hidden></div>
 <div class="rabbit-event" id="rabbitEvent" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+<div class="message-banner" id="messageBanner" role="status" aria-live="polite" hidden><button class="message-banner-copy" type="button" data-message-banner-open><strong id="messageBannerSender"></strong><span id="messageBannerText"></span></button><button class="message-banner-close" type="button" data-message-banner-close aria-label="알림 닫기">×</button></div>
 
 <script src="./auth-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1426,6 +1451,7 @@
 <script src="./co-reading-repository.js"></script>
 <script src="./conversation-repository.js"></script>
 <script src="./conversation-polling.js"></script>
+<script src="./message-inbox-polling.js"></script>
 <script src="./friend-visit.js"></script>
 <script src="./room-depth.js"></script>
 <script src="./home-room-assets.js"></script>
@@ -1481,11 +1507,18 @@
     socialProfile: { displayName:"", intro:"" },
     socialProfileStatus: "loading",
     selectedFriendConnectionId: null,
+    friendProfileReturnView: "co-reading",
     blockedUsers: [],
     blockedUsersStatus: "idle",
     conversations: [],
     conversationsStatus: "idle",
+    messagePreferences: {receiveMessages:true,inAppNotifications:true,previewMessage:false},
+    messagePreferencesStatus: "idle",
+    inboxUnread: 0,
+    inboxLatest: null,
+    inboxReturnView: "home",
     selectedConversationId: null,
+    conversationReturnView: "conversations",
     conversationMessages: [],
     conversationMessagesStatus: "idle",
     conversationCanSend: true,
@@ -1495,6 +1528,8 @@
     conversationSendAttempt: null,
     conversationHasMore: false,
     conversationLoadingOlder: false,
+    visitorBubbleConnectionId: null,
+    visitorBubbleBusy: false,
     friendVisit: { userId:null, visitors:[] },
     homeAmbient: { actors:[] },
     dbMode: null /* 'db' | 'local' */
@@ -1544,6 +1579,13 @@
   var coReadingLoadEpoch = 0;
   var conversationLoadEpoch = 0;
   var conversationPolling = null;
+  var messageInboxPolling = null;
+  var messageBannerTimer = null;
+  var visitorBubbleTimer = null;
+  var messageLongPressTimer = null;
+  var messageLongPressStart = null;
+  var messageLongPressOpenedAt = 0;
+  var blockedUsersNoticeTimer = null;
   var measurementRepository = null;
   var cloudMutationQueues = {};
   var pendingBookCreates = {};
@@ -2319,10 +2361,39 @@
      reached by tapping into them and left again with an explicit back
      button — so `detailFrom` remembers whether a book was opened from
      home (요즘 읽는 책), 통계, or 서재, and that back button returns there. */
-  function goTo(view, bookId){
+  var socialHistoryReady=false,applyingHistoryRoute=false;
+  function safeSocialReturn(view,fallback){
+    return ["home","library","stats","my","co-reading","friend-profile","conversations","conversation"].indexOf(view)!==-1?view:fallback;
+  }
+  function appRouteSnapshot(view){return {
+    view:view||"home",selectedConversationId:state.selectedConversationId||null,
+    selectedFriendConnectionId:state.selectedFriendConnectionId||null,
+    inboxReturnView:state.inboxReturnView||"home",conversationReturnView:state.conversationReturnView||"conversations",
+    friendProfileReturnView:state.friendProfileReturnView||"co-reading"
+  };}
+  function socialHistoryView(view){return ["conversations","conversation","friend-profile"].indexOf(view)!==-1;}
+  function pushSocialHistory(fromView,toView){
+    if(typeof window==="undefined"||!appStarted||applyingHistoryRoute||(!socialHistoryView(fromView)&&!socialHistoryView(toView)))return;
+    window.history.replaceState({booktokkiNav:true,route:appRouteSnapshot(fromView)},"",window.location.href);
+    socialHistoryReady=true;
+    window.history.pushState({booktokkiNav:true,route:appRouteSnapshot(toView)},"",window.location.href);
+  }
+  function appBack(fallback){
+    var route=typeof window!=="undefined"&&window.history.state&&window.history.state.booktokkiNav&&window.history.state.route;
+    if(socialHistoryReady&&route&&route.view===state.view){window.history.back();return;}
+    goTo(safeSocialReturn(fallback,"home"),undefined,{fromHistory:true});
+  }
+  function goTo(view, bookId, navOptions){
+    navOptions=navOptions||{};
+    var fromView=state.view;
+    if(!navOptions.fromHistory&&view==="conversations"&&fromView!=="conversations"&&fromView!=="conversation")state.inboxReturnView=safeSocialReturn(fromView,"home");
+    if(!navOptions.fromHistory&&view==="conversation"&&fromView!=="conversation")state.conversationReturnView=safeSocialReturn(fromView,"conversations");
+    if(!navOptions.fromHistory&&typeof pushSocialHistory==="function")pushSocialHistory(fromView,view);
     var enteringHome = view === "home" && state.view !== "home";
+    if(state.view==="home"&&view!=="home")closeVisitorBubble();
     if(state.view==="conversation"&&view!=="conversation"){
       stopConversationPolling();
+      closeConversationMessageMenu();
       var leavingConversationInput=document.getElementById("conversationInput");
       if(leavingConversationInput&&document.activeElement===leavingConversationInput)leavingConversationInput.blur();
     }
@@ -2349,7 +2420,21 @@
     if(view === "blocked-users") loadBlockedUsers();
     if(view === "conversations") loadConversations();
     if(view === "conversation") startConversationPolling();
+    if(view==="conversation"&&state.inboxLatest&&state.inboxLatest.connectionId===state.selectedConversationId)dismissMessageBanner();
   }
+  if(typeof window!=="undefined")window.addEventListener("popstate",function(event){
+    if(!appStarted)return;
+    var route=event.state&&event.state.booktokkiNav&&event.state.route;
+    if(!route){applyingHistoryRoute=true;goTo("home",undefined,{fromHistory:true});applyingHistoryRoute=false;return;}
+    applyingHistoryRoute=true;
+    state.selectedConversationId=route.selectedConversationId||null;
+    state.selectedFriendConnectionId=route.selectedFriendConnectionId||null;
+    state.inboxReturnView=safeSocialReturn(route.inboxReturnView,"home");
+    state.conversationReturnView=safeSocialReturn(route.conversationReturnView,"conversations");
+    state.friendProfileReturnView=safeSocialReturn(route.friendProfileReturnView,"co-reading");
+    goTo(safeSocialReturn(route.view,"home"),undefined,{fromHistory:true});
+    applyingHistoryRoute=false;
+  });
   function openMyBooklogs(){
     state.statsFrom = "my";
     state.statsMonth = null;
@@ -2413,9 +2498,12 @@
     document.getElementById("view-blocked-users").hidden = state.view !== "blocked-users";
     document.getElementById("view-conversations").hidden = state.view !== "conversations";
     document.getElementById("view-conversation").hidden = state.view !== "conversation";
-    document.getElementById("libraryNavBtn").hidden = state.view === "library";
-    document.getElementById("statsNavBtn").hidden = state.view === "stats";
-    document.getElementById("myNavBtn").hidden = ["my","feedback","data-info","co-reading","profile-edit","friend-profile","blocked-users","conversations","conversation"].indexOf(state.view)!==-1;
+    var commonTop=["home","library","stats","conversations"].indexOf(state.view)!==-1;
+    document.getElementById("libraryNavBtn").hidden = !commonTop||state.view === "library";
+    document.getElementById("statsNavBtn").hidden = !commonTop||state.view === "stats";
+    document.getElementById("inboxNavBtn").hidden = !commonTop||state.view === "conversations";
+    document.getElementById("myNavBtn").hidden = !commonTop;
+    renderInboxBadge();
 
     renderOffline();
     renderHome();
@@ -2556,6 +2644,7 @@
       var image=el.querySelector("img");if(image&&image.getAttribute("src")!==actor.asset)image.setAttribute("src",actor.asset);
     });
     if(window.BooktokkiRoomDepth)window.BooktokkiRoomDepth.applyScene(document.querySelector("#view-home .home-scene"));
+    positionVisitorBubble();
   }
 
   function ensureHomeAmbient(){
@@ -2583,11 +2672,35 @@
     var classes = "home-scene-object home-scene-rabbit " + (owner ? "home-scene-owner " : "home-scene-visitor ") + "facing-" + item.facing + (item.viewportEdge ? " peek-edge peek-"+item.viewportEdge : "");
     var label = owner ? "내 토끼" : item.friendDisplayName + "의 토끼";
     style += "--home-rabbit-move-ms:"+(item.moveDuration||0)+"ms;--home-pose-anchor-x:"+(item.anchorX||0)+"px;--home-pose-anchor-y:"+(item.anchorY||0)+"px;--home-pose-scale:"+(item.visualScale==null?1:item.visualScale)+";";
-    return '<div class="'+classes+'" data-scene-object="'+esc(item.type)+'" data-scene-id="'+esc(item.id)+'" data-behavior="'+esc(item.behavior||"IDLE")+'"'+(owner?' data-owner-rabbit-tap role="button" tabindex="0"':'')+(item.viewportEdge?'':window.BooktokkiHomeScene.projectionAttributes(item))+' style="'+style+'" aria-label="'+esc(label)+'">' +
+    var rabbitAction=owner?' data-owner-rabbit-tap role="button" tabindex="0"':' data-visitor-rabbit="'+esc(item.connectionId)+'" role="button" tabindex="0"';
+    return '<div class="'+classes+'" data-scene-object="'+esc(item.type)+'" data-scene-id="'+esc(item.id)+'" data-behavior="'+esc(item.behavior||"IDLE")+'"'+rabbitAction+(item.viewportEdge?'':window.BooktokkiHomeScene.projectionAttributes(item))+' style="'+style+'" aria-label="'+esc(label)+'">' +
       (owner && item.speech && (item.forceSpeech || !item.suppressSpeech) ? '<div class="home-scene-speech" aria-live="polite">'+item.speech+'</div>' : '') +
       '<img src="'+esc(item.asset)+'" alt="'+(owner?esc(item.alt):"")+'">' +
       (!owner ? '<span class="home-scene-friend-name">'+esc(item.friendDisplayName)+'</span>' : '') +
     '</div>';
+  }
+
+  function homeSceneVisitorBubble(visitor){
+    if(!visitor||state.visitorBubbleConnectionId!==visitor.connectionId)return "";
+    return '<div class="visitor-message-bubble" data-visitor-bubble data-visitor-bubble-for="'+esc(visitor.connectionId)+'"><strong>'+esc(visitor.friendDisplayName)+'</strong><button type="button" data-visitor-message="'+esc(visitor.connectionId)+'"'+(state.visitorBubbleBusy?' disabled':'')+'>메시지 보내기</button></div>';
+  }
+
+  function visitorBubbleCoordinates(sceneRect,visualRect,bubbleRect){
+    var pad=10,actorLeft=visualRect.left-sceneRect.left,actorTop=visualRect.top-sceneRect.top;
+    var maxLeft=Math.max(pad,sceneRect.width-bubbleRect.width-pad),maxTop=Math.max(pad,sceneRect.height-bubbleRect.height-pad);
+    var left=actorLeft+(visualRect.width-bubbleRect.width)/2;
+    var top=actorTop+(visualRect.height-bubbleRect.height)/2;
+    return {left:Math.min(Math.max(left,pad),maxLeft),top:Math.min(Math.max(top,pad),maxTop)};
+  }
+
+  function positionVisitorBubble(){
+    var scene=document.querySelector("#view-home .home-scene"),shell=scene&&scene.closest(".home-scene-shell"),bubble=shell&&shell.querySelector("[data-visitor-bubble]");
+    if(!scene||!bubble)return;
+    var id=bubble.getAttribute("data-visitor-bubble-for"),actor=scene.querySelector('[data-visitor-rabbit="'+CSS.escape(id)+'"]');
+    if(!actor)return;
+    var sceneRect=scene.getBoundingClientRect(),actorRect=actor.getBoundingClientRect(),bubbleRect=bubble.getBoundingClientRect();
+    var point=visitorBubbleCoordinates(sceneRect,actorRect,bubbleRect);
+    bubble.style.left=Math.round(point.left)+"px";bubble.style.top=Math.round(point.top)+"px";
   }
 
   function homeSceneFurniture(item){
@@ -2614,7 +2727,7 @@
       bookCount:getBooks().length
     });
     var bookshelf = scene.bookshelf;
-    return '<section class="home-scene" aria-label="내 서재">' +
+    return '<div class="home-scene-shell"><section class="home-scene" aria-label="내 서재">' +
       '<div class="home-scene-wall" aria-hidden="true"></div>' +
       '<div class="home-scene-floor" aria-hidden="true"></div>' +
       scene.furniture.map(homeSceneFurniture).join("") +
@@ -2624,7 +2737,7 @@
       '</button>' +
       homeSceneRabbit(scene.owner,true) +
       scene.visitors.map(function(visitor){return homeSceneRabbit(visitor,false);}).join("") +
-    '</section>';
+    '</section><div class="home-scene-overlay-root" data-home-scene-overlay>'+homeSceneVisitorBubble(scene.visitors.find(function(visitor){return visitor.connectionId===state.visitorBubbleConnectionId;}))+'</div></div>';
   }
 
   /* This month's distinct books with at least one positive page record. */
@@ -2686,12 +2799,14 @@
 
   function renderHome(){
     var el = document.getElementById("view-home");
+    if(state.visitorBubbleConnectionId&&!(state.friendVisit.visitors||[]).some(function(visitor){return visitor.connectionId===state.visitorBubbleConnectionId;}))closeVisitorBubble();
     var hasBooks = getBooks().length > 0;
     el.innerHTML = homeScene() + (hasBooks
       ? currentBookMini() + '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button>'
       : '<div class="home-empty-reading"><div class="home-empty-title">요즘 무슨 책 읽어?</div>' +
           '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button></div>');
     if(window.BooktokkiRoomDepth)window.BooktokkiRoomDepth.applyScene(el.querySelector(".home-scene"));
+    positionVisitorBubble();
     observeContinueReading();
     if (state.view==="home" && friendVisit && window.BooktokkiFriendVisit){
       var renderedScene=window.BooktokkiHomeScene&&window.BooktokkiHomeScene.build({visitors:state.friendVisit&&state.friendVisit.visitors});
@@ -2699,8 +2814,29 @@
     }
   }
 
+  function closeVisitorBubble(){clearTimeout(visitorBubbleTimer);visitorBubbleTimer=null;state.visitorBubbleConnectionId=null;state.visitorBubbleBusy=false;}
+  function openVisitorBubble(connectionId){
+    if(state.view!=="home"||!connectionId)return;
+    clearTimeout(visitorBubbleTimer);state.visitorBubbleConnectionId=connectionId;state.visitorBubbleBusy=false;renderHome();
+    visitorBubbleTimer=setTimeout(function(){if(!state.visitorBubbleBusy&&state.visitorBubbleConnectionId===connectionId){closeVisitorBubble();if(state.view==="home")renderHome();}},5000);
+  }
+  function openVisitorConversation(connectionId){
+    if(!connectionId||state.visitorBubbleBusy||!coReadingRepository)return;
+    clearTimeout(visitorBubbleTimer);state.visitorBubbleBusy=true;renderHome();
+    var userId=activeAuthUserId;
+    coReadingRepository.getFriendProfile(connectionId).then(function(profile){
+      if(userId!==activeAuthUserId||state.view!=="home"||state.visitorBubbleConnectionId!==connectionId)return;
+      if(!profile)throw new Error("UNAVAILABLE");
+      closeVisitorBubble();openConversation(connectionId);
+    }).catch(function(){
+      if(userId!==activeAuthUserId)return;
+      closeVisitorBubble();window.alert("지금은 이 대화를 열 수 없어요.");if(state.view==="home")renderHome();
+    });
+  }
+
   window.addEventListener("resize",function(){
     if(state.view==="home"&&window.BooktokkiRoomDepth)window.BooktokkiRoomDepth.applyScene(document.querySelector("#view-home .home-scene"));
+    if(state.view==="home")positionVisitorBubble();
   });
 
   function statusBadge(status){
@@ -3202,12 +3338,33 @@
       archiveHtml;
   }
 
-  function myHeader(title, backTarget){
-    var backAttr = backTarget === "feedback-return" ? "data-feedback-back" : 'data-nav="' + backTarget + '"';
+  function myHeader(title, backTarget, historyBack, actionHtml){
+    var backAttr = historyBack ? 'data-app-back="' + esc(backTarget) + '"' : (backTarget === "feedback-return" ? "data-feedback-back" : 'data-nav="' + backTarget + '"');
     return '<div class="sub-topbar my-header">' +
       '<button class="back-btn" ' + backAttr + ' title="뒤로" aria-label="뒤로">' +
         '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>' +
-      '</button><h2>' + esc(title) + '</h2></div>';
+      '</button><h2>' + esc(title) + '</h2>'+(actionHtml||"")+'</div>';
+  }
+
+  function unreadLabel(count){return count>99?"99+":String(Math.max(0,count||0));}
+  function renderInboxBadge(){
+    var badge=document.getElementById("inboxUnread");if(!badge)return;
+    badge.hidden=!state.inboxUnread;
+    badge.textContent=state.inboxUnread?unreadLabel(state.inboxUnread):"";
+    var button=document.getElementById("inboxNavBtn");
+    if(button)button.setAttribute("aria-label",state.inboxUnread?"대화로 이동, 읽지 않은 메시지 "+unreadLabel(state.inboxUnread)+"개":"대화로 이동");
+  }
+  function dismissMessageBanner(){
+    clearTimeout(messageBannerTimer);messageBannerTimer=null;
+    var banner=document.getElementById("messageBanner");if(banner)banner.hidden=true;
+  }
+  function showMessageBanner(message){
+    if(!message||!message.connectionId||!message.id||state.view==="conversation"&&state.selectedConversationId===message.connectionId)return;
+    var banner=document.getElementById("messageBanner");if(!banner)return;
+    document.getElementById("messageBannerSender").textContent=message.senderDisplayName||"친구";
+    document.getElementById("messageBannerText").textContent=window.BooktokkiConversationRepository.bannerText(state.messagePreferences.previewMessage,message.body);
+    banner.dataset.connectionId=message.connectionId;banner.dataset.messageId=message.id;banner.hidden=false;
+    clearTimeout(messageBannerTimer);messageBannerTimer=setTimeout(dismissMessageBanner,4000);
   }
 
   function renderMy(){
@@ -3228,6 +3385,12 @@
         '<button class="my-menu" type="button" data-nav="conversations"><span class="my-menu-label">대화</span><span class="my-menu-arrow">›</span></button>' +
         '<button class="my-menu" type="button" data-guide><span class="my-menu-label">북토끼 사용법</span><span class="my-menu-arrow">↗</span></button>' +
         '<button class="my-menu" type="button" data-nav="feedback"><span class="my-menu-label">의견 보내기</span><span class="my-menu-arrow">›</span></button>' +
+      '</section>' +
+      '<section class="my-section"><div class="my-section-title">메시지 설정</div>' +
+        '<div class="message-setting"><span class="message-setting-copy"><strong>메시지 수신</strong><span>모든 친구의 새 메시지 수신</span></span><button class="message-setting-toggle" type="button" data-message-setting="receive" aria-pressed="'+state.messagePreferences.receiveMessages+'"'+(state.messagePreferencesStatus==="saving"?' disabled':'')+'>'+(state.messagePreferences.receiveMessages?'ON':'OFF')+'</button></div>' +
+        '<div class="message-setting"><span class="message-setting-copy"><strong>앱 내부 알림</strong><span>앱을 보는 동안 새 메시지 알림</span></span><button class="message-setting-toggle" type="button" data-message-setting="notifications" aria-pressed="'+state.messagePreferences.inAppNotifications+'"'+(state.messagePreferencesStatus==="saving"?' disabled':'')+'>'+(state.messagePreferences.inAppNotifications?'ON':'OFF')+'</button></div>' +
+        '<div class="message-setting"><span class="message-setting-copy"><strong>메시지 미리보기</strong><span>알림에 메시지 내용 표시</span></span><button class="message-setting-toggle" type="button" data-message-setting="preview" aria-pressed="'+state.messagePreferences.previewMessage+'"'+(state.messagePreferencesStatus==="saving"?' disabled':'')+'>'+(state.messagePreferences.previewMessage?'ON':'OFF')+'</button></div>' +
+        (state.messagePreferencesStatus==="error"?'<p class="my-form-error" role="status">메시지 설정을 저장하지 못했어요.</p>':'')+
       '</section>' +
       '<section class="my-section"><div class="my-section-title">계정</div>' +
         '<button class="my-menu" type="button" data-nav="blocked-users"><span class="my-menu-label">차단한 사용자</span><span class="my-menu-arrow">›</span></button>' +
@@ -3261,10 +3424,10 @@
   function selectedFriend(){return state.coReadingConnections.find(function(c){return c.connectionId===state.selectedFriendConnectionId;})||null;}
   function renderFriendProfile(){
     var el=document.getElementById("view-friend-profile");if(!el)return;var friend=selectedFriend();
-    el.innerHTML=myHeader("친구 프로필","co-reading")+(friend?'<section class="friend-profile"><img class="friend-profile-rabbit" src="'+esc(MY_RABBIT_ASSET)+'" alt="친구의 Personal Librarian"><h3>'+esc(friend.friendDisplayName)+'</h3><p>'+esc(friend.friendIntro||"소개가 아직 없어요.")+'</p><div class="friend-profile-actions"><button class="btn btn-outline" type="button" data-open-conversation="'+esc(friend.connectionId)+'">메시지 보내기</button><button class="btn btn-outline friend-more" type="button" data-friend-more="'+esc(friend.connectionId)+'" aria-label="친구 관리">···</button></div></section>':'<p class="friend-status">친구 프로필을 볼 수 없어요.</p>');
+    el.innerHTML=myHeader("친구 프로필",state.friendProfileReturnView||"co-reading",true)+(friend?'<section class="friend-profile"><img class="friend-profile-rabbit" src="'+esc(MY_RABBIT_ASSET)+'" alt="친구의 Personal Librarian"><h3>'+esc(friend.friendDisplayName)+'</h3><p>'+esc(friend.friendIntro||"소개가 아직 없어요.")+'</p><div class="friend-profile-actions"><button class="btn btn-outline" type="button" data-open-conversation="'+esc(friend.connectionId)+'">메시지 보내기</button><button class="btn btn-outline friend-more" type="button" data-friend-more="'+esc(friend.connectionId)+'" aria-label="친구 관리">···</button></div></section>':'<p class="friend-status">친구 프로필을 볼 수 없어요.</p>');
   }
   function loadBlockedUsers(){
-    if(!coReadingRepository)return;var userId=activeAuthUserId;state.blockedUsersStatus="loading";renderAll();
+    if(!coReadingRepository)return;var userId=activeAuthUserId;clearTimeout(blockedUsersNoticeTimer);blockedUsersNoticeTimer=null;state.coReadingMessage="";state.blockedUsersStatus="loading";renderAll();
     coReadingRepository.getBlockedUsers().then(function(list){if(userId!==activeAuthUserId)return;state.blockedUsers=list;state.blockedUsersStatus="ready";}).catch(function(){if(userId===activeAuthUserId)state.blockedUsersStatus="error";}).finally(function(){if(userId===activeAuthUserId&&state.view==="blocked-users")renderAll();});
   }
   function renderBlockedUsers(){
@@ -3272,7 +3435,7 @@
     if(state.blockedUsersStatus==="loading")body='<p class="friend-status">차단 목록을 불러오고 있어요.</p>';
     else if(state.blockedUsersStatus==="error")body='<p class="friend-status">차단 목록을 불러오지 못했어요.</p><button class="btn btn-outline" type="button" data-blocked-retry>다시 시도</button>';
     else if(!state.blockedUsers.length)body='<p class="friend-empty">차단한 사용자가 없어요.</p>';
-    else body='<div class="friend-list">'+state.blockedUsers.map(function(item){return '<div class="friend-row"><div class="friend-row-primary"><span class="friend-avatar" aria-hidden="true">🐰</span><span class="friend-row-copy"><strong>'+esc(item.displayName)+'</strong><span class="friend-row-intro">'+esc(item.intro||"소개가 아직 없어요.")+'</span></span><button class="friend-disconnect" type="button" data-social-unblock="'+esc(item.handle)+'">차단 해제</button></div></div>';}).join("")+'</div><p class="friend-section-copy">차단을 해제해도 친구 관계는 자동으로 복구되지 않아요.</p>';
+    else body='<div class="friend-list">'+state.blockedUsers.map(function(item){return '<div class="friend-row"><div class="friend-row-primary"><span class="friend-avatar" aria-hidden="true">🐰</span><span class="friend-row-copy"><strong>'+esc(item.displayName)+'</strong><span class="friend-row-intro">'+esc(item.intro||"소개가 아직 없어요.")+'</span></span><button class="friend-disconnect" type="button" data-social-unblock="'+esc(item.handle)+'">차단 해제</button></div></div>';}).join("")+'</div>'+(state.coReadingMessage==="차단을 해제했어요."?'':'<p class="friend-section-copy">차단을 해제해도 친구 관계는 자동으로 복구되지 않아요.</p>');
     el.innerHTML=myHeader("차단한 사용자","my")+body+(state.coReadingMessage?'<p class="friend-status" aria-live="polite">'+esc(state.coReadingMessage)+'</p>':'');
   }
 
@@ -3336,7 +3499,7 @@
   }
   function conversationErrorMessage(error){
     var code=String(error&&error.code||""),status=Number(error&&error.status||error&&error.statusCode||0);
-    if(code==="42501")return "친구 연결이 종료되어 새 메시지를 보낼 수 없어요.";
+    if(code==="42501")return "지금은 새 메시지를 보낼 수 없어요.";
     if(status===401||code==="PGRST301"||code==="PGRST302")return "로그인이 만료되었어요. 다시 로그인해 주세요.";
     if(code==="PT429")return "메시지를 너무 자주 보냈어요. 잠시 후 다시 시도해 주세요.";
     if(code==="PT409")return "전송 상태를 확인하지 못했어요. 내용을 바꾼 뒤 다시 보내 주세요.";
@@ -3347,6 +3510,50 @@
     if(status===401||code==="PGRST301"||code==="PGRST302")return "로그인이 만료되었어요. 다시 로그인해 주세요.";
     if(code==="42501")return "이 대화를 볼 수 없어요.";
     return "새 메시지를 확인하지 못했어요. 연결되면 다시 확인할게요.";
+  }
+  function newestReceivedMessage(messages){
+    for(var i=messages.length-1;i>=0;i--)if(!messages[i].senderIsMe)return messages[i];
+    return null;
+  }
+  function markVisibleConversationRead(connectionId,messages){
+    if(document.hidden||state.view!=="conversation"||state.selectedConversationId!==connectionId||!conversationRepository)return Promise.resolve(false);
+    var newest=newestReceivedMessage(messages);if(!newest)return Promise.resolve(false);
+    if(!document.querySelector('#view-conversation [data-message-id="'+CSS.escape(newest.id)+'"]'))return Promise.resolve(false);
+    var userId=activeAuthUserId;
+    return conversationRepository.markRead(connectionId,newest.id).then(function(){
+      if(userId!==activeAuthUserId||document.hidden||state.view!=="conversation"||state.selectedConversationId!==connectionId)return false;
+      state.conversations=state.conversations.map(function(item){return item.connectionId===connectionId?Object.assign({},item,{unreadCount:0}):item;});
+      state.inboxUnread=state.conversations.reduce(function(total,item){return total+(item.unreadCount||0);},0);renderInboxBadge();
+      return true;
+    }).catch(function(){return false;});
+  }
+  function messageFromInbox(next){return next&&next.latestMessageId?{id:next.latestMessageId,connectionId:next.latestConnectionId,senderDisplayName:next.latestSenderDisplayName,body:next.latestBody,createdAt:next.latestCreatedAt}:null;}
+  function ensureMessageInboxPolling(){
+    if(!messageInboxPolling&&window.BooktokkiMessageInboxPolling&&conversationRepository){
+      messageInboxPolling=window.BooktokkiMessageInboxPolling.create({
+        intervalMs:15000,
+        isActive:function(){return appStarted&&!!activeAuthUserId;},
+        isVisible:function(){return !document.hidden;},
+        poll:function(){return conversationRepository.inboxState();},
+        onState:function(next,meta){
+          state.inboxUnread=next.totalUnread;state.inboxLatest=messageFromInbox(next);
+          state.messagePreferences={receiveMessages:next.receiveMessages,inAppNotifications:next.inAppNotifications,previewMessage:next.previewMessage};
+          renderInboxBadge();
+          if(state.view==="my")renderMy();
+          if(!meta.isBaseline&&meta.isNew&&next.inAppNotifications&&state.inboxLatest&&!(state.view==="conversation"&&state.selectedConversationId===state.inboxLatest.connectionId))showMessageBanner(state.inboxLatest);
+        }
+      });
+    }
+    return messageInboxPolling;
+  }
+  function startMessageInboxPolling(){var polling=ensureMessageInboxPolling();return polling?polling.start():Promise.resolve(false);}
+  function stopMessageInboxPolling(){if(messageInboxPolling)messageInboxPolling.stop();dismissMessageBanner();}
+  function updateMessagePreference(kind){
+    if(!conversationRepository||state.messagePreferencesStatus==="saving")return;
+    var userId=activeAuthUserId,next={receiveMessages:state.messagePreferences.receiveMessages,inAppNotifications:state.messagePreferences.inAppNotifications,previewMessage:state.messagePreferences.previewMessage};
+    if(kind==="receive")next.receiveMessages=!next.receiveMessages;else if(kind==="notifications")next.inAppNotifications=!next.inAppNotifications;else if(kind==="preview")next.previewMessage=!next.previewMessage;else return;
+    state.messagePreferencesStatus="saving";renderMy();
+    conversationRepository.updatePreferences(next).then(function(saved){if(userId===activeAuthUserId){state.messagePreferences=saved;state.messagePreferencesStatus="ready";if(!saved.inAppNotifications)dismissMessageBanner();}}).catch(function(){if(userId===activeAuthUserId)state.messagePreferencesStatus="error";}).finally(function(){if(userId===activeAuthUserId&&state.view==="my")renderMy();});
   }
   function stopConversationPolling(){
     if(conversationPolling)conversationPolling.stop();
@@ -3378,7 +3585,7 @@
       state.conversationMessages=nextMessages;state.conversationCanSend=canSend;state.conversationMessagesStatus="ready";state.conversationError="";
       if(initialLoad)state.conversationHasMore=messages.length===50;
       if(changed)renderConversationUpdate({scrollLatest:initialLoad||!!options.showLoading||wasNearBottom});
-      return changed;
+      return markVisibleConversationRead(connectionId,nextMessages).then(function(){return changed;});
     }).catch(function(error){
       if(userId!==activeAuthUserId||epoch!==conversationLoadEpoch||connectionId!==state.selectedConversationId||state.view!=="conversation")return false;
       var message=conversationLoadErrorMessage(error);
@@ -3399,6 +3606,9 @@
   function handleConversationVisibility(){
     var polling=ensureConversationPolling();
     if(polling)polling.visibilityChanged();
+    var inbox=ensureMessageInboxPolling();
+    if(inbox)inbox.visibilityChanged();
+    if(document.hidden){dismissMessageBanner();closeVisitorBubble();}
   }
   document.addEventListener("visibilitychange",handleConversationVisibility);
   function openConversation(connectionId){
@@ -3420,7 +3630,7 @@
     state.conversationsStatus="loading";state.conversationError="";renderAll();
     conversationRepository.list().then(function(list){
       if(userId!==activeAuthUserId||epoch!==conversationLoadEpoch)return;
-      state.conversations=list;state.conversationsStatus="ready";
+      state.conversations=list;state.conversationsStatus="ready";state.inboxUnread=list.reduce(function(total,item){return total+(item.unreadCount||0);},0);
     }).catch(function(error){
       if(userId!==activeAuthUserId||epoch!==conversationLoadEpoch)return;
       state.conversationsStatus="error";state.conversationError=error&&error.message||"대화를 불러오지 못했어요.";
@@ -3451,8 +3661,8 @@
     if(state.conversationsStatus==="loading")body='<p class="friend-status">대화를 불러오고 있어요.</p>';
     else if(state.conversationsStatus==="error")body='<p class="conversation-error">'+esc(state.conversationError||"대화를 불러오지 못했어요.")+'</p><button class="btn btn-outline" type="button" data-conversations-retry>다시 시도</button>';
     else if(!state.conversations.length)body='<p class="conversation-empty">아직 대화가 없어요.<br>친구 프로필에서 책 이야기를 건네보세요.</p>';
-    else body='<div class="conversation-list">'+state.conversations.map(function(item){return '<button class="conversation-row" type="button" data-conversation-open="'+esc(item.connectionId)+'"><span class="conversation-row-copy"><span class="conversation-row-head"><strong class="conversation-row-name">'+esc(item.friendDisplayName)+'</strong>'+(item.canSend?'<time class="conversation-time">'+esc(conversationTime(item.lastMessageAt))+'</time>':'<span class="conversation-readonly-label">읽기 전용</span>')+'</span><span class="conversation-preview">'+esc((item.lastMessageIsMine?"나: ":"")+item.lastMessage)+'</span></span></button>';}).join("")+'</div>';
-    el.innerHTML=myHeader("대화","my")+body;
+    else body='<div class="conversation-list">'+state.conversations.map(function(item){return '<button class="conversation-row" type="button" data-conversation-open="'+esc(item.connectionId)+'"><span class="conversation-row-copy"><span class="conversation-row-head"><span><strong class="conversation-row-name">'+esc(item.friendDisplayName)+'</strong>'+(item.unreadCount?'<span class="conversation-row-unread" aria-label="읽지 않은 메시지 '+esc(unreadLabel(item.unreadCount))+'개">'+esc(unreadLabel(item.unreadCount))+'</span>':'')+'</span>'+(item.canSend?'<time class="conversation-time">'+esc(conversationTime(item.lastMessageAt))+'</time>':'<span class="conversation-readonly-label">읽기 전용</span>')+'</span><span class="conversation-preview">'+esc((item.lastMessageIsMine?"나: ":"")+item.lastMessage)+'</span></span></button>';}).join("")+'</div>';
+    el.innerHTML=myHeader("대화",state.inboxReturnView,true)+body;
   }
   function renderConversation(){
     var el=document.getElementById("view-conversation");if(!el)return;
@@ -3461,14 +3671,14 @@
     if(state.conversationMessagesStatus==="loading")messages='<p class="conversation-empty">대화를 불러오고 있어요.</p>';
     else if(state.conversationMessagesStatus==="error")messages='<p class="conversation-error">'+esc(state.conversationError||"이 대화를 이용할 수 없어요.")+'</p><button class="btn btn-outline" type="button" data-conversation-retry>다시 시도</button>';
     else if(!state.conversationMessages.length)messages='<p class="conversation-empty">아직 대화가 없어요.<br>책 이야기를 건네보세요.</p>';
-    else messages=(state.conversationHasMore?'<button class="btn btn-outline conversation-older" type="button" data-conversation-older'+(state.conversationLoadingOlder?' disabled':'')+'>'+(state.conversationLoadingOlder?'불러오는 중':'이전 메시지 보기')+'</button>':'')+state.conversationMessages.map(function(item){return '<div class="conversation-message'+(item.senderIsMe?' mine':'')+'" data-message-id="'+esc(item.id)+'"><div class="conversation-bubble">'+esc(item.body)+'</div><div class="conversation-message-meta"><time class="conversation-time">'+esc(conversationTime(item.createdAt))+'</time>'+(item.senderIsMe?'':'<button class="conversation-message-report" type="button" data-conversation-report="'+esc(item.id)+'">신고</button>')+'</div></div>';}).join("");
+    else messages=(state.conversationHasMore?'<button class="btn btn-outline conversation-older" type="button" data-conversation-older'+(state.conversationLoadingOlder?' disabled':'')+'>'+(state.conversationLoadingOlder?'불러오는 중':'이전 메시지 보기')+'</button>':'')+state.conversationMessages.map(function(item){var received=!item.senderIsMe;return '<div class="conversation-message'+(item.senderIsMe?' mine':' received')+'" data-message-id="'+esc(item.id)+'"><div class="conversation-bubble"'+(received?' data-message-report-target tabindex="0" role="button" aria-haspopup="menu" aria-label="받은 메시지. 길게 눌러 신고 메뉴 열기"':'')+'>'+esc(item.body)+'</div><div class="conversation-message-meta"><time class="conversation-time">'+esc(conversationTime(item.createdAt))+'</time></div></div>';}).join("");
     var screen=el.querySelector(".conversation-screen");
     if(!screen||screen.getAttribute("data-conversation-id")!==String(state.selectedConversationId||"")){
       el.innerHTML='<div class="conversation-screen" data-conversation-id="'+esc(state.selectedConversationId||"")+'"><div data-conversation-header></div><div class="conversation-messages" aria-live="polite"></div><div data-conversation-feedback></div><div data-conversation-composer></div></div>';
       screen=el.querySelector(".conversation-screen");
     }
     if(!screen)return;
-    screen.querySelector("[data-conversation-header]").innerHTML=myHeader(name,"conversations");
+    screen.querySelector("[data-conversation-header]").innerHTML=myHeader(name,state.conversationReturnView,true,'<button class="conversation-more" type="button" data-conversation-more aria-label="대화 메뉴" aria-haspopup="dialog">•••</button>');
     screen.querySelector(".conversation-messages").innerHTML=messages;
     screen.querySelector("[data-conversation-feedback]").innerHTML=state.conversationError&&state.conversationMessagesStatus!=="error"?'<p class="conversation-error">'+esc(state.conversationError)+'</p>':'';
     var composerHost=screen.querySelector("[data-conversation-composer]");
@@ -3490,9 +3700,43 @@
     }
   }
   function openConversationMessageReport(messageId){
+    closeConversationMessageMenu();
     var message=state.conversationMessages.find(function(item){return item.id===messageId&&!item.senderIsMe;});
     if(!message||!state.selectedConversationId)return;
     openModal('<div class="modal"><h2>메시지 신고</h2><p>이 메시지를 운영 검토 대상으로 신고할까요?</p><p class="my-form-hint">신고한 메시지 본문, 작성 시각과 신고 사유가 증거로 저장되며 접수 후 최대 90일 보관돼요. 상대방에게는 알리지 않아요.</p><div class="field"><label for="conversationReportCategory">이유</label><select id="conversationReportCategory"><option value="spam">스팸</option><option value="harassment">괴롭힘</option><option value="inappropriate_content">부적절한 콘텐츠</option><option value="other">기타</option></select></div><div class="field"><label for="conversationReportDetail">추가 설명 (선택)</label><textarea id="conversationReportDetail" maxlength="500"></textarea></div><div class="modal-error" id="conversationReportError" hidden></div><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>취소</button><button class="btn btn-dark" type="button" data-conversation-report-submit="'+esc(messageId)+'">신고</button></div></div>');
+  }
+
+  function closeConversationMessageMenu(){
+    clearTimeout(messageLongPressTimer);messageLongPressTimer=null;messageLongPressStart=null;
+    var menu=document.getElementById("conversationMessageMenu");if(menu){if(typeof menu.remove==="function")menu.remove();else if(menu.parentNode)menu.parentNode.removeChild(menu);}
+  }
+  function openConversationMessageMenu(messageId,clientX,clientY){
+    var message=state.conversationMessages.find(function(item){return item.id===messageId&&!item.senderIsMe;});
+    if(!message||state.view!=="conversation")return;
+    closeConversationMessageMenu();
+    var menu=document.createElement("div");menu.id="conversationMessageMenu";menu.className="conversation-message-menu";menu.setAttribute("role","menu");menu.innerHTML='<button type="button" role="menuitem" data-message-menu-report="'+esc(messageId)+'">신고하기</button>';
+    document.body.appendChild(menu);
+    var rect=menu.getBoundingClientRect(),pad=10;
+    menu.style.left=Math.round(Math.min(Math.max(clientX,pad),window.innerWidth-rect.width-pad))+"px";
+    menu.style.top=Math.round(Math.min(Math.max(clientY,pad),window.innerHeight-rect.height-pad))+"px";
+    messageLongPressOpenedAt=Date.now();menu.querySelector("button").focus({preventScroll:true});
+  }
+  function renderConversationActions(connectionId,friend,error){
+    openModal('<div class="modal"><h2>대화 메뉴</h2>'+(error?'<p class="modal-error">'+esc(error)+'</p>':'<p class="modal-error" id="socialActionError" hidden></p>')+'<div class="modal-actions" style="flex-direction:column">'+(friend?'<button class="btn btn-outline" type="button" data-conversation-profile="'+esc(connectionId)+'">친구 프로필 보기</button><button class="btn btn-outline" type="button" data-conversation-block="'+esc(connectionId)+'">사용자 차단</button>':error?'':'<p class="my-form-hint">친구 연결이 종료되어 지난 대화만 볼 수 있어요.</p>')+'<button class="btn btn-dark" type="button" data-closemodal>닫기</button></div></div>');
+  }
+  function openConversationActions(){
+    var connectionId=state.selectedConversationId,userId=activeAuthUserId;
+    if(!connectionId||!coReadingRepository)return;
+    openModal('<div class="modal"><h2>대화 메뉴</h2><p class="my-form-hint">친구 상태를 확인하고 있어요.</p></div>');
+    coReadingRepository.getConnections().then(function(connections){
+      if(userId!==activeAuthUserId||connectionId!==state.selectedConversationId||state.view!=="conversation")return;
+      state.coReadingConnections=connections;
+      if(friendVisit&&friendVisitEnabled())friendVisit.setConnections(connections);
+      var friend=connections.find(function(item){return item.connectionId===connectionId;})||null;
+      renderConversationActions(connectionId,friend,"");
+    }).catch(function(){
+      if(userId===activeAuthUserId&&connectionId===state.selectedConversationId&&state.view==="conversation")renderConversationActions(connectionId,null,"친구 상태를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.");
+    });
   }
 
   function renderFeedback(){
@@ -3517,7 +3761,7 @@
       '<div class="data-guide">' +
         '<section><h3>북토끼가 저장하는 정보</h3><p>로그인 식별 정보, 직접 설정한 닉네임, 등록한 책과 읽은 페이지 기록, 북로그, 완독 상태와 소감, 친구와 주고받은 대화, 서비스 이용 중 남긴 의견을 저장할 수 있어요.</p></section>' +
         '<section><h3>왜 사용하는지</h3><p>기기에서 읽던 책과 기록을 이어서 보여주고, 독서 캘린더와 북로그를 구성하며, Public Alpha를 개선하기 위해 사용해요.</p></section>' +
-        '<section><h3>클라우드에 저장되는 정보</h3><ul><li>Supabase Auth의 사용자 UUID와 Kakao 로그인 과정에서 Kakao가 전달한 계정 정보(metadata)</li><li>MY에서 직접 설정한 소셜 프로필 닉네임과 한줄 소개: Kakao 계정 정보와 분리해 저장돼요</li><li>책 정보, 페이지 기록, 북로그, 완독 상태와 소감</li><li>친구와 주고받은 대화 내용과 작성 시각</li><li>책 추가·독서 기록 저장 여부와 시각 등 Minimal Analytics</li><li>의견 보내기로 직접 작성한 내용과 접수 시각</li></ul></section>' +
+        '<section><h3>클라우드에 저장되는 정보</h3><ul><li>Supabase Auth의 사용자 UUID와 Kakao 로그인 과정에서 Kakao가 전달한 계정 정보(metadata)</li><li>MY에서 직접 설정한 소셜 프로필 닉네임과 한줄 소개: Kakao 계정 정보와 분리해 저장돼요</li><li>책 정보, 페이지 기록, 북로그, 완독 상태와 소감</li><li>친구와 주고받은 대화 내용과 작성 시각, 메시지 수신·앱 내부 알림 설정, 대화별 마지막 읽음 위치</li><li>책 추가·독서 기록 저장 여부와 시각 등 Minimal Analytics</li><li>의견 보내기로 직접 작성한 내용과 접수 시각</li></ul></section>' +
         '<section><h3>현재 기기에 저장되는 정보</h3><p>IndexedDB에는 책과 독서 기록, 북로그, 직접 올린 표지 이미지가 남을 수 있어요. localStorage에는 로그인 세션, Local Owner 정보와 안전한 이전·복원을 위한 진행 정보가 저장될 수 있어요.</p></section>' +
         '<section><h3>Minimal Analytics</h3><p>책 추가와 독서 기록 저장 같은 최소 행동을 사용자 UUID와 연결해 기록해요. 서비스 개선과 오류 확인을 위해 최초 유입 경로, 로그인 성공·실패 같은 최소 이용 상태, 친구 초대·연결 과정의 최소 상태도 기록할 수 있어요. 익명 통계가 아니며, 책 제목·검색어·실제 페이지 숫자·북로그 본문은 Analytics event에 넣지 않아요.</p></section>' +
         '<section><h3>친구 토끼 방문</h3><p>친구와 둘 다 허용한 경우에만 북토끼를 사용하는 동안 마지막으로 확인된 시각 하나를 잠시 저장해요. 이전 기록은 남기지 않고 몇 분 뒤 효력을 잃어요. 친구에게는 시각이 아니라 토끼가 놀러 왔는지만 전달돼요. 서비스 개선을 위해 두 사람의 사용 시간이 겹쳤는지와 친구 토끼가 화면에 보였는지만 30분 단위로 기록해요.</p></section>' +
@@ -4217,9 +4461,43 @@
   function openReport(connectionId){
     openModal('<div class="modal"><h2>사용자 신고</h2><div class="field"><label for="socialReportCategory">이유</label><select id="socialReportCategory"><option value="spam">스팸</option><option value="harassment">괴롭힘</option><option value="inappropriate_content">부적절한 콘텐츠</option><option value="other">기타</option></select></div><div class="field"><label for="socialReportDetail">추가 설명 (선택)</label><textarea id="socialReportDetail" maxlength="500"></textarea></div><div class="modal-error" id="socialReportError" hidden></div><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>취소</button><button class="btn btn-dark" type="button" data-social-report-submit="'+esc(connectionId)+'">신고</button></div></div>');
   }
+  document.addEventListener("pointerdown",function(e){
+    var target=e.target.closest&&e.target.closest("[data-message-report-target]");
+    if(!target||state.view!=="conversation"){if(!e.target.closest||!e.target.closest("#conversationMessageMenu"))closeConversationMessageMenu();return;}
+    var row=target.closest("[data-message-id]");if(!row)return;
+    clearTimeout(messageLongPressTimer);messageLongPressStart={x:e.clientX,y:e.clientY,id:row.getAttribute("data-message-id")};
+    messageLongPressTimer=setTimeout(function(){var start=messageLongPressStart;if(!start)return;var selection=window.getSelection&&window.getSelection();if(selection)selection.removeAllRanges();openConversationMessageMenu(start.id,start.x,start.y);},600);
+  });
+  document.addEventListener("pointermove",function(e){
+    if(!messageLongPressStart)return;
+    if(Math.abs(e.clientX-messageLongPressStart.x)>8||Math.abs(e.clientY-messageLongPressStart.y)>8)closeConversationMessageMenu();
+  },{passive:true});
+  document.addEventListener("pointerup",function(){clearTimeout(messageLongPressTimer);messageLongPressTimer=null;messageLongPressStart=null;},{passive:true});
+  document.addEventListener("pointercancel",closeConversationMessageMenu,{passive:true});
+  document.addEventListener("contextmenu",function(e){
+    var target=e.target.closest&&e.target.closest("[data-message-report-target]");if(!target)return;
+    var row=target.closest("[data-message-id]");if(!row)return;e.preventDefault();openConversationMessageMenu(row.getAttribute("data-message-id"),e.clientX,e.clientY);
+  });
+  document.addEventListener("keydown",function(e){
+    var target=e.target.closest&&e.target.closest("[data-message-report-target]");
+    if(target&&(e.key==="Enter"||e.key===" "||(e.shiftKey&&e.key==="F10"))){e.preventDefault();var row=target.closest("[data-message-id]"),rect=target.getBoundingClientRect();openConversationMessageMenu(row.getAttribute("data-message-id"),rect.left,rect.bottom+4);}
+    else if(e.key==="Escape")closeConversationMessageMenu();
+  });
   document.body.addEventListener("click", function(e){
+    var reportMenu=e.target.closest("[data-message-menu-report]");
+    if(reportMenu){var reportMessageId=reportMenu.getAttribute("data-message-menu-report");closeConversationMessageMenu();openConversationMessageReport(reportMessageId);return;}
+    if(typeof messageLongPressOpenedAt!=="undefined"&&Date.now()-messageLongPressOpenedAt<500&&e.target.closest("[data-message-report-target]")){e.preventDefault();return;}
+    if(!e.target.closest("#conversationMessageMenu")&&typeof closeConversationMessageMenu==="function")closeConversationMessageMenu();
     var ownerRabbit=e.target.closest("[data-owner-rabbit-tap]");
     if(ownerRabbit){tapOwnerRabbit();return;}
+    var visitorMessage=e.target.closest("[data-visitor-message]");
+    if(visitorMessage){openVisitorConversation(visitorMessage.getAttribute("data-visitor-message"));return;}
+    var visitorRabbit=e.target.closest("[data-visitor-rabbit]");
+    if(visitorRabbit){openVisitorBubble(visitorRabbit.getAttribute("data-visitor-rabbit"));return;}
+    if(state.visitorBubbleConnectionId&&!e.target.closest("[data-visitor-bubble]")){closeVisitorBubble();if(state.view==="home")renderHome();}
+    t=e.target.closest("[data-message-banner-close]");if(t){dismissMessageBanner();return;}
+    t=e.target.closest("[data-message-banner-open]");if(t){var banner=document.getElementById("messageBanner"),bannerConnection=banner&&banner.dataset.connectionId;dismissMessageBanner();if(bannerConnection)openConversation(bannerConnection);return;}
+    t=e.target.closest("[data-message-setting]");if(t){updateMessagePreference(t.getAttribute("data-message-setting"));return;}
     t = e.target.closest("[data-closemodal]");
     if(t){closeModal();return;}
     t = e.target.closest("[data-opencapture]");
@@ -4244,6 +4522,8 @@
       renderAll();
       return;
     }
+    t = e.target.closest("[data-app-back]");
+    if(t){appBack(t.getAttribute("data-app-back"));return;}
     t = e.target.closest("[data-nav]");
     if (t){ goTo(t.getAttribute("data-nav")); return; }
 
@@ -4251,13 +4531,17 @@
     if (t){ modalEditNickname(); return; }
 
     t=e.target.closest("[data-friend-profile]");
-    if(t){state.selectedFriendConnectionId=t.getAttribute("data-friend-profile");emitSocialHook("friend_profile_viewed");goTo("friend-profile");return;}
+    if(t){state.selectedFriendConnectionId=t.getAttribute("data-friend-profile");state.friendProfileReturnView="co-reading";emitSocialHook("friend_profile_viewed");goTo("friend-profile");return;}
     t=e.target.closest("[data-open-conversation], [data-conversation-open]");
     if(t){openConversation(t.getAttribute("data-open-conversation")||t.getAttribute("data-conversation-open"));return;}
     t=e.target.closest("[data-conversations-retry]");if(t){loadConversations();return;}
     t=e.target.closest("[data-conversation-retry]");if(t){loadConversationMessages(state.selectedConversationId);return;}
     t=e.target.closest("[data-conversation-older]");if(t){loadOlderConversationMessages();return;}
     t=e.target.closest("[data-conversation-report]");if(t){openConversationMessageReport(t.getAttribute("data-conversation-report"));return;}
+    t=e.target.closest("[data-conversation-more]");if(t){openConversationActions();return;}
+    t=e.target.closest("[data-conversation-profile]");if(t){var profileConnection=t.getAttribute("data-conversation-profile");closeModal();state.selectedFriendConnectionId=profileConnection;state.friendProfileReturnView="conversation";emitSocialHook("friend_profile_viewed");goTo("friend-profile");return;}
+    t=e.target.closest("[data-conversation-block]");
+    if(t){var conversationBlockId=t.getAttribute("data-conversation-block"),conversationBlockUser=activeAuthUserId;if(state.coReadingBusyConnections[conversationBlockId]||!coReadingRepository||!window.confirm("이 사용자를 차단할까요? 친구 연결과 토끼 방문이 함께 해제됩니다."))return;state.coReadingBusyConnections[conversationBlockId]=true;t.disabled=true;coReadingRepository.blockConnection(conversationBlockId).then(function(){if(conversationBlockUser!==activeAuthUserId)return;emitSocialHook("user_blocked");closeModal();state.coReadingConnections=state.coReadingConnections.filter(function(item){return item.connectionId!==conversationBlockId;});state.selectedFriendConnectionId=null;state.conversationCanSend=false;state.conversations=state.conversations.map(function(item){return item.connectionId===conversationBlockId?Object.assign({},item,{canSend:false}):item;});if(friendVisit&&friendVisitEnabled())friendVisit.setConnections(state.coReadingConnections);if(state.view==="conversation")renderConversationUpdate();}).catch(function(error){if(conversationBlockUser!==activeAuthUserId)return;var out=document.getElementById("socialActionError");if(out){out.textContent=error.message||"사용자를 차단하지 못했어요.";out.hidden=false;t.disabled=false;}}).finally(function(){if(conversationBlockUser===activeAuthUserId)delete state.coReadingBusyConnections[conversationBlockId];});return;}
     t=e.target.closest("[data-conversation-report-submit]");
     if(t){var messageReportId=t.getAttribute("data-conversation-report-submit"),messageReportConnection=state.selectedConversationId,messageReportUser=activeAuthUserId,messageReportCategory=document.getElementById("conversationReportCategory"),messageReportDetail=document.getElementById("conversationReportDetail"),messageReportKey="message-report:"+messageReportId;if(state.coReadingBusyConnections[messageReportKey]||!conversationRepository)return;state.coReadingBusyConnections[messageReportKey]=true;t.disabled=true;conversationRepository.report(messageReportConnection,messageReportId,messageReportCategory.value,messageReportDetail.value).then(function(){if(messageReportUser!==activeAuthUserId)return;openModal('<div class="modal"><h2>신고했어요.</h2><p>접수된 메시지는 운영 검토에만 사용돼요.</p><div class="modal-actions"><button class="btn btn-dark" type="button" data-closemodal>확인</button></div></div>');}).catch(function(error){if(messageReportUser!==activeAuthUserId)return;var out=document.getElementById("conversationReportError");if(out){out.textContent=error&&error.code==="PT409"?"이미 신고한 메시지예요.":"신고하지 못했어요. 잠시 후 다시 시도해 주세요.";out.hidden=false;t.disabled=false;}}).finally(function(){if(messageReportUser===activeAuthUserId)delete state.coReadingBusyConnections[messageReportKey];});return;}
     t=e.target.closest("[data-friend-more]");
@@ -4270,7 +4554,7 @@
     t=e.target.closest("[data-social-report-submit]");
     if(t){var reportId=t.getAttribute("data-social-report-submit"),cat=document.getElementById("socialReportCategory"),detail=document.getElementById("socialReportDetail"),reportUser=activeAuthUserId;if(state.coReadingBusyConnections["report:"+reportId])return;state.coReadingBusyConnections["report:"+reportId]=true;t.disabled=true;coReadingRepository.reportConnection(reportId,cat.value,detail.value).then(function(){if(reportUser!==activeAuthUserId)return;emitSocialHook("user_reported");openModal('<div class="modal"><h2>신고했어요.</h2><p>이 사용자를 차단할까요?</p><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>닫기</button><button class="btn btn-dark" type="button" data-social-block="'+esc(reportId)+'">차단</button></div></div>');}).catch(function(error){if(reportUser!==activeAuthUserId)return;var out=document.getElementById("socialReportError");if(out){out.textContent=error.message||"신고하지 못했어요.";out.hidden=false;t.disabled=false;}}).finally(function(){if(reportUser===activeAuthUserId)delete state.coReadingBusyConnections["report:"+reportId];});return;}
     t=e.target.closest("[data-social-unblock]");
-    if(t){var unblockId=t.getAttribute("data-social-unblock"),unblockUser=activeAuthUserId;if(state.coReadingBusyConnections["unblock:"+unblockId])return;state.coReadingBusyConnections["unblock:"+unblockId]=true;t.disabled=true;coReadingRepository.unblockUser(unblockId).then(function(){if(unblockUser!==activeAuthUserId)return;state.blockedUsers=state.blockedUsers.filter(function(item){return item.userId!==unblockId;});state.coReadingMessage="차단을 해제했어요. 친구 관계는 복구되지 않습니다.";renderAll();}).catch(function(error){if(unblockUser!==activeAuthUserId)return;state.coReadingMessage=error.message||"차단을 해제하지 못했어요.";t.disabled=false;renderAll();}).finally(function(){if(unblockUser===activeAuthUserId)delete state.coReadingBusyConnections["unblock:"+unblockId];});return;}
+    if(t){var unblockId=t.getAttribute("data-social-unblock"),unblockUser=activeAuthUserId;if(state.coReadingBusyConnections["unblock:"+unblockId])return;state.coReadingBusyConnections["unblock:"+unblockId]=true;t.disabled=true;coReadingRepository.unblockUser(unblockId).then(function(){if(unblockUser!==activeAuthUserId)return;state.blockedUsers=state.blockedUsers.filter(function(item){return item.userId!==unblockId;});state.coReadingMessage="차단을 해제했어요.";clearTimeout(blockedUsersNoticeTimer);blockedUsersNoticeTimer=setTimeout(function(){if(unblockUser!==activeAuthUserId||state.coReadingMessage!=="차단을 해제했어요.")return;state.coReadingMessage="";blockedUsersNoticeTimer=null;if(state.view==="blocked-users")renderAll();},3000);renderAll();}).catch(function(error){if(unblockUser!==activeAuthUserId)return;state.coReadingMessage=error.message||"차단을 해제하지 못했어요.";t.disabled=false;renderAll();}).finally(function(){if(unblockUser===activeAuthUserId)delete state.coReadingBusyConnections["unblock:"+unblockId];});return;}
     t=e.target.closest("[data-blocked-retry]");if(t){loadBlockedUsers();return;}
 
     t = e.target.closest("[data-my-booklogs]");
@@ -4509,12 +4793,18 @@
       conversationRepository.send(connectionId,attempt.body,attempt.clientId).then(function(message){
         if(conversationUser!==activeAuthUserId||connectionId!==state.selectedConversationId)return;
         state.conversationMessages=mergeConversationMessages(state.conversationMessages,[message]);state.conversationMessageDraft="";state.conversationSendAttempt=null;state.conversationMessagesStatus="ready";
-        return conversationRepository.list().then(function(list){if(conversationUser===activeAuthUserId)state.conversations=list;});
+        return conversationRepository.list().then(function(list){if(conversationUser===activeAuthUserId){state.conversations=list;state.inboxUnread=list.reduce(function(total,item){return total+(item.unreadCount||0);},0);}});
       }).catch(function(error){
         if(conversationUser!==activeAuthUserId||connectionId!==state.selectedConversationId)return;
         if(error&&error.code==="42501"){
-          state.conversationCanSend=false;state.conversationSendAttempt=null;
-          state.conversations=state.conversations.map(function(item){return item.connectionId===connectionId?Object.assign({},item,{canSend:false}):item;});
+          state.conversationSendAttempt=null;
+          return conversationRepository.messages(connectionId).then(function(messages){
+            if(conversationUser!==activeAuthUserId||connectionId!==state.selectedConversationId)return;
+            var listed=state.conversations.find(function(item){return item.connectionId===connectionId;});
+            state.conversationCanSend=window.BooktokkiConversationRepository.resolveCanSend(messages,listed,state.conversationCanSend);
+            state.conversations=state.conversations.map(function(item){return item.connectionId===connectionId?Object.assign({},item,{canSend:state.conversationCanSend}):item;});
+            state.conversationError=conversationErrorMessage(error);
+          }).catch(function(){state.conversationError=conversationErrorMessage(error);});
         }
         state.conversationError=conversationErrorMessage(error);
       }).finally(function(){if(conversationUser===activeAuthUserId){state.conversationSending=false;if(state.view==="conversation")renderConversationUpdate({scrollLatest:!state.conversationError});}});
@@ -4752,8 +5042,9 @@
 
   document.body.addEventListener("keydown",function(e){
     var ownerRabbit=e.target.closest&&e.target.closest("[data-owner-rabbit-tap]");
-    if(!ownerRabbit||(e.key!=="Enter"&&e.key!==" "))return;
-    e.preventDefault();tapOwnerRabbit();
+    var visitorRabbit=e.target.closest&&e.target.closest("[data-visitor-rabbit]");
+    if((e.key!=="Enter"&&e.key!==" ")||(!ownerRabbit&&!visitorRabbit))return;
+    e.preventDefault();if(ownerRabbit)tapOwnerRabbit();else openVisitorBubble(visitorRabbit.getAttribute("data-visitor-rabbit"));
   });
 
   function showReadyApp(userId){
@@ -4770,6 +5061,7 @@
     syncHomeAmbientActors();
     renderAll();
     loadSocialProfile();
+    startMessageInboxPolling();
     if(state.view==="home")enterHomeCharacterMoment();
   }
 
@@ -4886,6 +5178,12 @@
 
   function showAuthenticated(session){
     cleanAuthRedirectUrl();
+    var previousUserId=activeAuthUserId;
+    if(previousUserId&&session&&session.user&&previousUserId!==session.user.id){
+      stopMessageInboxPolling();messageInboxPolling=null;conversationLoadEpoch+=1;dismissMessageBanner();closeVisitorBubble();
+      state.inboxUnread=0;state.inboxLatest=null;state.messagePreferences={receiveMessages:true,inAppNotifications:true,previewMessage:false};state.messagePreferencesStatus="idle";
+      socialHistoryReady=false;
+    }
     activeAuthUserId = session && session.user ? session.user.id : null;
     activeAuthUser = session && session.user ? session.user : null;
     ensureAccountRepositories();
@@ -4911,6 +5209,8 @@
     if(homeAmbient)homeAmbient.stop();
     stopConversationPolling();
     conversationPolling=null;
+    stopMessageInboxPolling();
+    messageInboxPolling=null;
     resetP4Session(null);
     coReadingLoadEpoch+=1;
     conversationLoadEpoch+=1;
@@ -4937,17 +5237,26 @@
     state.coReadingInviteUrl = "";
     state.coReadingPreviewName = "";
     state.coReadingMessage = "";
+    clearTimeout(blockedUsersNoticeTimer);
+    blockedUsersNoticeTimer = null;
     state.coReadingBusyCreate = false;
     state.coReadingBusyAccept = false;
     state.coReadingBusyConnections = {};
     state.socialProfile = {displayName:"",intro:""};
     state.socialProfileStatus = "loading";
     state.selectedFriendConnectionId = null;
+    state.friendProfileReturnView = "co-reading";
     state.blockedUsers = [];
     state.blockedUsersStatus = "idle";
     state.conversations = [];
     state.conversationsStatus = "idle";
+    state.messagePreferences = {receiveMessages:true,inAppNotifications:true,previewMessage:false};
+    state.messagePreferencesStatus = "idle";
+    state.inboxUnread = 0;
+    state.inboxLatest = null;
     state.selectedConversationId = null;
+    state.inboxReturnView = "home";
+    state.conversationReturnView = "conversations";
     state.conversationMessages = [];
     state.conversationMessagesStatus = "idle";
     state.conversationCanSend = true;
@@ -4957,6 +5266,8 @@
     state.conversationSendAttempt = null;
     state.conversationHasMore = false;
     state.conversationLoadingOlder = false;
+    socialHistoryReady = false;
+    closeVisitorBubble();
     state.friendVisit = {userId:null,visitors:[]};
     state.homeAmbient = {actors:[]};
     if (db) db.close();

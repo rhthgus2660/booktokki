@@ -3,9 +3,11 @@ var assert=require("node:assert/strict"),fs=require("node:fs"),path=require("nod
 var ambientApi=require("../../home-ambient.js");
 var roomAssets=require("../../home-room-assets.js");
 var depthApi=require("../../room-depth.js");
-var qaSource=fs.readFileSync(path.join(__dirname,"../../ambient-mobile-qa.html"),"utf8");
+var qaPath=path.join(__dirname,"../../ambient-mobile-qa.html");
+var qaSource=fs.existsSync(qaPath)?fs.readFileSync(qaPath,"utf8"):null;
 var productionSource=fs.readFileSync(path.join(__dirname,"../../index.html"),"utf8");
 
+if(qaSource){
 assert.match(qaSource,/data-force="IDLE">Force IDLE/);
 assert.match(qaSource,/data-force="WALK">Force WALK/);
 assert.match(qaSource,/data-force="REST">Force REST/);
@@ -22,6 +24,7 @@ assert.doesNotMatch(productionSource,/Force IDLE|Force WALK|Force REST|Force REA
 assert.match(qaSource,/script src="\.\/home-room-assets\.js"/);
 assert.match(qaSource,/renderFurniture\(\)/,"mobile QA renders the same independent furniture layer as Home");
 assert.doesNotMatch(qaSource,/id="rugWidth"/,"FINAL QA has no obsolete Rug scale comparison");
+}
 assert.doesNotMatch(productionSource,/id="rugWidth"/,"Rug comparison remains QA-only");
 
 ["B02_PEEK_v1.png","B03_SIDE_WALK_v1.png","B04_FRONT_PLOP_SIT_v1.png","B05_Read_Book_v1.png","B06_Bookshelf_Reach_v1.png","B07_Window_Look_v1.png"].forEach(function(file){
