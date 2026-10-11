@@ -92,9 +92,28 @@ var flow = require("../../reading-record-flow.js");
   assert.match(html, /id=\"logPageSave\">기록하기<\/button>/);
   assert.match(html, /addNote\(composeBookId, composeText, null, null, \{ useCommittedPage:true \}\)/);
   assert.match(html, /var meta = \(n\.page != null \? 'p\.' \+ n\.page \+ ' · ' : ''\) \+ fmtMonthDay\(n\.createdAt\)/);
-  assert.match(html, /E: \{ img:"assets\/bunny-done\.png", text:"인간이 끈질기네\.\.<br>방해 실패\." \}/);
-  assert.match(html, /var COMPLETION_REACTIONS = \["인간이 끈질기네\.\.<br>방해 실패\."\]/);
-  assert.match(html, /TODO\(brand\): bunny-done\.png/);
+  assert.match(html, /E: \{ img:"assets\/bunny-done\.png", copyId:"reading_E", variants:2 \}/);
+  assert.match(html, /reactionText\("manual_completion"/);
+  assert.doesNotMatch(html, /방해 실패|독서 의지 말살|증거 인멸|독서 안 함/);
+  assert.match(html, /inputmode="numeric"[^>]*data-pageinput=|data-pageinput="[^"]+" inputmode="numeric"/);
+  assert.match(html, /input\.matches\("\[data-pageinput\], #f-page, #capturePage"\)/,"all current-page inputs share the overwrite-on-focus contract");
+  assert.match(html, /document\.body\.addEventListener\("focusin"/,"dynamic page inputs use delegated focus handling");
+
+  var pageFocusSource=html.slice(html.indexOf("function isCurrentPageInput("),html.indexOf('document.body.addEventListener("input"',html.indexOf("function isCurrentPageInput(")));
+  var focusHandler;
+  new Function("document",pageFocusSource)(
+    {body:{addEventListener:function(type,handler){if(type==="focusin")focusHandler=handler;}}}
+  );
+  var selected=0,currentValue="37";
+  var currentPageInput={
+    value:currentValue,
+    matches:function(selector){return selector==="[data-pageinput], #f-page, #capturePage";},
+    select:function(){selected+=1;}
+  };
+  focusHandler({target:currentPageInput});
+  assert.equal(selected,1,"focus selects the complete existing page number for immediate overwrite");
+  assert.equal(currentPageInput.value,currentValue,"focus selection never changes the stored current page");
+  focusHandler({target:{matches:function(){return false;},select:function(){throw new Error("unrelated number input selected");}}});
 
   /* Execute the production addNote() body with the same serialized book
      queue used by the app. The page is resolved only when the note action

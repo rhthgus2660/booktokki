@@ -153,7 +153,7 @@ function logPageHarness(shouldFail){
   var logPage = new Function(
     "state", "queueCloudMutation", "getBooks", "buildPageLogPatch", "readingReaction", "todayStr", "uid",
     "cloudRepository", "activeAuthUserId", "localBookFromCloudRow", "commitLocalBook", "document",
-    "showReadingReaction", "queueFirstRecordFeedbackPrompt", "cloudSaveFailed", "continueReadingFlow",
+    "showReadingReaction", "queueFirstRecordFeedbackPrompt", "cloudSaveFailed", "continueReadingFlow", "window",
     logPageSource + "; return logPage;"
   )(
     state,
@@ -171,7 +171,8 @@ function logPageHarness(shouldFail){
     function(mode){ shown.push(mode); },
     function(){},
     function(){},
-    require("../../continue-reading.js").createFlow()
+    require("../../continue-reading.js").createFlow(),
+    {BooktokkiP4Character:require("../../p4-character.js")}
   );
   return { logPage:logPage, shown:shown };
 }
@@ -179,7 +180,7 @@ function logPageHarness(shouldFail){
 (async function(){
   var successful = logPageHarness(false);
   assert.equal(await successful.logPage("book", 20), true);
-  assert.deepEqual(successful.shown, ["B"]);
+  assert.deepEqual(successful.shown, [],"Reading B keeps saving but no longer auto-speaks");
 
   var failed = logPageHarness(true);
   assert.equal(await failed.logPage("book", 20), false);
@@ -193,12 +194,13 @@ function logPageHarness(shouldFail){
   var timerCallback = null;
   var element = { hidden:true, innerHTML:"", dataset:{}, classList:{ add:function(){}, remove:function(){} }, offsetWidth:1 };
   var reactionUi = new Function(
-    "document", "clearTimeout", "setTimeout",
+    "document", "clearTimeout", "setTimeout", "window",
     reactionUiSource + "; return { show:showReadingReaction };"
   )(
     { getElementById:function(){ return element; } },
     function(){},
-    function(callback, delay){ timerCallback = callback; timerDelay = delay; return 1; }
+    function(callback, delay){ timerCallback = callback; timerDelay = delay; return 1; },
+    {BooktokkiP4Character:require("../../p4-character.js")}
   );
   reactionUi.show("B", "seed");
   assert.equal(element.hidden, false);

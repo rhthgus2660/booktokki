@@ -14,7 +14,7 @@ function createLogPageHarness(options){
   var factory = new Function(
     "state", "queueCloudMutation", "getBooks", "buildPageLogPatch", "readingReaction", "todayStr", "uid",
     "cloudRepository", "activeAuthUserId", "localBookFromCloudRow", "commitLocalBook", "document",
-    "showReadingReaction", "queueFirstRecordFeedbackPrompt", "cloudSaveFailed", "continueReadingFlow",
+    "showReadingReaction", "queueFirstRecordFeedbackPrompt", "cloudSaveFailed", "continueReadingFlow", "window",
     source + "; return logPage;"
   );
   var logCreated = options.logCreated !== false;
@@ -46,7 +46,8 @@ function createLogPageHarness(options){
     function(){},
     function(userId){ promptCalls.push(userId); },
     function(){},
-    require("../../continue-reading.js").createFlow()
+    require("../../continue-reading.js").createFlow(),
+    {BooktokkiP4Character:require("../../p4-character.js")}
   );
   return { logPage:logPage, promptCalls:promptCalls, state:state };
 }
@@ -135,6 +136,9 @@ function createLogPageHarness(options){
   var prompt = createPromptHarness();
   assert.equal(prompt.api.queue("user-1"), true);
   prompt.runNext();
+  assert.equal(prompt.opened.length, 0, "the first-record prompt never interrupts Home or the reading flow");
+  prompt.state.view = "my";
+  prompt.runNext();
   assert.equal(prompt.opened.length, 1);
   assert.match(prompt.opened[0], /북토끼는 아직 자라는 중이에요 🐰/);
   assert.match(prompt.opened[0], /의견 보내기/);
@@ -144,6 +148,7 @@ function createLogPageHarness(options){
 
   prompt = createPromptHarness();
   prompt.rabbit.hidden = false;
+  prompt.state.view = "my";
   prompt.api.queue("user-1");
   prompt.runNext();
   assert.equal(prompt.opened.length, 0);
@@ -153,6 +158,7 @@ function createLogPageHarness(options){
 
   prompt = createPromptHarness();
   prompt.overlay.hidden = false;
+  prompt.state.view = "my";
   prompt.api.queue("user-1");
   prompt.runNext();
   assert.equal(prompt.opened.length, 0);
@@ -162,6 +168,7 @@ function createLogPageHarness(options){
 
   prompt = createPromptHarness();
   prompt.setTyping(true);
+  prompt.state.view = "my";
   prompt.api.queue("user-1");
   prompt.runNext();
   assert.equal(prompt.opened.length, 0);
@@ -171,6 +178,7 @@ function createLogPageHarness(options){
 
   prompt = createPromptHarness();
   prompt.queues.book = Promise.resolve();
+  prompt.state.view = "my";
   prompt.api.queue("user-1");
   prompt.runNext();
   assert.equal(prompt.opened.length, 0);
@@ -182,9 +190,12 @@ function createLogPageHarness(options){
   prompt.state.view = "stats";
   prompt.api.queue("user-1");
   prompt.runNext();
+  assert.equal(prompt.opened.length, 0, "the prompt also waits outside MY when queued from another screen");
+  prompt.state.view = "my";
+  prompt.runNext();
   prompt.buttons.feedbackPromptSend.onclick();
   assert.equal(prompt.state.view, "feedback");
-  assert.equal(prompt.state.feedbackFrom, "stats");
+  assert.equal(prompt.state.feedbackFrom, "my");
 
   var goToSource = html.slice(html.indexOf("function goTo("), html.indexOf("function openMyBooklogs("));
   var navigationState = { view:"my" };

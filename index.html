@@ -799,7 +799,7 @@
   #view-home .home-scene-visitor{ pointer-events:auto; cursor:pointer; }
   #view-home .home-scene-visitor:focus-visible{ outline:2px solid #fff8ea; outline-offset:3px; }
   #view-home .home-scene-overlay-root{ position:absolute; z-index:1; inset:0; overflow:hidden; pointer-events:none; }
-  #view-home .visitor-message-bubble{ box-sizing:border-box; position:absolute; width:144px; max-width:calc(100% - 20px); overflow:hidden; border:1px solid rgba(0,0,0,.12); border-radius:12px; background:#fff; color:#171717; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.10); pointer-events:auto; }
+  #view-home .visitor-message-bubble{ box-sizing:border-box; position:absolute; z-index:3; width:144px; max-width:calc(100% - 20px); overflow:hidden; border:1px solid rgba(0,0,0,.12); border-radius:12px; background:#fff; color:#171717; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.10); pointer-events:auto; }
   #view-home .visitor-message-bubble strong{ display:block; padding:9px 10px 7px; overflow:hidden; font-size:.68rem; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
   #view-home .visitor-message-bubble button{ width:100%; min-height:44px; padding:8px 10px; border:0; border-top:1px solid #e9e9e9; background:#fff; color:#171717; font:inherit; font-size:.68rem; font-weight:700; cursor:pointer; }
   #view-home .home-scene-rabbit img{
@@ -816,15 +816,16 @@
   #view-home .home-scene-chair-occlusion.right{ clip-path:polygon(64% 20%,100% 20%,100% 78%,64% 78%); }
   #view-home .home-scene-chair-occlusion.front{ clip-path:polygon(12% 62%,88% 62%,88% 78%,12% 78%); }
   #view-home .home-scene-owner{ width:66px; }
+  #view-home .home-scene-owner{ pointer-events:auto; cursor:pointer; }
   #view-home .home-scene-speech{
-    position:absolute; left:50%; bottom:calc(100% + 4px); min-width:96px; max-width:124px; transform:translateX(-50%);
-    padding:6px 7px; border:1px solid rgba(105,80,55,.25); border-radius:6px; background:rgba(255,253,248,.94);
-    color:#35302a; font-size:.59rem; font-weight:600; line-height:1.4; text-align:center;
+    box-sizing:border-box; position:absolute; z-index:2; width:152px; max-width:calc(100% - 20px);
+    border:1px solid rgba(105,80,55,.20); border-radius:11px; background:rgba(255,253,248,.96);
+    color:#35302a; font-size:.62rem; font-weight:600; line-height:1.42; text-align:center; pointer-events:auto;
+    box-shadow:0 2px 7px rgba(67,47,29,.10);
   }
-  #view-home .home-scene-speech::after{
-    content:""; position:absolute; left:50%; bottom:-5px; width:8px; height:8px; margin-left:-4px;
-    border-right:1px solid #ddd6ca; border-bottom:1px solid #ddd6ca; background:#fff; transform:rotate(45deg);
-  }
+  #view-home .home-scene-speech-copy{ padding:8px 9px; overflow-wrap:anywhere; word-break:keep-all; }
+  #view-home .home-scene-speech-action{ padding:5px 7px 7px; border-top:1px solid rgba(105,80,55,.14); }
+  #view-home .home-scene-speech button{ display:inline-flex; min-height:36px; padding:5px 9px; align-items:center; justify-content:center; border:1px solid rgba(105,80,55,.16); border-radius:999px; background:rgba(255,255,255,.72); color:#35302a; font:inherit; font-weight:700; cursor:pointer; }
   #view-home .home-scene-friend-name{
     max-width:72px; margin-top:1px; padding:1px 4px; overflow:hidden; border-radius:3px; background:rgba(255,250,241,.78); color:#584938; font-size:.56rem; text-overflow:ellipsis; white-space:nowrap;
   }
@@ -1458,6 +1459,7 @@
 <script src="./home-ambient.js"></script>
 <script src="./home-scene.js"></script>
 <script src="./p4-character.js"></script>
+<script src="./p6-repository.js"></script>
 <script src="./measurement-repository.js"></script>
 <script src="./share-card.js"></script>
 <script src="./capture-ocr.js"></script>
@@ -1576,6 +1578,9 @@
   var homeAmbient = null;
   var P4_SPEECH_MS = 4000;
   var p4Session = {userId:null,momentEvaluated:false,dailyShown:false,speech:null,speechTimer:null,tapBusyUntil:0,tapCount:0};
+  var p6Repository = null;
+  var p6Session = {userId:null,generation:0,homeEntry:0,claiming:false,lastCompletedBookId:null};
+  var p6SessionId = "p6-session:" + uid();
   var coReadingLoadEpoch = 0;
   var conversationLoadEpoch = 0;
   var conversationPolling = null;
@@ -1599,7 +1604,7 @@
   var conflictResolutionLocked = false;
   /* Set after the Worker is deployed. This URL is public configuration;
      the Kakao key remains a Worker secret and is never shipped here. */
-  var BOOK_SEARCH_ENDPOINT = "https://booktokki-search.rhthgus2660.workers.dev/books";
+  var BOOK_SEARCH_ENDPOINT = window.BOOKTOKKI_AUTH_CONFIG && window.BOOKTOKKI_AUTH_CONFIG.bookSearchEndpoint || "https://booktokki-search.rhthgus2660.workers.dev/books";
   var OCR_ENDPOINT = BOOK_SEARCH_ENDPOINT.replace(/\/books$/, "/ocr");
   var CAPTURE_STATUS = "coming_soon";
   var BOOKTOKKI_GUIDE_URL = "https://desert-sandwich-d38.notion.site/3e882ff9dce98105ab80f0dc599218a4?pvs=73";
@@ -2090,6 +2095,8 @@
       var hadPageRecords = getBooks().some(function(book){ return (book.pageLogs || []).length > 0; });
       var shouldPromptForFeedback = false;
       var savedAnalytics = null;
+      var p6PositiveSaved = false;
+      var p6Completed = false;
       var continueRootId = continueReadingFlow.context(bookId);
       var patch = buildPageLogPatch(b, page);
       var reaction = readingReaction(b, patch.currentPage);
@@ -2098,15 +2105,20 @@
       var operation = { logId:log ? log.id : uid(), newPage:patch.currentPage, date:todayStr(), at:log ? log.at : patch.updatedAt };
       return cloudRepository.recordPage(activeAuthUserId, bookId, operation).then(function(result){
         savedAnalytics = {pageDelta:result.logCreated && result.log ? result.log.delta : 0, continueReadingId:continueRootId};
+        p6PositiveSaved = savedAnalytics.pageDelta > 0;
         shouldPromptForFeedback = !hadPageRecords && result.logCreated === true;
         var candidate = localBookFromCloudRow(Object.assign({}, b, patch, { pageLogs:result.logs }), result.book);
+        p6Completed = b.status !== "done" && candidate.status === "done";
+        if(reaction==="E")reactionSeed="completion|"+bookId+"|"+(candidate.completedAt||patch.completedAt||"");
         if (result.logCreated && !log){ throw new Error("Unexpected Cloud page log"); }
         return commitLocalBook(candidate);
       }).then(function(){
+        if(p6PositiveSaved&&typeof recordP6Event==="function")recordP6Event("positive_page_saved",null,null);
+        if(p6Completed&&typeof p6Session!=="undefined"&&p6Session.userId===activeAuthUserId)p6Session.lastCompletedBookId=bookId;
         if (options.onSaved) options.onSaved(savedAnalytics);
         var pageInput = document.querySelector('[data-pageinput="' + bookId + '"]');
         if (pageInput){ pageInput.value = patch.currentPage; pageInput.defaultValue = patch.currentPage; }
-        if (reaction && !options.suppressReaction) showReadingReaction(reaction, reactionSeed);
+        if (reaction && !options.suppressReaction && window.BooktokkiP4Character.readingExposure(reaction,reactionSeed)) showReadingReaction(reaction, reactionSeed);
         if (shouldPromptForFeedback) queueFirstRecordFeedbackPrompt(activeAuthUserId);
         return true;
       });
@@ -2145,20 +2157,12 @@
 
   var rabbitEventTimer = null;
   var READING_REACTIONS = {
-    A: { img:"assets/bunny-sleep.png", text:"인간이 또 읽음.<br>방해 실패." },
-    B: [
-      { img:"assets/bunny-sleep.png", text:"다시 나타남.<br>독서 의지 말살 실패." },
-      { img:"assets/bunny-sleep.png", text:"또 왔네.<br>이거 안 버렸네." },
-      { img:"assets/bunny-sleep.png", text:"인간 복귀.<br>계획에 없었음." }
-    ],
-    C: { img:"assets/bunny-kick.png", text:"인간 또 딴 책 폄.<br>또 시작됨." },
-    D: { img:"assets/bunny-sleep.png", text:"이건 좀 많이 읽는데.<br>작전 수정 필요." },
-    E: { img:"assets/bunny-done.png", text:"인간이 끈질기네..<br>방해 실패." }
+    A: { img:"assets/bunny-sleep.png", copyId:"reading_A", variants:2 },
+    B: { img:"assets/bunny-sleep.png", copyId:"reading_B", variants:2 },
+    C: { img:"assets/bunny-kick.png", copyId:"reading_C" },
+    D: { img:"assets/bunny-sleep.png", copyId:"reading_D", variants:2 },
+    E: { img:"assets/bunny-done.png", copyId:"reading_E", variants:2 }
   };
-  /* TODO(brand): bunny-done.png reads more triumphant than this dry,
-     frustrated line. Replace the asset only after the next character
-     pose is approved; keep the current Character Identity meanwhile. */
-  var COMPLETION_REACTIONS = ["인간이 끈질기네..<br>방해 실패."];
   function hideReadingReaction(){
     clearTimeout(rabbitEventTimer);
     var el = document.getElementById("rabbitEvent");
@@ -2176,8 +2180,9 @@
     return (hash >>> 0) % length;
   }
   function pickReadingReaction(mode, seed){
-    var reactions = READING_REACTIONS[mode];
-    return Array.isArray(reactions) ? reactions[reactionVariantIndex(seed, reactions.length)] : reactions;
+    var reaction = READING_REACTIONS[mode];
+    var index=reactionVariantIndex(seed,reaction.variants||1);
+    return {img:reaction.img,text:window.BooktokkiP4Character.reactionText(reaction.copyId,index)};
   }
   function showReadingReaction(mode, seed){
     hideReadingReaction();
@@ -2312,8 +2317,9 @@
   }
   function showDoneCelebration(bookId){
     var b = state.books[bookId];
-    var seed = bookId + "|" + (b && b.completedAt ? b.completedAt : "");
-    var copy = COMPLETION_REACTIONS[reactionVariantIndex(seed, COMPLETION_REACTIONS.length)];
+    var seed = "completion|"+bookId+"|"+(b&&b.completedAt?b.completedAt:"");
+    if(!window.BooktokkiP4Character.readingExposure("E",seed))return;
+    var copy = window.BooktokkiP4Character.reactionText("manual_completion",reactionVariantIndex(seed,2));
     openModal('' +
       '<div class="modal completion-modal">' +
         '<div class="speech-bubble">' + copy + '</div>' +
@@ -2544,11 +2550,11 @@
   /* Character Master 기준 이미지 에셋 풀. 홈 토끼는 이 목록의 PNG만
      사용하며 새 행동도 같은 캐릭터 에셋으로 추가한다. */
   var BUNNY_NONE = [
-    { img: "assets/bunny-chew.png", alt: "책을 갉아먹는 토끼", bubble: "독서 안 함?<br>ㅇㅋ 책 내가 먹음" },
-    { img: "assets/bunny-kick.png", alt: "뒷발로 모래를 차서 책을 덮는 토끼", bubble: "증거 인멸 중" }
+    { img: "assets/bunny-chew.png", alt: "책 옆에서 기다리는 토끼", copyId:"ambient_no_record", variant:0 },
+    { img: "assets/bunny-kick.png", alt: "서가를 정리하는 토끼", copyId:"ambient_no_record", variant:1 }
   ];
   var BUNNY_LOGGED = [
-    { img: "assets/bunny-sleep.png", alt: "책 위에 퍼져 자는 토끼", bubble: "인간이 책을 읽음<br>계획에 없던 일임" }
+    { img: "assets/bunny-sleep.png", alt: "오늘 기록을 정리한 토끼", copyId:"ambient_recorded", variant:0 }
   ];
 
   /* Stable for the whole day (re-rendering shouldn't make the rabbit
@@ -2572,16 +2578,25 @@
     clearP4SpeechTimer();
     p4Session={userId:userId||null,momentEvaluated:false,dailyShown:false,speech:null,speechTimer:null,tapBusyUntil:0,tapCount:0};
   }
-  function setHomeOwnerSpeech(source,text,priority){
+  function resetP6Session(userId){
+    p6Session={userId:userId||null,generation:p6Session.generation+1,homeEntry:0,claiming:false,lastCompletedBookId:null};
+    p6SessionId="p6-session:"+uid();
+  }
+  function recordP6Event(type,kind,ctaType){
+    if(!p6Repository||!activeAuthUserId)return Promise.resolve(false);
+    return p6Repository.record("p6:"+uid(),type,kind||null,ctaType||null,p6SessionId).catch(function(){return false;});
+  }
+  function setHomeOwnerSpeech(source,text,priority,cta,reaction){
     if(!text||!activeAuthUserId||p4Session.userId!==activeAuthUserId)return false;
     var current=p4Session.speech;
     if(!window.BooktokkiP4Character.canReplaceSpeech(current,priority,Date.now()))return false;
     clearP4SpeechTimer();
     var speechId=uid(),userId=activeAuthUserId;
-    p4Session.speech={id:speechId,source:source,text:text,priority:priority,expiresAt:Date.now()+P4_SPEECH_MS};
+    p4Session.speech={id:speechId,source:source,text:text,priority:priority,cta:cta||null,reaction:reaction||null,expiresAt:Date.now()+P4_SPEECH_MS};
     p4Session.speechTimer=setTimeout(function(){
       if(activeAuthUserId!==userId||p4Session.userId!==userId||!p4Session.speech||p4Session.speech.id!==speechId)return;
-      p4Session.speech=null;p4Session.speechTimer=null;
+      var expired=p4Session.speech;p4Session.speech=null;p4Session.speechTimer=null;
+      if(expired.reaction&&p6Repository)p6Repository.complete(expired.reaction).catch(function(){return false;});
       if(appStarted&&state.view==="home")renderHome();
     },P4_SPEECH_MS);
     if(appStarted&&state.view==="home")renderHome();
@@ -2589,11 +2604,10 @@
   }
   function dailyOwnerSpeech(){
     var logged=hasLoggedToday();
-    return pickBunnyBehavior(logged?BUNNY_LOGGED:BUNNY_NONE,logged?"logged":"none").bubble;
+    var picked=pickBunnyBehavior(logged?BUNNY_LOGGED:BUNNY_NONE,logged?"logged":"none");
+    return window.BooktokkiP4Character.reactionText(picked.copyId,picked.variant);
   }
-  function enterHomeCharacterMoment(){
-    if(!appStarted||state.view!=="home"||!activeAuthUserId||!window.BooktokkiP4Character)return;
-    if(p4Session.userId!==activeAuthUserId)resetP4Session(activeAuthUserId);
+  function fallbackHomeCharacterMoment(){
     if(p4Session.momentEvaluated)return;
     p4Session.momentEvaluated=true;
     var continuation=window.BooktokkiContinueReading.select(getBooks(),new Date(),continueReadingReady);
@@ -2602,10 +2616,49 @@
       var controller=ensureHomeAmbient();
       if(controller)controller.forceAt("owner","READ_BOOK","floor-a");
       setHomeOwnerSpeech("librarian",moment.text,3);
-      return;
     }
-    p4Session.dailyShown=true;
-    setHomeOwnerSpeech("daily",dailyOwnerSpeech(),1);
+  }
+  function acknowledgeP6Reaction(candidate,speechId,userId,entry){
+    requestAnimationFrame(function(){
+      var visible=document.querySelector("#view-home [data-owner-speech]");
+      if(!visible||visible.hidden||state.view!=="home"||activeAuthUserId!==userId||p6Session.homeEntry!==entry||!p4Session.speech||p4Session.speech.id!==speechId)return;
+      p6Repository.displayed(candidate).then(function(ok){
+        if(ok)return;
+        if(p4Session.speech&&p4Session.speech.id===speechId){p4Session.speech=null;clearP4SpeechTimer();renderHome();}
+      }).catch(function(){
+        if(p4Session.speech&&p4Session.speech.id===speechId){p4Session.speech=null;clearP4SpeechTimer();renderHome();}
+      });
+    });
+  }
+  function enterHomeCharacterMoment(){
+    if(!appStarted||state.view!=="home"||!activeAuthUserId||!window.BooktokkiP4Character)return;
+    if(p4Session.userId!==activeAuthUserId)resetP4Session(activeAuthUserId);
+    if(p6Session.userId!==activeAuthUserId)resetP6Session(activeAuthUserId);
+    var entry=++p6Session.homeEntry,userId=activeAuthUserId,generation=p6Session.generation;
+    if(p4Session.momentEvaluated||state.visitorBubbleConnectionId)return;
+    if(!p6Repository||p6Session.claiming){fallbackHomeCharacterMoment();return;}
+    p6Session.claiming=true;
+    function claimNext(remaining){
+      return p6Repository.claim().then(function(candidate){
+      if(activeAuthUserId!==userId||p6Session.userId!==userId||p6Session.generation!==generation||p6Session.homeEntry!==entry||state.view!=="home")return;
+      var plan=window.BooktokkiP4Character.proactivePlan(candidate);
+      if(!candidate){fallbackHomeCharacterMoment();return;}
+      if(!plan){
+        return p6Repository.dismiss(candidate,"policy_suppressed").then(function(){
+          if(remaining>1)return claimNext(remaining-1);
+          fallbackHomeCharacterMoment();
+        });
+      }
+      p4Session.momentEvaluated=true;
+      var controller=ensureHomeAmbient();if(controller)controller.forceAt("owner",plan.behaviorId,"floor-a");
+      if(setHomeOwnerSpeech("p6",plan.text,4,null,candidate)){
+        acknowledgeP6Reaction(candidate,p4Session.speech.id,userId,entry);
+      }
+      });
+    }
+    claimNext(4).catch(function(){
+      if(activeAuthUserId===userId&&p6Session.generation===generation&&state.view==="home")fallbackHomeCharacterMoment();
+    }).finally(function(){if(p6Session.userId===userId&&p6Session.generation===generation)p6Session.claiming=false;});
   }
   function tapOwnerRabbit(){
     if(!appStarted||state.view!=="home"||!activeAuthUserId||p4Session.userId!==activeAuthUserId||Date.now()<p4Session.tapBusyUntil||!window.BooktokkiP4Character)return false;
@@ -2613,10 +2666,12 @@
     if(!actor||actor.behavior==="WALK"||actor.activity)return false;
     var controller=ensureHomeAmbient();if(!controller)return false;
     p4Session.tapCount+=1;
-    var plan=window.BooktokkiP4Character.tapPlan(p4Session.tapCount);
+    var continuation=window.BooktokkiContinueReading.select(getBooks(),new Date(),continueReadingReady);
+    var plan=window.BooktokkiP4Character.tapContext(getBooks(),continuation&&continuation.book,p6Session.lastCompletedBookId);
     if(!controller.forceAt("owner",plan.behaviorId,"floor-a"))return false;
     p4Session.tapBusyUntil=Date.now()+P4_SPEECH_MS;
-    if(plan.text)setHomeOwnerSpeech("tap",plan.text,2);
+    if(plan.text)setHomeOwnerSpeech("tap",plan.text,2,{label:plan.ctaLabel,type:plan.ctaType,bookId:plan.bookId,kind:"contextual"});
+    recordP6Event("rabbit_tapped","contextual",null);
     return true;
   }
 
@@ -2674,10 +2729,53 @@
     style += "--home-rabbit-move-ms:"+(item.moveDuration||0)+"ms;--home-pose-anchor-x:"+(item.anchorX||0)+"px;--home-pose-anchor-y:"+(item.anchorY||0)+"px;--home-pose-scale:"+(item.visualScale==null?1:item.visualScale)+";";
     var rabbitAction=owner?' data-owner-rabbit-tap role="button" tabindex="0"':' data-visitor-rabbit="'+esc(item.connectionId)+'" role="button" tabindex="0"';
     return '<div class="'+classes+'" data-scene-object="'+esc(item.type)+'" data-scene-id="'+esc(item.id)+'" data-behavior="'+esc(item.behavior||"IDLE")+'"'+rabbitAction+(item.viewportEdge?'':window.BooktokkiHomeScene.projectionAttributes(item))+' style="'+style+'" aria-label="'+esc(label)+'">' +
-      (owner && item.speech && (item.forceSpeech || !item.suppressSpeech) ? '<div class="home-scene-speech" aria-live="polite">'+item.speech+'</div>' : '') +
       '<img src="'+esc(item.asset)+'" alt="'+(owner?esc(item.alt):"")+'">' +
       (!owner ? '<span class="home-scene-friend-name">'+esc(item.friendDisplayName)+'</span>' : '') +
     '</div>';
+  }
+
+  function homeOwnerSpeechBubble(){
+    var speech=p4Session.speech&&p4Session.speech.expiresAt>Date.now()?p4Session.speech:null;
+    if(!speech)return "";
+    var safeText=esc(speech.text).replace(/&lt;br&gt;/g,"<br>");
+    var cta=speech.cta?'<button type="button" data-owner-speech-cta="'+esc(speech.cta.type)+'" data-owner-speech-book="'+esc(speech.cta.bookId||"")+'" data-owner-speech-kind="'+esc(speech.cta.kind||"contextual")+'">'+esc(speech.cta.label)+'</button>':"";
+    return '<div class="home-scene-speech" data-owner-speech role="status" aria-live="polite"><div class="home-scene-speech-copy">'+safeText+'</div>'+(cta?'<div class="home-scene-speech-action">'+cta+'</div>':"")+'</div>';
+  }
+
+  function positionHomeOwnerSpeech(){
+    var scene=document.querySelector("#view-home .home-scene"),shell=scene&&scene.closest(".home-scene-shell"),bubble=shell&&shell.querySelector("[data-owner-speech]"),actor=scene&&scene.querySelector('[data-scene-id="owner"]');
+    if(!scene||!bubble||!actor)return;
+    var visual=actor.querySelector("img")||actor;
+    var point=ownerSpeechCoordinates(scene.getBoundingClientRect(),visual.getBoundingClientRect(),bubble.getBoundingClientRect());
+    if(!point){bubble.hidden=true;return;}
+    bubble.style.left=Math.round(point.left)+"px";
+    bubble.style.top=Math.round(point.top)+"px";
+  }
+
+  function ownerSpeechCoordinates(sceneRect,visualRect,bubbleRect){
+    var pad=10,gap=8,visualLeft=visualRect.left-sceneRect.left,visualTop=visualRect.top-sceneRect.top;
+    var maxLeft=Math.max(pad,sceneRect.width-bubbleRect.width-pad),maxTop=Math.max(pad,sceneRect.height-bubbleRect.height-pad);
+    function clamp(value,min,max){return Math.min(Math.max(value,min),max);}
+    function overlaps(point){
+      return point.left<visualLeft+visualRect.width+gap&&point.left+bubbleRect.width>visualLeft-gap&&
+        point.top<visualTop+visualRect.height+gap&&point.top+bubbleRect.height>visualTop-gap;
+    }
+    var centeredLeft=visualLeft+(visualRect.width-bubbleRect.width)/2;
+    var centeredTop=visualTop+(visualRect.height-bubbleRect.height)/2;
+    var candidates=[
+      {left:centeredLeft,top:visualTop-bubbleRect.height-gap},
+      {left:visualLeft+visualRect.width+gap,top:centeredTop},
+      {left:visualLeft-bubbleRect.width-gap,top:centeredTop},
+      {left:centeredLeft,top:visualTop+visualRect.height+gap}
+    ].map(function(point){return {left:clamp(point.left,pad,maxLeft),top:clamp(point.top,pad,maxTop)};});
+    var available=candidates.find(function(point){return !overlaps(point);});
+    if(available)return available;
+    for(var top=pad;top<=maxTop;top+=4){
+      for(var left=pad;left<=maxLeft;left+=4){
+        var point={left:left,top:top};if(!overlaps(point))return point;
+      }
+    }
+    return null;
   }
 
   function homeSceneVisitorBubble(visitor){
@@ -2737,7 +2835,7 @@
       '</button>' +
       homeSceneRabbit(scene.owner,true) +
       scene.visitors.map(function(visitor){return homeSceneRabbit(visitor,false);}).join("") +
-    '</section><div class="home-scene-overlay-root" data-home-scene-overlay>'+homeSceneVisitorBubble(scene.visitors.find(function(visitor){return visitor.connectionId===state.visitorBubbleConnectionId;}))+'</div></div>';
+    '</section><div class="home-scene-overlay-root" data-home-scene-overlay>'+homeOwnerSpeechBubble()+homeSceneVisitorBubble(scene.visitors.find(function(visitor){return visitor.connectionId===state.visitorBubbleConnectionId;}))+'</div></div>';
   }
 
   /* This month's distinct books with at least one positive page record. */
@@ -2806,6 +2904,7 @@
       : '<div class="home-empty-reading"><div class="home-empty-title">요즘 무슨 책 읽어?</div>' +
           '<button class="btn-dashed" id="addBookBtnHome">책 찾기 🔍</button></div>');
     if(window.BooktokkiRoomDepth)window.BooktokkiRoomDepth.applyScene(el.querySelector(".home-scene"));
+    positionHomeOwnerSpeech();
     positionVisitorBubble();
     observeContinueReading();
     if (state.view==="home" && friendVisit && window.BooktokkiFriendVisit){
@@ -2836,7 +2935,7 @@
 
   window.addEventListener("resize",function(){
     if(state.view==="home"&&window.BooktokkiRoomDepth)window.BooktokkiRoomDepth.applyScene(document.querySelector("#view-home .home-scene"));
-    if(state.view==="home")positionVisitorBubble();
+    if(state.view==="home"){positionHomeOwnerSpeech();positionVisitorBubble();}
   });
 
   function statusBadge(status){
@@ -3893,7 +3992,7 @@
     var rabbit = document.getElementById("rabbitEvent");
     var active = document.activeElement;
     var typing = active && typeof active.matches === "function" && active.matches("input, textarea, select, [contenteditable]");
-    return appStarted && overlay.hidden && (!rabbit || rabbit.hidden) &&
+    return appStarted && state.view === "my" && overlay.hidden && (!rabbit || rabbit.hidden) &&
       Object.keys(cloudMutationQueues).length === 0 && !state.feedbackSubmitting && !typing;
   }
   function showFirstRecordFeedbackPrompt(userId){
@@ -4488,6 +4587,15 @@
     if(reportMenu){var reportMessageId=reportMenu.getAttribute("data-message-menu-report");closeConversationMessageMenu();openConversationMessageReport(reportMessageId);return;}
     if(typeof messageLongPressOpenedAt!=="undefined"&&Date.now()-messageLongPressOpenedAt<500&&e.target.closest("[data-message-report-target]")){e.preventDefault();return;}
     if(!e.target.closest("#conversationMessageMenu")&&typeof closeConversationMessageMenu==="function")closeConversationMessageMenu();
+    var ownerSpeechCta=e.target.closest("[data-owner-speech-cta]");
+    if(ownerSpeechCta){
+      var ctaType=ownerSpeechCta.getAttribute("data-owner-speech-cta"),ctaBook=ownerSpeechCta.getAttribute("data-owner-speech-book")||null,ctaKind=ownerSpeechCta.getAttribute("data-owner-speech-kind")||"contextual";
+      recordP6Event("reaction_cta_clicked",ctaKind,ctaType);
+      if(ctaType==="book_detail"&&ctaBook&&state.books[ctaBook])openBook(ctaBook,"home");
+      else if(ctaType==="add_book")modalAddBook("home");
+      else if(ctaType==="library")goTo("library");
+      return;
+    }
     var ownerRabbit=e.target.closest("[data-owner-rabbit-tap]");
     if(ownerRabbit){tapOwnerRabbit();return;}
     var visitorMessage=e.target.closest("[data-visitor-message]");
@@ -4753,6 +4861,15 @@
         });
       }
     });
+  });
+
+  function isCurrentPageInput(input){
+    return !!(input&&typeof input.matches==="function"&&input.matches("[data-pageinput], #f-page, #capturePage"));
+  }
+  document.body.addEventListener("focusin",function(e){
+    var input=e.target;
+    if(!isCurrentPageInput(input)||typeof input.select!=="function")return;
+    input.select();
   });
 
   document.body.addEventListener("input", function(e){
@@ -5050,6 +5167,7 @@
   function showReadyApp(userId){
     if (activeAuthUserId !== userId) return;
     if(p4Session.userId!==userId)resetP4Session(userId);
+    if(p6Session.userId!==userId)resetP6Session(userId);
     continueReadingReady = true;
     appStarted = true;
     bootstrappedUserId = userId;
@@ -5062,6 +5180,7 @@
     renderAll();
     loadSocialProfile();
     startMessageInboxPolling();
+    recordP6Event("app_session_started",null,null);
     if(state.view==="home")enterHomeCharacterMoment();
   }
 
@@ -5142,7 +5261,7 @@
      an authenticated session (including re-login without a reload) restores
      them here, without touching bootstrap or IndexedDB. */
   function ensureAccountRepositories(){
-    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository && conversationRepository && friendVisit)) return;
+    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository && conversationRepository && p6Repository && friendVisit)) return;
     try {
       profileRepository = window.BooktokkiProfileRepository.create(supabaseClient);
       feedbackRepository = window.BooktokkiFeedbackRepository.create(supabaseClient);
@@ -5151,6 +5270,9 @@
         : null;
       conversationRepository = window.BooktokkiConversationRepository
         ? window.BooktokkiConversationRepository.create(supabaseClient)
+        : null;
+      p6Repository = window.BooktokkiP6Repository
+        ? window.BooktokkiP6Repository.create(supabaseClient)
         : null;
       friendVisit = window.BooktokkiFriendVisit && coReadingRepository
         ? window.BooktokkiFriendVisit.create({
@@ -5171,6 +5293,7 @@
       feedbackRepository = null;
       coReadingRepository = null;
       conversationRepository = null;
+      p6Repository = null;
       friendVisit = null;
       console.error("북토끼 MY 연결 초기화 실패", { code:repositoryError && repositoryError.code ? repositoryError.code : null });
     }
@@ -5183,6 +5306,7 @@
       stopMessageInboxPolling();messageInboxPolling=null;conversationLoadEpoch+=1;dismissMessageBanner();closeVisitorBubble();
       state.inboxUnread=0;state.inboxLatest=null;state.messagePreferences={receiveMessages:true,inAppNotifications:true,previewMessage:false};state.messagePreferencesStatus="idle";
       socialHistoryReady=false;
+      resetP4Session(null);resetP6Session(null);
     }
     activeAuthUserId = session && session.user ? session.user.id : null;
     activeAuthUser = session && session.user ? session.user : null;
@@ -5212,6 +5336,7 @@
     stopMessageInboxPolling();
     messageInboxPolling=null;
     resetP4Session(null);
+    resetP6Session(null);
     coReadingLoadEpoch+=1;
     conversationLoadEpoch+=1;
     activeAuthUserId = null;
@@ -5224,6 +5349,7 @@
     feedbackRepository = null;
     coReadingRepository = null;
     conversationRepository = null;
+    p6Repository = null;
     friendVisit = null;
     cloudMutationQueues = {};
     pendingBookCreates = {};
