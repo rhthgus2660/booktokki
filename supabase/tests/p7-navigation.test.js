@@ -1,0 +1,33 @@
+const assert = require("assert");
+const fs = require("fs");
+const path = require("path");
+const html = fs.readFileSync(path.join(__dirname,"../../index.html"),"utf8");
+
+assert.match(html,/id="view-book-tower"/);
+assert.match(html,/id="view-reading-recap"/);
+assert.match(html,/src="\.\/p7-memory\.js"/);
+assert.match(html,/var data=statsMonthData\(month\)/,"Book Tower uses Calendar month data as its source");
+assert.match(html,/data-open-book-tower="' \+ monthKey/);
+assert.doesNotMatch(html,/data-stats-panel="books"/,"inline monthly book list is gone");
+assert.match(html,/\.book-tower-hit\{[^}]*min-height:44px/,"touch target is independent from visual spine thickness");
+assert.match(html,/--tower-thickness:/,"visual spine thickness remains deterministic data");
+assert.match(html,/data-recap-month-anchor="true"/,"selected month is the initial recap position");
+assert.match(html,/<span>독서 기간<\/span>/);
+assert.match(html,/<span>현재 읽은 위치<\/span>/);
+assert.match(html,/<span>남긴 북로그<\/span>/);
+assert.doesNotMatch(html,/양수 페이지 기록일/);
+assert.doesNotMatch(html,/페이지 변화는 실제 독서량을 뜻하지 않아요/);
+assert.match(html,/\.recap-summary\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+assert.match(html,/\.recap-summary-item:first-child\{ grid-column:1 \/ -1; \}/);
+assert.match(html,/\.recap-summary-item:first-child strong\{ white-space:nowrap; \}/);
+assert.match(html,/\.recap-summary-item strong\{[^}]*overflow-wrap:anywhere/);
+assert.match(html,/state\.detailFrom === "reading-recap"/);
+assert.match(html,/selectedBookId:state\.selectedBookId/);
+assert.match(html,/towerScrollTop:state\.towerScrollTop/);
+assert.match(html,/recapScrollTop:state\.recapScrollTop/);
+assert.match(html,/if\(!navOptions\.fromHistory&&view==="stats"&&fromView!=="book-tower"\)state\.statsSelectedDate=null/);
+assert.match(html,/state\.memoryMonth=null;state\.memoryFrom="stats";state\.towerScrollTop=0;state\.recapBookId=null/,"account switch clears P7 navigation state");
+assert.match(html,/state\.memoryMonth = null;[\s\S]*state\.recapBookId = null;/,"sign-out clears P7 navigation state");
+assert.match(html,/@media \(max-width:390px\)/);
+
+console.log("PASS P7 navigation tests");

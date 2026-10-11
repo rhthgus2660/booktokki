@@ -29,7 +29,7 @@ assert.match(html, /class="library-rabbit-spot"/);
 /* Non-home reading screens use their own compact title/navigation instead of
    repeating the global “내 독서 기록” label. */
 assert.match(html, /body\.detail-prototype \.topbar h1,[\s\S]*?body\.stats-prototype \.topbar h1\{ display:none; \}/);
-assert.match(html, /var backLabel = backTarget === "stats" \? "독서 캘린더" : \(backTarget === "library" \? "내 책장" : "내 서재"\)/);
+assert.match(html, /state\.detailFrom === "reading-recap"/);
 assert.match(html, /<span class="back-context">' \+ backLabel \+ '<\/span>/);
 
 const sampleBook = {
@@ -103,6 +103,8 @@ assert.match(statsEl.innerHTML, /class="stats-day-note-title">책<\/span>/);
 assert.match(statsEl.innerHTML, /class="stats-day-note-meta">p\.31<\/span>/);
 assert.match(statsEl.innerHTML, /class="stats-day-note-text">기록<\/span>/);
 assert.doesNotMatch(statsEl.innerHTML, /data-stats-panel="notes"/, "Book Log metric is a monthly count, not a toggle");
+assert.match(statsEl.innerHTML, /data-open-book-tower="2026-09"/, "monthly book count opens the dedicated tower");
+assert.doesNotMatch(statsEl.innerHTML, /data-stats-panel="books"/, "the former inline monthly book toggle is removed");
 assert.match(statsEl.innerHTML, /data-stats-year/, "Calendar exposes year navigation");
 assert.match(statsEl.innerHTML, /<option value="2026" selected>2026년<\/option>/);
 
