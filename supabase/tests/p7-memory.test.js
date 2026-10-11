@@ -7,7 +7,7 @@ function book(id, options){
 function monthEntry(value){return {book:value,readDays:1,noteCount:(value.notes||[]).length,latestAt:"2026-10-01T00:00:00Z"};}
 
 assert.equal(memory.towerEntries([]).length,0,"0 books is safe");
-[1,10,30].forEach(function(count){
+[1,3,10,30].forEach(function(count){
   const books=Array.from({length:count},function(_,index){return monthEntry(book("book-"+index));});
   const first=memory.towerEntries(books),second=memory.towerEntries(books);
   assert.equal(first.length,count,count+" books remain individually addressable");

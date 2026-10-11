@@ -1228,8 +1228,9 @@
   .memory-header h2{ min-width:0; flex:1; font-size:.95rem; font-weight:600; }
   .memory-kicker{ margin-top:18px; color:#737373; font-size:.72rem; }
   .book-tower-stage{ display:flex; min-height:420px; flex-direction:column; justify-content:flex-end; align-items:center; padding:36px 4px 18px; overflow:hidden; }
-  .book-tower-list{ display:flex; width:100%; flex-direction:column-reverse; align-items:center; gap:0; }
-  .book-tower-hit{ position:relative; display:flex; width:100%; min-height:44px; align-items:center; justify-content:center; border:0; background:none; color:#171717; font:inherit; cursor:pointer; }
+  .book-tower-list{ display:flex; width:100%; flex-direction:column-reverse; align-items:center; gap:1px; }
+  .book-tower-hit{ position:relative; z-index:var(--tower-stack); display:flex; width:100%; height:var(--tower-thickness); min-height:0; align-items:center; justify-content:center; border:0; background:none; color:#171717; font:inherit; cursor:pointer; }
+  .book-tower-hit::before{ content:""; position:absolute; z-index:2; top:calc((var(--tower-thickness) - 44px)/2); right:0; bottom:calc((var(--tower-thickness) - 44px)/2); left:0; }
   .book-tower-spine{ position:relative; display:flex; box-sizing:border-box; height:var(--tower-thickness); width:var(--tower-length); max-width:94%; align-items:center; justify-content:center; margin-left:var(--tower-offset); padding:4px 18px; overflow:hidden; border:1px solid rgba(0,0,0,.16); border-radius:var(--tower-radius); background:var(--tower-color); box-shadow:0 2px 0 rgba(0,0,0,.08); }
   .book-tower-spine::before,.book-tower-spine::after{ content:""; position:absolute; top:3px; bottom:3px; width:1px; background:rgba(0,0,0,.12); }
   .book-tower-spine::before{ left:9px; }.book-tower-spine::after{ right:9px; }
@@ -3536,8 +3537,8 @@
       '<p class="memory-kicker">'+memoryMonthLabel(month)+' · '+entries.length+'권</p>'+
       (entries.length?'<section class="book-tower-stage" aria-label="'+esc(memoryMonthLabel(month))+'에 읽은 책 '+entries.length+'권"><div class="book-tower-list">'+entries.map(function(entry){
         var spec=entry.spec,title=entry.book.title||"제목 없음";
-        return '<button type="button" class="book-tower-hit" data-open-recap="'+esc(entry.book.id)+'" aria-label="'+esc(title)+' Reading Recap 열기">'+
-          '<span class="book-tower-spine" style="--tower-length:'+spec.length+'%;--tower-thickness:'+spec.thickness+'px;--tower-offset:'+spec.offset+'px;--tower-radius:'+spec.radius+'px;--tower-color:'+colors[spec.tone]+'"><span class="book-tower-title">'+esc(title)+'</span></span></button>';
+        return '<button type="button" class="book-tower-hit" data-open-recap="'+esc(entry.book.id)+'" aria-label="'+esc(title)+' Reading Recap 열기" style="--tower-thickness:'+spec.thickness+'px;--tower-stack:'+(entries.length-entry.index)+'">'+
+          '<span class="book-tower-spine" style="--tower-length:'+spec.length+'%;--tower-offset:'+spec.offset+'px;--tower-radius:'+spec.radius+'px;--tower-color:'+colors[spec.tone]+'"><span class="book-tower-title">'+esc(title)+'</span></span></button>';
       }).join("")+'</div><div class="book-tower-ground" aria-hidden="true"></div></section>':'<p class="memory-empty">이 달에는 페이지 기록이 없어요.</p>');
   }
   function recapDate(value){
