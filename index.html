@@ -1504,6 +1504,7 @@
 <script src="./p4-character.js"></script>
 <script src="./p6-repository.js"></script>
 <script src="./p7-memory.js"></script>
+<script src="./p7-recall.js"></script>
 <script src="./measurement-repository.js"></script>
 <script src="./share-card.js"></script>
 <script src="./capture-ocr.js"></script>
@@ -1542,6 +1543,7 @@
     recapBookId: null,
     recapReturnView: "book-tower",
     recapScrollTop: 0,
+    recapAnchorEventId: null,
     feedbackFrom: "my",
     feedbackDraft: "",
     feedbackStatus: null,
@@ -2429,7 +2431,8 @@
     friendProfileReturnView:state.friendProfileReturnView||"co-reading",
     statsMonth:state.statsMonth||null,statsSelectedDate:state.statsSelectedDate||null,
     memoryMonth:state.memoryMonth||null,memoryFrom:state.memoryFrom||"stats",towerScrollTop:state.towerScrollTop||0,
-    recapBookId:state.recapBookId||null,recapReturnView:state.recapReturnView||"book-tower",recapScrollTop:state.recapScrollTop||0
+    recapBookId:state.recapBookId||null,recapReturnView:state.recapReturnView||"book-tower",recapScrollTop:state.recapScrollTop||0,
+    recapAnchorEventId:state.recapAnchorEventId||null
   };}
   function socialHistoryView(view){return ["conversations","conversation","friend-profile","book-tower","reading-recap"].indexOf(view)!==-1;}
   function pushSocialHistory(fromView,toView){
@@ -2506,6 +2509,7 @@
     state.recapBookId=route.recapBookId||null;
     state.recapReturnView=safeSocialReturn(route.recapReturnView,"book-tower");
     state.recapScrollTop=Number(route.recapScrollTop)||0;
+    state.recapAnchorEventId=route.recapAnchorEventId||null;
     goTo(safeSocialReturn(route.view,"home"),undefined,{fromHistory:true});
     applyingHistoryRoute=false;
   });
@@ -2534,14 +2538,16 @@
     state.towerScrollTop=0;
     goTo("book-tower");
   }
-  function openReadingRecap(bookId,from){
+  function openReadingRecap(bookId,from,noteId){
     if(!state.books[bookId])return;
     state.recapBookId=bookId;
     state.recapReturnView=from==="book-tower"?"book-tower":safeSocialReturn(from,"book-tower");
     state.recapScrollTop=0;
+    state.recapAnchorEventId=noteId?"note:"+noteId:null;
+    if(from==="home")state.memoryMonth=null;
     goTo("reading-recap");
     setTimeout(function(){
-      var anchor=document.querySelector('[data-recap-month-anchor="true"]');
+      var anchor=document.querySelector('[data-recap-anchor="true"]');
       if(anchor)anchor.scrollIntoView({block:"start"});
     },0);
   }
@@ -2701,12 +2707,25 @@
   function fallbackHomeCharacterMoment(){
     if(p4Session.momentEvaluated)return;
     p4Session.momentEvaluated=true;
+    if(!window.BooktokkiP7Recall)return;
+    var history=window.BooktokkiP7Recall.readHistory(window.localStorage,activeAuthUserId);
+    if(!history.ok)return;
     var continuation=window.BooktokkiContinueReading.select(getBooks(),new Date(),continueReadingReady);
-    var moment=window.BooktokkiP4Character.selectLibrarianMoment(getBooks(),continuation&&continuation.book&&continuation.book.id,new Date());
+    var moment=window.BooktokkiP7Recall.selectRecall(getBooks(),continuation&&continuation.book&&continuation.book.id,history.history,new Date());
     if(moment){
+      var book=state.books[moment.bookId],note=book&&(book.notes||[]).find(function(item){return String(item.id)===String(moment.noteId);});
+      if(!note||activeAuthUserId!==p4Session.userId||state.view!=="home")return;
       var controller=ensureHomeAmbient();
       if(controller)controller.forceAt("owner","READ_BOOK","floor-a");
-      setHomeOwnerSpeech("librarian",moment.text,3);
+      var title=String(book.title||"").trim();
+      if(!title)return;
+      var copy="『"+title+"』에 남긴 기록이 있네.";
+      if(setHomeOwnerSpeech("librarian",copy,3,{label:"기록 보기",type:"reading_recap",bookId:moment.bookId,noteId:moment.noteId,kind:"contextual"})){
+        var visible=document.querySelector("#view-home [data-owner-speech]");
+        if(!visible||visible.hidden||!window.BooktokkiP7Recall.recordDisplayed(window.localStorage,activeAuthUserId,moment.noteId,new Date())){
+          p4Session.speech=null;clearP4SpeechTimer();renderHome();
+        }
+      }
     }
   }
   function acknowledgeP6Reaction(candidate,speechId,userId,entry){
@@ -2829,7 +2848,7 @@
     var speech=p4Session.speech&&p4Session.speech.expiresAt>Date.now()?p4Session.speech:null;
     if(!speech)return "";
     var safeText=esc(speech.text).replace(/&lt;br&gt;/g,"<br>");
-    var cta=speech.cta?'<button type="button" data-owner-speech-cta="'+esc(speech.cta.type)+'" data-owner-speech-book="'+esc(speech.cta.bookId||"")+'" data-owner-speech-kind="'+esc(speech.cta.kind||"contextual")+'">'+esc(speech.cta.label)+'</button>':"";
+    var cta=speech.cta?'<button type="button" data-owner-speech-cta="'+esc(speech.cta.type)+'" data-owner-speech-book="'+esc(speech.cta.bookId||"")+'" data-owner-speech-note="'+esc(speech.cta.noteId||"")+'" data-owner-speech-kind="'+esc(speech.cta.kind||"contextual")+'">'+esc(speech.cta.label)+'</button>':"";
     return '<div class="home-scene-speech" data-owner-speech role="status" aria-live="polite"><div class="home-scene-speech-copy">'+safeText+'</div>'+(cta?'<div class="home-scene-speech-action">'+cta+'</div>':"")+'</div>';
   }
 
@@ -3548,7 +3567,7 @@
   function recapEventHtml(event,model){
     var selected=event.id===model.anchorEventId;
     var cls='recap-event'+(selected?' is-selected-month':'');
-    var anchor=selected?' data-recap-month-anchor="true"':'';
+    var anchor=selected?' data-recap-anchor="true"':'';
     if(event.type==="note"||event.type==="reflection")return '<article class="'+cls+'"'+anchor+'><div class="recap-event-date">'+esc(recapDate(event.at))+(event.page!=null?' · p.'+event.page:'')+'</div><div class="recap-note-text">'+esc(event.text)+'</div><div class="recap-event-context">'+(event.type==="reflection"?'완독 후 생각':'북로그')+'</div></article>';
     var label=event.type==="correction"?'페이지 위치 수정':'페이지 기록';
     return '<article class="'+cls+'"'+anchor+'><div class="recap-event-date">'+esc(event.date||recapDate(event.at))+'</div><div class="recap-event-page">'+label+' · '+event.previousPage+'p → '+event.currentPage+'p</div></article>';
@@ -3558,7 +3577,7 @@
     if(!book||!window.BooktokkiP7Memory){
       el.innerHTML=memoryHeader("Reading Recap",state.recapReturnView||"book-tower")+'<p class="memory-empty">이 책의 기록을 찾을 수 없어요.</p>';return;
     }
-    var model=window.BooktokkiP7Memory.recap(book,state.memoryMonth);
+    var model=window.BooktokkiP7Memory.recap(book,state.memoryMonth,state.recapAnchorEventId);
     var status=model.currentCompleted?'완독 · '+recapDate(model.completedAt):(book.currentPage||0)+' / '+book.totalPages+'p';
     var range=model.firstRecordedAt?(recapDate(model.firstRecordedAt)+(model.latestRecordedAt!==model.firstRecordedAt?' – '+recapDate(model.latestRecordedAt):'')):'기록 없음';
     el.innerHTML=memoryHeader("Reading Recap",state.recapReturnView||"book-tower")+
@@ -4721,11 +4740,12 @@
     if(!e.target.closest("#conversationMessageMenu")&&typeof closeConversationMessageMenu==="function")closeConversationMessageMenu();
     var ownerSpeechCta=e.target.closest("[data-owner-speech-cta]");
     if(ownerSpeechCta){
-      var ctaType=ownerSpeechCta.getAttribute("data-owner-speech-cta"),ctaBook=ownerSpeechCta.getAttribute("data-owner-speech-book")||null,ctaKind=ownerSpeechCta.getAttribute("data-owner-speech-kind")||"contextual";
-      recordP6Event("reaction_cta_clicked",ctaKind,ctaType);
+      var ctaType=ownerSpeechCta.getAttribute("data-owner-speech-cta"),ctaBook=ownerSpeechCta.getAttribute("data-owner-speech-book")||null,ctaNote=ownerSpeechCta.getAttribute("data-owner-speech-note")||null,ctaKind=ownerSpeechCta.getAttribute("data-owner-speech-kind")||"contextual";
+      if(ctaType!=="reading_recap")recordP6Event("reaction_cta_clicked",ctaKind,ctaType);
       if(ctaType==="book_detail"&&ctaBook&&state.books[ctaBook])openBook(ctaBook,"home");
       else if(ctaType==="add_book")modalAddBook("home");
       else if(ctaType==="library")goTo("library");
+      else if(ctaType==="reading_recap"&&ctaBook&&ctaNote&&state.books[ctaBook]&&(state.books[ctaBook].notes||[]).some(function(note){return String(note.id)===String(ctaNote);}))openReadingRecap(ctaBook,"home",ctaNote);
       return;
     }
     var ownerRabbit=e.target.closest("[data-owner-rabbit-tap]");
@@ -5447,7 +5467,7 @@
       stopMessageInboxPolling();messageInboxPolling=null;conversationLoadEpoch+=1;dismissMessageBanner();closeVisitorBubble();
       state.inboxUnread=0;state.inboxLatest=null;state.messagePreferences={receiveMessages:true,inAppNotifications:true,previewMessage:false};state.messagePreferencesStatus="idle";
       socialHistoryReady=false;
-      state.memoryMonth=null;state.memoryFrom="stats";state.towerScrollTop=0;state.recapBookId=null;state.recapReturnView="book-tower";state.recapScrollTop=0;
+      state.memoryMonth=null;state.memoryFrom="stats";state.towerScrollTop=0;state.recapBookId=null;state.recapReturnView="book-tower";state.recapScrollTop=0;state.recapAnchorEventId=null;
       resetP4Session(null);resetP6Session(null);
     }
     activeAuthUserId = session && session.user ? session.user.id : null;
@@ -5540,6 +5560,7 @@
     state.recapBookId = null;
     state.recapReturnView = "book-tower";
     state.recapScrollTop = 0;
+    state.recapAnchorEventId = null;
     socialHistoryReady = false;
     closeVisitorBubble();
     state.friendVisit = {userId:null,visitors:[]};

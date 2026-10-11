@@ -34,7 +34,7 @@
     });
   }
   function eventMonth(event){return event&&event.date&&event.date.slice(0,7);}
-  function recap(book,selectedMonth){
+  function recap(book,selectedMonth,requestedAnchorEventId){
     if(!book)return null;
     var events=[];
     (book.notes||[]).forEach(function(note){
@@ -56,7 +56,9 @@
     events.forEach(function(event){if(event.type==="page"&&event.delta>0)positiveDates[event.date]=true;});
     var reached=events.filter(function(event){return (event.type==="page"||event.type==="correction")&&Number(book.totalPages)>0&&event.currentPage>=Number(book.totalPages);});
     var currentCompleted=book.status==="done"&&validTime(book.completedAt)!=null;
-    var anchorIndex=validMonth(selectedMonth)?events.findIndex(function(event){return eventMonth(event)===selectedMonth;}):-1;
+    var exactAnchor=String(requestedAnchorEventId||"");
+    var anchorIndex=exactAnchor?events.findIndex(function(event){return event.id===exactAnchor;}):-1;
+    if(anchorIndex<0&&validMonth(selectedMonth))anchorIndex=events.findIndex(function(event){return eventMonth(event)===selectedMonth;});
     return {
       book:book,
       events:events,

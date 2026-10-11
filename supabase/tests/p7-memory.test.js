@@ -42,6 +42,7 @@ assert.equal(recap.readDayCount,2,"summary counts positive record dates and neve
 assert.equal(recap.currentCompleted,false,"a corrected reading book is not called currently completed");
 assert.equal(recap.lastPageReachedAt,"2026-10-02T02:00:00Z","historical last-page reach remains distinguishable");
 assert.ok(recap.anchorEventId&&recap.events.find(function(event){return event.id===recap.anchorEventId;}).date.slice(0,7)==="2026-10","selected month supplies the initial anchor");
+assert.equal(memory.recap(journey,"2026-09","note:n3").anchorEventId,"note:n3","an explicit Book Log anchor overrides the Calendar month anchor");
 
 assert.equal(memory.recap(book("none"),"2026-10").events.length,0,"a book with no notes uses only real page data and stays empty when none exists");
 assert.equal(memory.recap(book("one",{notes:[{id:"one-note",text:"한 개",createdAt:"2026-10-01T00:00:00Z"}]}),"2026-10").notes.length,1);

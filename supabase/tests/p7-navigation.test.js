@@ -14,7 +14,7 @@ assert.match(html,/\.book-tower-hit\{[^}]*height:var\(--tower-thickness\)[^}]*mi
 assert.match(html,/\.book-tower-hit::before\{[^}]*top:calc\(\(var\(--tower-thickness\) - 44px\)\/2\)[^}]*bottom:calc\(\(var\(--tower-thickness\) - 44px\)\/2\)/,"the invisible hit area remains at least 44 pixels without adding visual gaps");
 assert.match(html,/--tower-stack:'\+\(entries\.length-entry\.index\)/,"overlapping hit areas follow the visible stack order");
 assert.match(html,/--tower-thickness:/,"visual spine thickness remains deterministic data");
-assert.match(html,/data-recap-month-anchor="true"/,"selected month is the initial recap position");
+assert.match(html,/data-recap-anchor="true"/,"the selected month or exact Book Log is the initial recap position");
 assert.match(html,/<span>독서 기간<\/span>/);
 assert.match(html,/<span>현재 읽은 위치<\/span>/);
 assert.match(html,/<span>남긴 북로그<\/span>/);
