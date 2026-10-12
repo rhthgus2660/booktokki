@@ -1269,7 +1269,7 @@
   body.my-prototype .topbar h1{ display:none; }
   body.my-prototype .icon-nav-btn{ border:0; border-radius:3px; background:transparent; }
   body.my-prototype .icon-nav-btn:hover{ background:#f5f5f5; }
-  #view-my, #view-feedback, #view-data-info, #view-co-reading, #view-profile-edit, #view-friend-profile, #view-blocked-users, #view-conversations, #view-conversation{ min-width:0; color:#171717; }
+  #view-my, #view-feedback, #view-data-info, #view-account-management, #view-account-deletion, #view-co-reading, #view-profile-edit, #view-friend-profile, #view-blocked-users, #view-conversations, #view-conversation{ min-width:0; color:#171717; }
   .my-header{ gap:8px; }
   .my-header h2{ font-size:.95rem; font-weight:600; }
   .my-profile{ display:flex; flex-direction:column; align-items:center; padding:36px 0 34px; }
@@ -1301,6 +1301,20 @@
   .my-menu-label{ font-size:.87rem; font-weight:500; }
   .my-menu-note{ color:#909090; font-size:.7rem; font-weight:400; }
   .my-menu-arrow{ flex:none; color:#a0a0a0; font-size:1rem; }
+  .account-delete-guide{ padding:24px 0; }
+  .account-delete-guide section{ padding:18px 0; border-bottom:1px solid #e9e9e9; }
+  .account-delete-guide h3{ font-size:.86rem; font-weight:600; }
+  .account-delete-guide p,.account-delete-guide li{ margin-top:8px; color:#565656; font-size:.76rem; line-height:1.65; }
+  .account-delete-guide ul{ padding-left:18px; }
+  .account-delete-confirm{ display:flex; gap:10px; align-items:flex-start; margin:20px 0; color:#333; font-size:.76rem; line-height:1.55; }
+  .account-delete-confirm input{ width:20px; height:20px; flex:none; }
+  .account-delete-actions{ display:grid; gap:8px; }
+  .account-delete-reasons{ margin:22px 0 8px; padding:0; border:0; }
+  .account-delete-reasons legend{ margin-bottom:10px; font-size:.82rem; font-weight:600; }
+  .account-delete-reasons label{ display:flex; align-items:center; gap:10px; min-height:44px; border-bottom:1px solid #ededed; color:#333; font-size:.78rem; }
+  .account-delete-reasons input{ width:18px; height:18px; flex:none; accent-color:#171717; }
+  .account-delete-danger{ width:100%; min-height:48px; border:1px solid #171717; border-radius:4px; background:#171717; color:#fff; font:inherit; font-weight:600; }
+  .account-delete-danger:disabled{ opacity:.4; }
   .message-setting{ display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:58px; padding:8px 0; }
   .message-setting-copy{ min-width:0; }
   .message-setting-copy strong{ display:block; font-size:.84rem; font-weight:500; }
@@ -1354,6 +1368,18 @@
   .friend-section-copy{ margin-top:8px; color:#737373; font-size:.72rem; line-height:1.55; }
   .friend-empty{ padding:13px 0; border-block:1px solid #e9e9e9; color:#909090; font-size:.72rem; }
   .conversation-list{ margin-top:12px; border-top:1px solid #e9e9e9; }
+  .inbox-tabs{ display:grid; grid-template-columns:1fr 1fr; margin:10px 0 16px; border-bottom:1px solid #e5e5e5; }
+  .inbox-tab{ position:relative; min-height:44px; padding:0 12px; border:0; background:transparent; color:#777; font:inherit; font-size:.78rem; cursor:pointer; }
+  .inbox-tab::after{ content:""; position:absolute; right:12px; bottom:-1px; left:12px; height:2px; background:transparent; }
+  .inbox-tab[aria-selected="true"]{ color:#111; font-weight:700; }
+  .inbox-tab[aria-selected="true"]::after{ background:#111; }
+  .inbox-tab:focus-visible{ outline:2px solid #111; outline-offset:-3px; }
+  .exchange-invitations{ margin:10px 0 18px; padding:12px; border:1px solid #e3e3e3; border-radius:12px; }
+  .exchange-invitation{ padding:10px 0; border-bottom:1px solid #ededed; }
+  .exchange-invitation:last-child{ border-bottom:0; }
+  .exchange-actions{ display:flex; gap:8px; margin-top:8px; }
+  .exchange-blocks-link{ display:flex; min-height:44px; align-items:center; justify-content:flex-start; margin-top:8px; padding:0; border:0; background:transparent; color:#777; font:inherit; font-size:.7rem; cursor:pointer; }
+  .exchange-blocks-link:focus-visible{ outline:2px solid #111; outline-offset:2px; }
   .conversation-row{ display:flex; width:100%; min-height:68px; padding:13px 0; border:0; border-bottom:1px solid #e9e9e9; background:none; color:inherit; text-align:left; cursor:pointer; }
   .conversation-row-copy{ min-width:0; flex:1; }
   .conversation-row-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
@@ -1363,6 +1389,34 @@
   .conversation-preview{ display:block; margin-top:6px; overflow:hidden; color:#737373; font-size:.72rem; text-overflow:ellipsis; white-space:nowrap; }
   .conversation-readonly-label{ flex:none; color:#909090; font-size:.64rem; font-weight:400; }
   .conversation-screen{ display:flex; width:100%; min-width:0; min-height:calc(100dvh - 100px); flex-direction:column; }
+  .exchange-notes{ display:grid; gap:18px; padding:4px 0 24px; }
+  .exchange-note-section{ display:grid; gap:10px; }
+  .exchange-note-section h3{ margin:0; font-size:15px; }
+  .exchange-note-compose,.exchange-note-card{ display:grid; gap:8px; padding:12px; border:1px solid #dedede; border-radius:12px; background:#fff; }
+  .exchange-note-compose textarea{ min-height:82px; resize:vertical; font:inherit; border:0; border-bottom:1px solid #ccc; }
+  .exchange-note-compose input[type="number"]{ min-height:44px; border:0; border-bottom:1px solid #ccc; font:inherit; }
+  .exchange-note-card p{ margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .exchange-note-card.locked{ color:#666; background:#f7f7f7; }
+  .exchange-timeline-note{ width:min(88%,360px); padding:12px; border:1px solid #dcdcdc; border-radius:12px; background:#fff; color:#171717; text-align:left; }
+  .exchange-timeline-note strong,.exchange-timeline-note span{ display:block; }
+  .exchange-timeline-note span{ margin-top:6px; font-size:.74rem; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .exchange-timeline-note.locked,.exchange-timeline-note.revoked{ color:#666; background:#f7f7f7; }
+  .exchange-timeline-note.mine{ margin-left:auto; border-color:#111; background:#111; color:#fff; }
+  .exchange-timeline-note.received{ margin-right:auto; }
+  .exchange-room-summary{ display:flex; width:100%; min-height:44px; align-items:center; justify-content:space-between; gap:12px; padding:8px 16px; border:0; border-bottom:1px solid #e5e5e5; background:#fff; color:#111; text-align:left; }
+  .exchange-room-summary span,.exchange-room-summary small{ display:block; }
+  .exchange-room-summary small{ color:#737373; margin-top:2px; }
+  .exchange-progress-list{ display:grid; gap:10px; }
+  .exchange-progress-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; padding:12px 0; border-bottom:1px solid #eee; }
+  .exchange-book-action{ width:44px; height:44px; flex:none; border:1px solid #d3d3d3; border-radius:12px; background:#fff; color:#171717; font-size:1rem; }
+  .exchange-modal .field{ margin-top:14px; }
+  .exchange-modal .field label,.exchange-modal .field > span{ margin-bottom:6px; color:#3f3f3f; font-weight:600; }
+  .exchange-modal input:not([type="checkbox"]),.exchange-modal select{ min-height:44px; padding:9px 0; border:0; border-bottom:1px solid #cfcfcf; border-radius:0; background:#fff; color:#171717; }
+  .exchange-modal input:not([type="checkbox"]):focus,.exchange-modal select:focus{ outline:0; border-bottom-color:#171717; box-shadow:none; }
+  .exchange-friend-choices{ display:grid; gap:2px; }
+  .exchange-friend-choice{ display:flex; min-height:44px; align-items:center; gap:10px; padding:5px 0; border-bottom:1px solid #eee; color:#242424; }
+  .exchange-friend-choice input{ flex:none; }
+  .exchange-modal > label{ display:flex; align-items:flex-start; gap:9px; margin-top:14px; color:#555; font-size:.72rem; line-height:1.5; }
   .conversation-messages{ display:flex; width:100%; min-width:0; flex:1; flex-direction:column; gap:10px; padding:18px 0 22px; }
   .conversation-message{ position:relative; align-self:flex-start; min-width:0; max-width:82%; }
   .conversation-message.mine{ align-self:flex-end; }
@@ -1471,12 +1525,15 @@
     <section id="view-my" class="view" hidden></section>
     <section id="view-feedback" class="view" hidden></section>
     <section id="view-data-info" class="view" hidden></section>
+    <section id="view-account-management" class="view" hidden></section>
+    <section id="view-account-deletion" class="view" hidden></section>
     <section id="view-co-reading" class="view" hidden></section>
     <section id="view-profile-edit" class="view" hidden></section>
     <section id="view-friend-profile" class="view" hidden></section>
     <section id="view-blocked-users" class="view" hidden></section>
     <section id="view-conversations" class="view" hidden></section>
     <section id="view-conversation" class="view" hidden></section>
+    <section id="view-exchange-room" class="view" hidden></section>
   </main>
 </div>
 
@@ -1494,6 +1551,7 @@
 <script src="./feedback-repository.js"></script>
 <script src="./co-reading-repository.js"></script>
 <script src="./conversation-repository.js"></script>
+<script src="./exchange-reading-repository.js"></script>
 <script src="./conversation-polling.js"></script>
 <script src="./message-inbox-polling.js"></script>
 <script src="./friend-visit.js"></script>
@@ -1548,6 +1606,8 @@
     feedbackDraft: "",
     feedbackStatus: null,
     feedbackSubmitting: false,
+    accountDeletionStatus: "idle",
+    accountDeletionMessage: "",
     coReadingStatus: "loading",
     coReadingConnections: [],
     coReadingDisplayName: "",
@@ -1569,6 +1629,8 @@
     messagePreferences: {receiveMessages:true,inAppNotifications:true,previewMessage:false},
     messagePreferencesStatus: "idle",
     inboxUnread: 0,
+    dmUnread: 0,
+    exchangeUnread: 0,
     inboxLatest: null,
     inboxReturnView: "home",
     selectedConversationId: null,
@@ -1582,6 +1644,29 @@
     conversationSendAttempt: null,
     conversationHasMore: false,
     conversationLoadingOlder: false,
+    inboxTab: "dm",
+    exchangeRooms: [],
+    exchangeInvitations: [],
+    exchangeStatus: "idle",
+    selectedExchangeRoomId: null,
+    exchangeReturnView: "conversations",
+    exchangeMessages: [],
+    exchangeMessagesStatus: "idle",
+    exchangeCanSend: false,
+    exchangeMessageDraft: "",
+    exchangeSending: false,
+    exchangeError: "",
+    exchangeSendAttempt: null,
+    exchangeHasMore: false,
+    exchangeLoadingOlder: false,
+    exchangeRoomTab: "chat",
+    exchangeSharedNotes: [],
+    exchangeMyNotes: [],
+    exchangeNotesStatus: "idle",
+    exchangeNoteDraft: "",
+    exchangeNotePage: "",
+    exchangeNoteShareAfterSave: false,
+    exchangeRoomDetail: [],
     visitorBubbleConnectionId: null,
     visitorBubbleBusy: false,
     friendVisit: { userId:null, visitors:[] },
@@ -1626,6 +1711,7 @@
   var feedbackRepository = null;
   var coReadingRepository = null;
   var conversationRepository = null;
+  var exchangeReadingRepository = null;
   var friendVisit = null;
   var homeAmbient = null;
   var P4_SPEECH_MS = 4000;
@@ -1636,6 +1722,10 @@
   var coReadingLoadEpoch = 0;
   var conversationLoadEpoch = 0;
   var conversationPolling = null;
+  var exchangePolling = null;
+  var exchangeLoadEpoch = 0;
+  var exchangeParticipationAttempts = Object.create(null);
+  var exchangeInvitationBookAttempts = Object.create(null);
   var messageInboxPolling = null;
   var messageBannerTimer = null;
   var visitorBubbleTimer = null;
@@ -1652,6 +1742,7 @@
   var bootstrappedUserId = null;
   var activeAuthUserId = null;
   var activeAuthUser = null;
+  var accountDeletionSubmitting = false;
   var pendingConflictResolution = null;
   var conflictResolutionLocked = false;
   /* Set after the Worker is deployed. This URL is public configuration;
@@ -2421,11 +2512,12 @@
      home (요즘 읽는 책), 통계, or 서재, and that back button returns there. */
   var socialHistoryReady=false,applyingHistoryRoute=false;
   function safeSocialReturn(view,fallback){
-    return ["home","library","detail","stats","book-tower","reading-recap","my","co-reading","friend-profile","conversations","conversation"].indexOf(view)!==-1?view:fallback;
+    return ["home","library","detail","stats","book-tower","reading-recap","my","account-management","account-deletion","co-reading","friend-profile","conversations","conversation","exchange-room"].indexOf(view)!==-1?view:fallback;
   }
   function appRouteSnapshot(view){return {
     view:view||"home",selectedBookId:state.selectedBookId||null,detailFrom:state.detailFrom||"library",
     selectedConversationId:state.selectedConversationId||null,
+    selectedExchangeRoomId:state.selectedExchangeRoomId||null,inboxTab:state.inboxTab||"dm",
     selectedFriendConnectionId:state.selectedFriendConnectionId||null,
     inboxReturnView:state.inboxReturnView||"home",conversationReturnView:state.conversationReturnView||"conversations",
     friendProfileReturnView:state.friendProfileReturnView||"co-reading",
@@ -2434,7 +2526,7 @@
     recapBookId:state.recapBookId||null,recapReturnView:state.recapReturnView||"book-tower",recapScrollTop:state.recapScrollTop||0,
     recapAnchorEventId:state.recapAnchorEventId||null
   };}
-  function socialHistoryView(view){return ["conversations","conversation","friend-profile","book-tower","reading-recap"].indexOf(view)!==-1;}
+  function socialHistoryView(view){return ["conversations","conversation","exchange-room","friend-profile","book-tower","reading-recap"].indexOf(view)!==-1;}
   function pushSocialHistory(fromView,toView){
     if(typeof window==="undefined"||!appStarted||applyingHistoryRoute||(!socialHistoryView(fromView)&&!socialHistoryView(toView)))return;
     window.history.replaceState({booktokkiNav:true,route:appRouteSnapshot(fromView)},"",window.location.href);
@@ -2453,6 +2545,7 @@
     if(fromView==="reading-recap")state.recapScrollTop=window.scrollY||0;
     if(!navOptions.fromHistory&&view==="conversations"&&fromView!=="conversations"&&fromView!=="conversation")state.inboxReturnView=safeSocialReturn(fromView,"home");
     if(!navOptions.fromHistory&&view==="conversation"&&fromView!=="conversation")state.conversationReturnView=safeSocialReturn(fromView,"conversations");
+    if(!navOptions.fromHistory&&view==="exchange-room"&&fromView!=="exchange-room")state.exchangeReturnView=safeSocialReturn(fromView,"conversations");
     if(!navOptions.fromHistory&&typeof pushSocialHistory==="function")pushSocialHistory(fromView,view);
     var enteringHome = view === "home" && state.view !== "home";
     if(state.view==="home"&&view!=="home")closeVisitorBubble();
@@ -2461,6 +2554,11 @@
       closeConversationMessageMenu();
       var leavingConversationInput=document.getElementById("conversationInput");
       if(leavingConversationInput&&document.activeElement===leavingConversationInput)leavingConversationInput.blur();
+    }
+    if(state.view==="exchange-room"&&view!=="exchange-room"){
+      stopExchangePolling();
+      var leavingExchangeInput=document.getElementById("exchangeInput");
+      if(leavingExchangeInput&&document.activeElement===leavingExchangeInput)leavingExchangeInput.blur();
     }
     if(enteringHome)hideReadingReaction();
     if (view === "stats" && state.view !== "stats"){
@@ -2483,8 +2581,9 @@
     if(view === "co-reading") loadCoReading();
     if(view === "profile-edit") loadSocialProfile();
     if(view === "blocked-users") loadBlockedUsers();
-    if(view === "conversations") loadConversations();
+    if(view === "conversations"){loadConversations();if(typeof loadExchangeInbox==="function")loadExchangeInbox();}
     if(view === "conversation") startConversationPolling();
+    if(view === "exchange-room") startExchangePolling();
     if(view==="conversation"&&state.inboxLatest&&state.inboxLatest.connectionId===state.selectedConversationId)dismissMessageBanner();
     if(view==="book-tower")setTimeout(function(){window.scrollTo(0,state.towerScrollTop||0);},0);
     if(view==="reading-recap")setTimeout(function(){window.scrollTo(0,state.recapScrollTop||0);},0);
@@ -2497,6 +2596,8 @@
     state.selectedBookId=route.selectedBookId||state.selectedBookId;
     state.detailFrom=safeSocialReturn(route.detailFrom,"library");
     state.selectedConversationId=route.selectedConversationId||null;
+    state.selectedExchangeRoomId=route.selectedExchangeRoomId||null;
+    state.inboxTab=route.inboxTab==="exchange"?"exchange":"dm";
     state.selectedFriendConnectionId=route.selectedFriendConnectionId||null;
     state.inboxReturnView=safeSocialReturn(route.inboxReturnView,"home");
     state.conversationReturnView=safeSocialReturn(route.conversationReturnView,"conversations");
@@ -2565,7 +2666,7 @@
     document.body.classList.toggle("library-prototype", state.view === "library");
     document.body.classList.toggle("stats-prototype", state.view === "stats");
     document.body.classList.toggle("memory-prototype", state.view === "book-tower" || state.view === "reading-recap");
-    document.body.classList.toggle("my-prototype", ["my","feedback","data-info","co-reading","profile-edit","friend-profile","blocked-users","conversations","conversation"].indexOf(state.view)!==-1);
+    document.body.classList.toggle("my-prototype", ["my","feedback","data-info","account-management","account-deletion","co-reading","profile-edit","friend-profile","blocked-users","conversations","conversation","exchange-room"].indexOf(state.view)!==-1);
     document.querySelector(".topbar h1").textContent = state.view === "home" ? "내 서재" : "내 독서 기록";
     // Keep unsaved inputs only when the same book/input survives the render.
     var detail = document.getElementById("view-detail");
@@ -2593,12 +2694,15 @@
     document.getElementById("view-my").hidden = state.view !== "my";
     document.getElementById("view-feedback").hidden = state.view !== "feedback";
     document.getElementById("view-data-info").hidden = state.view !== "data-info";
+    document.getElementById("view-account-management").hidden = state.view !== "account-management";
+    document.getElementById("view-account-deletion").hidden = state.view !== "account-deletion";
     document.getElementById("view-co-reading").hidden = state.view !== "co-reading";
     document.getElementById("view-profile-edit").hidden = state.view !== "profile-edit";
     document.getElementById("view-friend-profile").hidden = state.view !== "friend-profile";
     document.getElementById("view-blocked-users").hidden = state.view !== "blocked-users";
     document.getElementById("view-conversations").hidden = state.view !== "conversations";
     document.getElementById("view-conversation").hidden = state.view !== "conversation";
+    document.getElementById("view-exchange-room").hidden = state.view !== "exchange-room";
     var commonTop=["home","library","stats","conversations"].indexOf(state.view)!==-1;
     document.getElementById("libraryNavBtn").hidden = !commonTop||state.view === "library";
     document.getElementById("statsNavBtn").hidden = !commonTop||state.view === "stats";
@@ -2616,12 +2720,15 @@
     renderMy();
     renderFeedback();
     renderDataInfo();
+    renderAccountManagement();
+    renderAccountDeletion();
     renderCoReading();
     renderProfileEdit();
     renderFriendProfile();
     renderBlockedUsers();
     renderConversations();
     renderConversation();
+    renderExchangeRoom();
     if (draftBookId === state.selectedBookId){
       drafts.forEach(function(draft){
         var input = detail.querySelector(draft.selector);
@@ -3643,6 +3750,7 @@
         (state.messagePreferencesStatus==="error"?'<p class="my-form-error" role="status">메시지 설정을 저장하지 못했어요.</p>':'')+
       '</section>' +
       '<section class="my-section"><div class="my-section-title">계정</div>' +
+        '<button class="my-menu" type="button" data-nav="account-management"><span class="my-menu-label">계정 관리</span><span class="my-menu-arrow">›</span></button>' +
         '<button class="my-menu" type="button" data-nav="blocked-users"><span class="my-menu-label">차단한 사용자</span><span class="my-menu-arrow">›</span></button>' +
         '<button class="my-menu" type="button" data-nav="data-info"><span class="my-menu-label">개인정보 · 데이터 안내</span><span class="my-menu-arrow">›</span></button>' +
         '<button class="my-menu my-logout" type="button" data-logout><span class="my-menu-label">로그아웃</span></button>' +
@@ -3773,7 +3881,7 @@
     return conversationRepository.markRead(connectionId,newest.id).then(function(){
       if(userId!==activeAuthUserId||document.hidden||state.view!=="conversation"||state.selectedConversationId!==connectionId)return false;
       state.conversations=state.conversations.map(function(item){return item.connectionId===connectionId?Object.assign({},item,{unreadCount:0}):item;});
-      state.inboxUnread=state.conversations.reduce(function(total,item){return total+(item.unreadCount||0);},0);renderInboxBadge();
+      state.dmUnread=state.conversations.reduce(function(total,item){return total+(item.unreadCount||0);},0);state.inboxUnread=state.dmUnread+state.exchangeUnread;renderInboxBadge();
       return true;
     }).catch(function(){return false;});
   }
@@ -3786,7 +3894,7 @@
         isVisible:function(){return !document.hidden;},
         poll:function(){return conversationRepository.inboxState();},
         onState:function(next,meta){
-          state.inboxUnread=next.totalUnread;state.inboxLatest=messageFromInbox(next);
+          state.dmUnread=next.totalUnread;state.inboxUnread=state.dmUnread+state.exchangeUnread;state.inboxLatest=messageFromInbox(next);
           state.messagePreferences={receiveMessages:next.receiveMessages,inAppNotifications:next.inAppNotifications,previewMessage:next.previewMessage};
           renderInboxBadge();
           if(state.view==="my")renderMy();
@@ -3858,6 +3966,8 @@
     if(polling)polling.visibilityChanged();
     var inbox=ensureMessageInboxPolling();
     if(inbox)inbox.visibilityChanged();
+    var exchange=ensureExchangePolling();
+    if(exchange)exchange.visibilityChanged();
     if(document.hidden){dismissMessageBanner();closeVisitorBubble();}
   }
   document.addEventListener("visibilitychange",handleConversationVisibility);
@@ -3880,7 +3990,7 @@
     state.conversationsStatus="loading";state.conversationError="";renderAll();
     conversationRepository.list().then(function(list){
       if(userId!==activeAuthUserId||epoch!==conversationLoadEpoch)return;
-      state.conversations=list;state.conversationsStatus="ready";state.inboxUnread=list.reduce(function(total,item){return total+(item.unreadCount||0);},0);
+      state.conversations=list;state.conversationsStatus="ready";state.dmUnread=list.reduce(function(total,item){return total+(item.unreadCount||0);},0);state.inboxUnread=state.dmUnread+state.exchangeUnread;
     }).catch(function(error){
       if(userId!==activeAuthUserId||epoch!==conversationLoadEpoch)return;
       state.conversationsStatus="error";state.conversationError=error&&error.message||"대화를 불러오지 못했어요.";
@@ -3906,14 +4016,185 @@
       if(userId===activeAuthUserId&&connectionId===state.selectedConversationId){state.conversationLoadingOlder=false;renderConversationUpdate();}
     });
   }
+  function exchangeRoom(roomId){return state.exchangeRooms.find(function(item){return item.roomId===roomId;})||null;}
+  function stopExchangePolling(){if(exchangePolling)exchangePolling.stop();}
+  function ensureExchangePolling(){
+    if(!exchangePolling&&window.BooktokkiConversationPolling)exchangePolling=window.BooktokkiConversationPolling.create({
+      intervalMs:10000,isActive:function(){return state.view==="exchange-room"&&!!activeAuthUserId&&!!state.selectedExchangeRoomId;},
+      isVisible:function(){return !document.hidden;},poll:function(){return pollExchangeMessages();}
+    });
+    return exchangePolling;
+  }
+  function pollExchangeMessages(options){
+    options=options||{};
+    if(state.view!=="exchange-room"||document.hidden||!state.selectedExchangeRoomId||!exchangeReadingRepository)return Promise.resolve(false);
+    var roomId=state.selectedExchangeRoomId,userId=activeAuthUserId,epoch=++exchangeLoadEpoch,initial=!state.exchangeMessages.length;
+    if(options.showLoading){state.exchangeMessagesStatus="loading";state.exchangeNotesStatus="loading";state.exchangeError="";renderAll();}
+    return Promise.all([exchangeReadingRepository.messages(roomId),exchangeReadingRepository.sharedNotes(roomId),exchangeReadingRepository.roomDetail(roomId)]).then(function(result){
+      var messages=result[0],notes=result[1],detail=result[2];
+      if(userId!==activeAuthUserId||epoch!==exchangeLoadEpoch||roomId!==state.selectedExchangeRoomId||state.view!=="exchange-room")return false;
+      state.exchangeMessages=messages.slice().reverse();state.exchangeSharedNotes=notes;state.exchangeRoomDetail=detail;state.exchangeMessagesStatus="ready";state.exchangeNotesStatus="ready";state.exchangeCanSend=messages.length?messages[0].canSend:detail.length>=2;state.exchangeError="";
+      if(initial)state.exchangeHasMore=messages.length===50;
+      renderExchangeRoom();
+      var newest=state.exchangeMessages[state.exchangeMessages.length-1];
+      if(newest&&!document.hidden)return exchangeReadingRepository.markRead(roomId,newest.id).then(function(){return true;});
+      return true;
+    }).catch(function(error){
+      if(userId!==activeAuthUserId||epoch!==exchangeLoadEpoch||roomId!==state.selectedExchangeRoomId)return false;
+      state.exchangeMessagesStatus="error";state.exchangeNotesStatus="error";state.exchangeError=conversationLoadErrorMessage(error);renderExchangeRoom();return false;
+    });
+  }
+  function startExchangePolling(){var polling=ensureExchangePolling();if(!polling)return Promise.resolve(false);if(state.exchangeMessagesStatus==="idle")state.exchangeMessagesStatus="loading";if(state.exchangeNotesStatus==="idle")state.exchangeNotesStatus="loading";return polling.start();}
+  function openExchangeRoom(roomId){
+    state.selectedExchangeRoomId=roomId;state.exchangeMessages=[];state.exchangeMessagesStatus="idle";state.exchangeMessageDraft="";state.exchangeSendAttempt=null;state.exchangeError="";state.exchangeHasMore=false;state.exchangeSharedNotes=[];state.exchangeMyNotes=[];state.exchangeRoomDetail=[];state.exchangeNotesStatus="idle";goTo("exchange-room");
+  }
+
+  var exchangeNotesEpoch=0;
+  function loadExchangeNotes(){
+    if(!exchangeReadingRepository||!state.selectedExchangeRoomId||!activeAuthUserId)return Promise.resolve(false);
+    var roomId=state.selectedExchangeRoomId,userId=activeAuthUserId,epoch=++exchangeNotesEpoch;state.exchangeNotesStatus="loading";
+    return Promise.all([exchangeReadingRepository.sharedNotes(roomId),exchangeReadingRepository.myNotes(roomId)]).then(function(result){
+      if(epoch!==exchangeNotesEpoch||userId!==activeAuthUserId||roomId!==state.selectedExchangeRoomId)return false;
+      state.exchangeSharedNotes=result[0];state.exchangeMyNotes=result[1];state.exchangeNotesStatus="ready";state.exchangeError="";renderExchangeRoom();return true;
+    }).catch(function(error){if(epoch===exchangeNotesEpoch&&userId===activeAuthUserId){state.exchangeNotesStatus="error";state.exchangeError=conversationLoadErrorMessage(error);renderExchangeRoom();}return false;});
+  }
+
+  function exchangeLocalBookId(){
+    var room=exchangeRoom(state.selectedExchangeRoomId);if(!room||!room.linkedBookId||!cloudRepository)return null;
+    return Object.keys(state.books).find(function(id){var ref=cloudRepository.getRef(id);return ref&&ref.cloudId===room.linkedBookId;})||null;
+  }
+  function loadExchangeInbox(){
+    var userId=activeAuthUserId,epoch=++exchangeLoadEpoch;if(!exchangeReadingRepository){state.exchangeStatus="error";renderAll();return;}
+    state.exchangeStatus="loading";renderAll();
+    return Promise.all([exchangeReadingRepository.rooms(),exchangeReadingRepository.invitations()]).then(function(result){
+      if(userId!==activeAuthUserId||epoch!==exchangeLoadEpoch)return;state.exchangeRooms=result[0];state.exchangeInvitations=result[1];state.exchangeUnread=state.exchangeRooms.reduce(function(total,item){return total+(item.unreadCount||0);},0);state.inboxUnread=state.dmUnread+state.exchangeUnread;state.exchangeStatus="ready";
+    }).catch(function(error){if(userId===activeAuthUserId&&epoch===exchangeLoadEpoch){state.exchangeStatus="error";state.exchangeError=error&&error.message||"교환독서를 불러오지 못했어요.";}}).finally(function(){if(userId===activeAuthUserId&&state.view==="conversations")renderAll();});
+  }
+  function exchangeInboxHtml(){
+    if(state.exchangeStatus==="loading")return '<p class="conversation-empty">교환독서를 불러오고 있어요.</p>';
+    if(state.exchangeStatus==="error")return '<p class="conversation-error">'+esc(state.exchangeError||"교환독서를 불러오지 못했어요.")+'</p><button class="btn btn-outline" type="button" data-exchange-retry>다시 시도</button>';
+    var invitations=state.exchangeInvitations.length?'<section class="exchange-invitations"><strong>초대</strong>'+state.exchangeInvitations.map(function(item){return '<div class="exchange-invitation"><b>'+esc(item.workTitle)+'</b><p>'+esc(item.inviterDisplayName)+'님의 초대</p><div class="exchange-actions"><button class="btn btn-dark" type="button" data-exchange-accept="'+esc(item.roomId)+'">수락</button><button class="btn btn-outline" type="button" data-exchange-decline-open="'+esc(item.roomId)+'">거절</button></div></div>';}).join("")+'</section>':'';
+    var rooms=state.exchangeRooms.length?'<div class="conversation-list">'+state.exchangeRooms.map(function(item){return '<button class="conversation-row" type="button" data-exchange-open="'+esc(item.roomId)+'"><span class="conversation-row-copy"><span class="conversation-row-head"><span><strong class="conversation-row-name">'+esc(item.workTitle)+'</strong>'+(item.unreadCount?'<span class="conversation-row-unread">'+esc(unreadLabel(item.unreadCount))+'</span>':'')+'</span><span class="conversation-time">'+esc(item.memberCount)+'명</span></span><span class="conversation-preview">'+esc(item.lastMessage||"아직 대화가 없어요.")+'</span></span></button>';}).join("")+'</div>':'<p class="conversation-empty">참여 중인 교환독서가 없어요.</p>';
+    return invitations+'<button class="btn btn-outline" type="button" data-exchange-create>교환독서 만들기</button>'+rooms+'<button class="exchange-blocks-link" type="button" data-exchange-blocks-open>차단 관리&nbsp;›</button>';
+  }
+  function loadOlderExchangeMessages(){
+    if(state.exchangeLoadingOlder||!state.exchangeMessages.length||!exchangeReadingRepository)return;
+    var oldest=state.exchangeMessages[0],roomId=state.selectedExchangeRoomId,userId=activeAuthUserId,epoch=exchangeLoadEpoch;
+    var oldHeight=document.documentElement.scrollHeight,oldY=window.scrollY||0;
+    state.exchangeLoadingOlder=true;renderExchangeRoom();
+    exchangeReadingRepository.messages(roomId,{beforeCreatedAt:oldest.createdAt,beforeId:oldest.id,limit:50}).then(function(messages){if(userId!==activeAuthUserId||epoch!==exchangeLoadEpoch||roomId!==state.selectedExchangeRoomId)return;state.exchangeMessages=messages.slice().reverse().concat(state.exchangeMessages);state.exchangeHasMore=messages.length===50;}).catch(function(error){if(userId===activeAuthUserId)state.exchangeError=conversationLoadErrorMessage(error);}).finally(function(){if(userId===activeAuthUserId){state.exchangeLoadingOlder=false;renderExchangeRoom();requestAnimationFrame(function(){window.scrollTo(0,oldY+Math.max(0,document.documentElement.scrollHeight-oldHeight));});}});
+  }
   function renderConversations(){
     var el=document.getElementById("view-conversations");if(!el)return;var body="";
     if(state.conversationsStatus==="loading")body='<p class="friend-status">대화를 불러오고 있어요.</p>';
     else if(state.conversationsStatus==="error")body='<p class="conversation-error">'+esc(state.conversationError||"대화를 불러오지 못했어요.")+'</p><button class="btn btn-outline" type="button" data-conversations-retry>다시 시도</button>';
     else if(!state.conversations.length)body='<p class="conversation-empty">아직 대화가 없어요.<br>친구 프로필에서 책 이야기를 건네보세요.</p>';
     else body='<div class="conversation-list">'+state.conversations.map(function(item){return '<button class="conversation-row" type="button" data-conversation-open="'+esc(item.connectionId)+'"><span class="conversation-row-copy"><span class="conversation-row-head"><span><strong class="conversation-row-name">'+esc(item.friendDisplayName)+'</strong>'+(item.unreadCount?'<span class="conversation-row-unread" aria-label="읽지 않은 메시지 '+esc(unreadLabel(item.unreadCount))+'개">'+esc(unreadLabel(item.unreadCount))+'</span>':'')+'</span>'+(item.canSend?'<time class="conversation-time">'+esc(conversationTime(item.lastMessageAt))+'</time>':'<span class="conversation-readonly-label">읽기 전용</span>')+'</span><span class="conversation-preview">'+esc((item.lastMessageIsMine?"나: ":"")+item.lastMessage)+'</span></span></button>';}).join("")+'</div>';
-    el.innerHTML=myHeader("대화",state.inboxReturnView,true)+body;
+    var tabs='<div class="inbox-tabs" role="tablist"><button class="inbox-tab" role="tab" data-inbox-tab="dm" aria-selected="'+(state.inboxTab==="dm")+'">DM</button><button class="inbox-tab" role="tab" data-inbox-tab="exchange" aria-selected="'+(state.inboxTab==="exchange")+'">교환독서</button></div>';
+    el.innerHTML=myHeader("대화",state.inboxReturnView,true)+tabs+(state.inboxTab==="exchange"?exchangeInboxHtml():body);
   }
+
+  function exchangeTimelineHtml(){
+    var events=[];
+    state.exchangeMessages.forEach(function(item){events.push({kind:"message",at:item.createdAt,id:item.id,item:item});});
+    state.exchangeSharedNotes.forEach(function(item){events.push({kind:"note",at:item.sharedAt,id:item.shareId,item:item});});
+    events.sort(function(left,right){var byTime=String(left.at||"").localeCompare(String(right.at||""));return byTime||String(left.kind+left.id).localeCompare(String(right.kind+right.id));});
+    var older=state.exchangeHasMore?'<button class="btn btn-outline conversation-older" type="button" data-exchange-older'+(state.exchangeLoadingOlder?' disabled':'')+'>'+(state.exchangeLoadingOlder?'불러오는 중':'이전 메시지 보기')+'</button>':'';
+    if(!events.length)return older+'<p class="conversation-empty">아직 대화나 공유 기록이 없어요.</p>';
+    return older+events.map(function(event){
+      var item=event.item;
+      if(event.kind==="message")return '<div class="conversation-message '+(item.senderIsMe?'mine':'received')+'" data-exchange-message-id="'+esc(item.id)+'"><div class="conversation-bubble"'+(!item.senderIsMe?' data-exchange-report-target tabindex="0" role="button"':'')+'>'+esc(item.body)+'</div><div class="conversation-message-meta"><span>'+esc(item.senderIsMe?'나':item.senderDisplayName)+'</span><time class="conversation-time">'+esc(conversationTime(item.createdAt))+'</time></div></div>';
+      var side=item.isMine?' mine':' received';
+      if(item.isRevoked)return '<button class="exchange-timeline-note revoked'+side+'" type="button" data-exchange-note-detail="'+esc(item.shareId)+'" aria-label="공유가 철회된 북로그"><strong>'+esc(item.isMine?'나':item.ownerDisplayName)+'</strong><span>공유가 철회된 기록이에요.</span></button>';
+      if(item.isLocked){var copy=item.lockReason==='page_required'?'내가 읽은 페이지까지 오면 열려요.':item.lockReason==='link_unavailable'?'연결된 책을 확인할 수 없어 잠겨 있어요.':'완독 후 열람할 수 있어요.';return '<button class="exchange-timeline-note locked'+side+'" type="button" data-exchange-note-detail="'+esc(item.shareId)+'" aria-label="잠긴 공유 북로그"><strong>'+esc(item.isMine?'나':item.ownerDisplayName)+'</strong><span>'+copy+'</span></button>';}
+      return '<button class="exchange-timeline-note'+side+'" type="button" data-exchange-note-detail="'+esc(item.shareId)+'"><strong>'+esc(item.isMine?'나':item.ownerDisplayName)+'의 북로그</strong><span>'+esc(item.text)+'</span><small>'+esc(conversationTime(item.sharedAt))+'</small></button>';
+    }).join('');
+  }
+  function renderExchangeRoom(){
+    var el=document.getElementById("view-exchange-room");if(!el)return;var room=exchangeRoom(state.selectedExchangeRoomId),title=room?room.workTitle:"교환독서";
+    var timeline=state.exchangeMessagesStatus==="loading"?'<p class="conversation-empty">대화를 불러오고 있어요.</p>':state.exchangeMessagesStatus==="error"?'<p class="conversation-error">'+esc(state.exchangeError||"대화를 이용할 수 없어요.")+'</p>':exchangeTimelineHtml();
+    var screen=el.querySelector(".conversation-screen");
+    if(!screen||screen.getAttribute("data-exchange-room-id")!==String(state.selectedExchangeRoomId||"")){
+      el.innerHTML='<div class="conversation-screen" data-exchange-room-id="'+esc(state.selectedExchangeRoomId||"")+'"><div data-exchange-header></div><div class="conversation-messages" aria-live="polite"></div><div data-exchange-feedback></div><div data-exchange-composer></div></div>';
+      screen=el.querySelector(".conversation-screen");
+    }
+    if(!screen)return;
+    var mine=state.exchangeRoomDetail.find(function(member){return member.isMe;});
+    var summary='<button class="exchange-room-summary" type="button" data-exchange-room-detail><span><b>'+esc(title)+'</b><small>'+(mine?esc(mine.currentPage)+' / '+esc(mine.totalPages)+'p · '+state.exchangeRoomDetail.length+'명':'진도를 불러오고 있어요.')+'</small></span><span aria-hidden="true">›</span></button>';
+    screen.querySelector("[data-exchange-header]").innerHTML=myHeader(title,state.exchangeReturnView,true,'<button class="conversation-more" type="button" data-exchange-actions aria-label="교환독서 메뉴">•••</button>')+summary;
+    screen.querySelector(".conversation-messages").innerHTML=timeline;
+    screen.querySelector("[data-exchange-feedback]").innerHTML=state.exchangeError&&state.exchangeMessagesStatus!=="error"?'<p class="conversation-error">'+esc(state.exchangeError)+'</p>':'';
+    var composerHost=screen.querySelector("[data-exchange-composer]");
+    if(state.exchangeMessagesStatus==="error"){
+      composerHost.innerHTML="";
+    }else if(!state.exchangeCanSend){
+      if(!composerHost.querySelector(".conversation-readonly"))composerHost.innerHTML='<p class="conversation-readonly">활성 멤버가 2명 이상이고 차단 관계가 없어야 새 메시지를 보낼 수 있어요.</p>';
+    }else{
+      var form=composerHost.querySelector("#exchangeForm");
+      if(!form){
+        composerHost.innerHTML='<form class="conversation-composer" id="exchangeForm"><button class="exchange-book-action" type="button" data-exchange-note-compose aria-label="북로그 작성 및 공유">▤</button><textarea id="exchangeInput" rows="1" maxlength="1000" enterkeyhint="send" aria-label="그룹 메시지" placeholder="메시지 입력"></textarea><button class="conversation-send" type="submit">보내기</button></form>';
+        form=composerHost.querySelector("#exchangeForm");
+      }
+      var input=form.querySelector("#exchangeInput"),send=form.querySelector(".conversation-send");
+      if(input.value!==state.exchangeMessageDraft)input.value=state.exchangeMessageDraft;
+      resizeConversationInput(input);
+      send.disabled=!!state.exchangeSending;
+      send.textContent=state.exchangeSending?"전송 중":"보내기";
+    }
+  }
+  function exchangeNoteModalHtml(){
+    var linkedLocalId=exchangeLocalBookId(),linkedBook=linkedLocalId&&state.books[linkedLocalId];
+    var existing=state.exchangeMyNotes.length?state.exchangeMyNotes.map(function(note){return '<article class="exchange-note-card"><p>'+esc(note.text)+'</p><small>'+(note.page==null?'페이지 없음':esc(note.page)+'p')+'</small>'+(note.activeShareId?'<button class="btn btn-outline" data-exchange-note-revoke="'+esc(note.activeShareId)+'">공유 철회</button>':'<button class="btn btn-outline" data-exchange-note-share="'+esc(note.noteId)+'">공유</button>')+'</article>';}).join(''):'<p class="conversation-empty">이 책에 남긴 북로그가 없어요.</p>';
+    return '<div class="modal"><h2>북로그</h2><form id="exchangeNoteForm" class="exchange-note-compose"><textarea id="exchangeNoteInput" maxlength="2000" placeholder="내 북로그에 먼저 저장돼요.">'+esc(state.exchangeNoteDraft)+'</textarea><input id="exchangeNotePage" type="number" min="0"'+(linkedBook?' max="'+esc(linkedBook.totalPages)+'"':'')+' inputmode="numeric" placeholder="페이지 (선택)" value="'+esc(state.exchangeNotePage)+'"><label><input id="exchangeShareAfterSave" type="checkbox"'+(state.exchangeNoteShareAfterSave?' checked':'')+'> 저장 후 이 방에 공유</label><button class="btn btn-dark" type="submit">북로그 저장</button></form><section class="exchange-note-section"><h3>기존 북로그</h3>'+existing+'</section><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>닫기</button></div></div>';
+  }
+  function openExchangeNoteComposer(){
+    if(!exchangeReadingRepository||!state.selectedExchangeRoomId)return;
+    var userId=activeAuthUserId,roomId=state.selectedExchangeRoomId;openModal('<div class="modal"><h2>북로그</h2><p>기록을 불러오고 있어요.</p></div>');
+    exchangeReadingRepository.myNotes(roomId).then(function(notes){if(userId!==activeAuthUserId||roomId!==state.selectedExchangeRoomId)return;state.exchangeMyNotes=notes;openModal(exchangeNoteModalHtml());}).catch(function(){if(userId===activeAuthUserId)openModal('<div class="modal"><h2>북로그</h2><p class="modal-error">북로그를 불러오지 못했어요.</p><button class="btn btn-dark" data-closemodal>닫기</button></div>');});
+  }
+  function openExchangeNoteDetail(shareId){
+    var note=state.exchangeSharedNotes.find(function(item){return item.shareId===shareId;});if(!note)return;
+    if(note.isRevoked){openModal('<div class="modal"><h2>공유가 철회된 기록</h2><p>원본 북로그는 작성자의 개인 기록으로 남고, 이 모임에서는 더 이상 볼 수 없어요.</p><div class="modal-actions"><button class="btn btn-dark" data-closemodal>확인</button></div></div>');return;}
+    if(note.isLocked){var reason=note.lockReason==='page_required'?'이 기록 위치에 도달하면 내용을 볼 수 있어요.':note.lockReason==='link_unavailable'?'연결된 개인 책을 확인할 수 없어 잠겨 있어요.':'다른 판본이거나 페이지 정보가 없어 완독 후 볼 수 있어요.';openModal('<div class="modal"><h2>아직 잠긴 기록이에요</h2><p>'+esc(reason)+'</p><div class="modal-actions"><button class="btn btn-dark" data-closemodal>확인</button></div></div>');return;}
+    openModal('<div class="modal"><h2>'+esc(note.isMine?'내 북로그':note.ownerDisplayName+'의 북로그')+'</h2><p style="white-space:pre-wrap">'+esc(note.text)+'</p><p class="my-form-hint">'+(note.page==null?'페이지 없음':esc(note.page)+'p')+'</p>'+(!note.isMine?'<button class="btn btn-outline" data-exchange-note-report="'+esc(note.shareId)+'">신고</button>':'')+'<div class="modal-actions"><button class="btn btn-dark" data-closemodal>닫기</button></div></div>');
+  }
+  function openExchangeRoomDetail(){
+    var members=state.exchangeRoomDetail;
+    if(!members.length){openModal('<div class="modal"><h2>멤버 독서 진도</h2><p>진도를 불러오고 있어요.</p></div>');return;}
+    openModal('<div class="modal"><h2>'+esc(members[0].workTitle)+'</h2><p class="my-form-hint">활성 멤버가 동의한 현재 읽은 위치예요.</p><div class="exchange-progress-list">'+members.map(function(member){return '<div class="exchange-progress-row"><strong>'+esc(member.isMe?'나':member.displayName)+'</strong><span>'+esc(member.currentPage)+' / '+esc(member.totalPages)+'p'+(member.isCompleted?' · 완독':'')+'</span></div>';}).join('')+'</div><div class="modal-actions"><button class="btn btn-dark" data-closemodal>닫기</button></div></div>');
+  }
+  function exchangeTextKey(value){return String(value||"").trim().toLocaleLowerCase().replace(/\s+/g," ");}
+  function exchangeInvitation(roomId){return state.exchangeInvitations.find(function(item){return item.roomId===roomId;})||null;}
+  function exchangeBookMatchesInvitation(book,invitation){
+    if(!book||!invitation)return false;
+    var sameEdition=/^[0-9]{13}$/.test(invitation.workIsbn13||"")&&book.isbn13===invitation.workIsbn13&&Number(book.totalPages)===Number(invitation.workTotalPages);
+    var sameWork=exchangeTextKey(book.title)===exchangeTextKey(invitation.workTitle)&&exchangeTextKey(book.author)===exchangeTextKey(invitation.workAuthor);
+    return sameEdition||sameWork;
+  }
+  function exchangeBookOptions(selectedLocalId){return Object.keys(state.books).map(function(id){var book=state.books[id],ref=cloudRepository&&cloudRepository.getRef(id);return ref?'<option value="'+esc(ref.cloudId)+'" data-local-id="'+esc(id)+'" data-title="'+esc(book.title)+'" data-author="'+esc(book.author||"")+'" data-isbn13="'+esc(book.isbn13||"")+'" data-page="'+esc(book.currentPage)+'" data-total="'+esc(book.totalPages)+'" data-revision="'+esc(ref.revision)+'"'+(id===selectedLocalId?' selected':'')+'>'+esc(book.title)+' — '+esc(book.author||"")+'</option>':'';}).join("");}
+  function exchangeProgressFields(prefix){return '<div class="field"><label for="'+prefix+'Page">현재 읽는 페이지</label><input id="'+prefix+'Page" type="number" inputmode="numeric" min="0" value="0"></div><label><input id="'+prefix+'Consent" type="checkbox"> 이 모임의 활성 멤버에게 현재 페이지와 전체 페이지를 공개합니다.</label>';}
+  function exchangeParticipationProgress(key,revision,currentPage,consent){var signature=[revision,currentPage,consent===true].join('|'),prior=exchangeParticipationAttempts[key];if(prior&&prior.signature===signature)return prior.progress;var progress={revision:revision,currentPage:currentPage,consent:consent===true,clientId:uid()};exchangeParticipationAttempts[key]={signature:signature,progress:progress};return progress;}
+  function syncExchangeProgressField(selectId,pageId,roomId){var select=document.getElementById(selectId),page=document.getElementById(pageId),option=select&&select.options[select.selectedIndex];if(!option||!page)return;page.max=option.dataset.total||"";page.value=option.dataset.page||"0";var wrap=document.querySelector("[data-exchange-same-work-wrap]");if(wrap&&roomId){var invitation=exchangeInvitation(roomId),book=state.books[option.dataset.localId];wrap.hidden=exchangeBookMatchesInvitation(book,invitation);}}
+  function refreshExchangeBook(localId){var current=state.books[localId];if(!current||!cloudRepository||!cloudRepository.refreshBook)return Promise.resolve(false);return cloudRepository.refreshBook(activeAuthUserId,localId).then(function(row){return commitLocalBook(localBookFromCloudRow(current,row));});}
+  function openExchangeAccept(roomId,selectedLocalId){var invitation=exchangeInvitation(roomId),matchingId=selectedLocalId||Object.keys(state.books).find(function(id){return exchangeBookMatchesInvitation(state.books[id],invitation);})||"",options=exchangeBookOptions(matchingId);openModal('<div class="modal exchange-modal"><h2>교환독서 초대 수락</h2><p>'+esc(invitation?('『'+invitation.workTitle+'』을 내 서재의 책과 연결해요.'):'함께 읽을 책을 연결해요.')+'</p>'+(options?'<div class="field"><label for="exchangeAcceptBook">내 책</label><select id="exchangeAcceptBook" data-exchange-book-select="accept" data-room-id="'+esc(roomId)+'">'+options+'</select></div>':'<p class="my-form-hint">내 서재에 같은 책이 없어요.</p>')+'<button class="btn btn-outline" type="button" data-exchange-new-book-save="'+esc(roomId)+'">초대받은 책을 내 서재에 추가</button>'+(options?exchangeProgressFields('exchangeAccept')+'<label data-exchange-same-work-wrap><input id="exchangeSameWorkConfirm" type="checkbox"> 다른 표기지만 같은 작품임을 확인했어요.</label>':'')+'<div class="modal-error" id="exchangeModalError" hidden></div><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>취소</button>'+(options?'<button class="btn btn-dark" type="button" data-exchange-accept-submit="'+esc(roomId)+'">수락</button>':'')+'</div></div>');if(options)syncExchangeProgressField('exchangeAcceptBook','exchangeAcceptPage',roomId);}
+  var exchangeFriendLoadEpoch=0;
+  function exchangeFriendChoices(friends,attribute){return '<div class="exchange-friend-choices">'+friends.map(function(item){return '<label class="exchange-friend-choice"><input type="checkbox" '+attribute+' value="'+esc(item.connectionId)+'"><span>'+esc(item.displayName)+'</span></label>';}).join('')+'</div>';}
+  function loadExchangeFriendPicker(roomId,mode){
+    if(!exchangeReadingRepository||!activeAuthUserId)return;
+    var userId=activeAuthUserId,epoch=++exchangeFriendLoadEpoch;
+    openModal('<div class="modal exchange-modal"><h2>'+(mode==='create'?'교환독서 만들기':'친구 초대')+'</h2><p>초대 가능한 친구를 불러오고 있어요.</p></div>');
+    exchangeReadingRepository.invitableFriends(roomId).then(function(friends){
+      if(userId!==activeAuthUserId||epoch!==exchangeFriendLoadEpoch)return;
+      var empty='<p class="my-form-hint">지금 초대할 수 있는 친구가 없어요. 이미 참여·초대됐거나 차단된 사용자는 표시되지 않아요.</p>';
+      if(mode==='create'){openModal('<div class="modal exchange-modal"><h2>교환독서 만들기</h2><div class="field"><label for="exchangeCreateBook">함께 읽을 책</label><select id="exchangeCreateBook" data-exchange-book-select="create">'+exchangeBookOptions()+'</select></div>'+exchangeProgressFields('exchangeCreate')+'<div class="field"><span>친구 1~3명</span>'+(friends.length?exchangeFriendChoices(friends,'data-exchange-friend'):empty)+'</div><div class="modal-error" id="exchangeModalError" hidden></div><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>취소</button><button class="btn btn-dark" type="button" data-exchange-create-submit'+(friends.length?'':' disabled')+'>만들기</button></div></div>');syncExchangeProgressField('exchangeCreateBook','exchangeCreatePage');}
+      else openModal('<div class="modal exchange-modal"><h2>친구 초대</h2><div class="field">'+(friends.length?exchangeFriendChoices(friends,'data-exchange-invite-friend'):empty)+'</div><div class="modal-error" id="exchangeModalError" hidden></div><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>취소</button><button class="btn btn-dark" type="button" data-exchange-invite-submit="'+esc(roomId)+'"'+(friends.length?'':' disabled')+'>초대</button></div></div>');
+    }).catch(function(){if(userId===activeAuthUserId&&epoch===exchangeFriendLoadEpoch)openModal('<div class="modal exchange-modal"><h2>'+(mode==='create'?'교환독서 만들기':'친구 초대')+'</h2><p class="modal-error">친구 목록을 불러오지 못했어요.</p><div class="modal-actions"><button class="btn btn-outline" data-closemodal>닫기</button><button class="btn btn-dark" data-exchange-friends-retry="'+esc(mode)+'" data-room-id="'+esc(roomId||'')+'">다시 시도</button></div></div>');});
+  }
+  function openExchangeCreate(){loadExchangeFriendPicker(null,'create');}
+  function openExchangeDecline(roomId){var invitation=exchangeInvitation(roomId);openModal('<div class="modal exchange-modal"><h2>교환독서 초대 거절</h2><p>'+esc(invitation?invitation.inviterDisplayName+'님의 초대를 거절할까요?':'이 초대를 거절할까요?')+'</p><p class="my-form-hint">일반 거절 후에는 새 초대를 받을 수 있어요.</p><div class="modal-actions" style="flex-direction:column"><button class="btn btn-dark" type="button" data-exchange-decline="'+esc(roomId)+'">이번 초대만 거절</button><button class="btn btn-outline" type="button" data-exchange-decline-block="'+esc(roomId)+'">이 사람의 교환독서 초대 차단</button><button class="btn btn-ghost" type="button" data-closemodal>취소</button></div><div class="modal-error" id="exchangeModalError" hidden></div></div>');}
+  function openExchangeInviteBlocks(){var userId=activeAuthUserId;openModal('<div class="modal exchange-modal"><h2>초대 차단 관리</h2><p>목록을 불러오고 있어요.</p></div>');exchangeReadingRepository.inviteBlocks().then(function(blocks){if(userId!==activeAuthUserId)return;openModal('<div class="modal exchange-modal"><h2>초대 차단 관리</h2>'+(blocks.length?'<div class="exchange-progress-list">'+blocks.map(function(item){return '<div class="exchange-progress-row"><strong>'+esc(item.displayName)+'</strong><button class="btn btn-ghost" type="button" data-exchange-unblock-inviter="'+esc(item.blockId)+'">해제</button></div>';}).join('')+'</div>':'<p class="my-form-hint">차단한 교환독서 초대가 없어요.</p>')+'<p class="my-form-hint">해제해도 이전 초대는 복원되지 않아요.</p><div class="modal-actions"><button class="btn btn-dark" type="button" data-closemodal>닫기</button></div><div class="modal-error" id="exchangeModalError" hidden></div></div>');}).catch(function(){if(userId===activeAuthUserId)openModal('<div class="modal exchange-modal"><h2>초대 차단 관리</h2><p class="modal-error">차단 목록을 불러오지 못했어요.</p><div class="modal-actions"><button class="btn btn-dark" data-closemodal>닫기</button></div></div>');});}
+  function openExchangeActions(){openModal('<div class="modal"><h2>교환독서 메뉴</h2><p>활성 멤버 누구나 친구를 초대할 수 있어요.</p><div class="modal-actions" style="flex-direction:column"><button class="btn btn-outline" type="button" data-exchange-invite-open>친구 초대</button><button class="btn btn-outline" type="button" data-exchange-leave>방 나가기</button><button class="btn btn-dark" type="button" data-closemodal>닫기</button></div></div>');}
+  function openExchangeReport(messageId){openModal('<div class="modal"><h2>그룹 메시지 신고</h2><p>선택한 메시지를 운영 검토 대상으로 신고할까요?</p><p class="my-form-hint">본문·작성 시각 snapshot은 최대 90일 보관돼요.</p><div class="field"><label for="exchangeReportCategory">이유</label><select id="exchangeReportCategory"><option value="spam">스팸</option><option value="harassment">괴롭힘</option><option value="inappropriate_content">부적절한 콘텐츠</option><option value="other">기타</option></select></div><div class="modal-error" id="exchangeModalError" hidden></div><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>취소</button><button class="btn btn-dark" type="button" data-exchange-report-submit="'+esc(messageId)+'">신고</button></div></div>');}
   function renderConversation(){
     var el=document.getElementById("view-conversation");if(!el)return;
     var peer=conversationPeer(state.selectedConversationId),name=peer&&peer.displayName||"대화";
@@ -4015,12 +4296,36 @@
         '<section><h3>현재 기기에 저장되는 정보</h3><p>IndexedDB에는 책과 독서 기록, 북로그, 직접 올린 표지 이미지가 남을 수 있어요. localStorage에는 로그인 세션, Local Owner 정보와 안전한 이전·복원을 위한 진행 정보가 저장될 수 있어요.</p></section>' +
         '<section><h3>Minimal Analytics</h3><p>책 추가와 독서 기록 저장 같은 최소 행동을 사용자 UUID와 연결해 기록해요. 서비스 개선과 오류 확인을 위해 최초 유입 경로, 로그인 성공·실패 같은 최소 이용 상태, 친구 초대·연결 과정의 최소 상태도 기록할 수 있어요. 익명 통계가 아니며, 책 제목·검색어·실제 페이지 숫자·북로그 본문은 Analytics event에 넣지 않아요.</p></section>' +
         '<section><h3>친구 토끼 방문</h3><p>친구와 둘 다 허용한 경우에만 북토끼를 사용하는 동안 마지막으로 확인된 시각 하나를 잠시 저장해요. 이전 기록은 남기지 않고 몇 분 뒤 효력을 잃어요. 친구에게는 시각이 아니라 토끼가 놀러 왔는지만 전달돼요. 서비스 개선을 위해 두 사람의 사용 시간이 겹쳤는지와 친구 토끼가 화면에 보였는지만 30분 단위로 기록해요.</p></section>' +
-        '<section><h3>메시지 신고 증거</h3><p>메시지를 신고하면 신고 메시지 본문, 작성 시각과 신고 사유를 신고 검토와 서비스 안전 운영을 위해 별도 증거로 저장해요. 일반 대화 원본은 계정 삭제 정책을 따르며, 신고 증거는 접수 후 최대 90일 보관한 뒤 자동 삭제돼요. 신고자나 신고 대상 계정이 삭제되면 더 일찍 삭제될 수 있어요.</p></section>' +
-        '<section><h3>의견 보내기</h3><p>보낸 의견은 로그인한 사용자 UUID와 함께 저장돼요. 의견 확인과 Public Alpha 개선에 사용하며, 비밀번호나 민감한 개인정보는 적지 말아줘.</p></section>' +
-        '<section><h3>로그아웃과 데이터 삭제</h3><p>로그아웃은 계정 삭제가 아니에요. 로그아웃 후에도 현재 기기의 로컬 데이터가 남을 수 있고, 서버 데이터와 기기 데이터는 별도로 관리될 수 있어요. 계정 삭제가 처리되면 참여한 대화도 삭제되어 상대방 화면에서 사라질 수 있어요. 현재 앱에는 자동 회원탈퇴나 전체 데이터 삭제 기능이 없어요.</p></section>' +
+        '<section><h3>메시지 신고 증거</h3><p>메시지를 신고하면 신고 메시지 본문, 작성 시각과 신고 사유를 신고 검토와 서비스 안전 운영을 위해 별도 증거로 저장해요. 일반 사용자는 이 증거를 볼 수 없어요. 1:1 대화와 교환독서 신고 증거는 기본적으로 접수 후 최대 90일 보관하고, 처리가 끝나 보존 필요가 없으면 더 일찍 삭제할 수 있어요. 법적 의무나 분쟁 대응을 위한 별도 보존 사유가 있으면 정해진 검토 절차가 끝날 때까지 보존될 수 있어요.</p></section>' +
+        '<section><h3>의견 보내기</h3><p>보내주신 의견은 로그인한 사용자 ID와 함께 저장됩니다. 서비스 개선을 위해 활용되며, 비밀번호나 민감한 개인정보는 입력하지 말아 주세요.</p></section>' +
+        '<section><h3>로그아웃과 데이터 삭제</h3><p>로그아웃은 계정 삭제가 아니에요. 로그아웃 후에도 현재 기기의 로컬 데이터가 남을 수 있고, 서버 데이터와 기기 데이터는 별도로 관리될 수 있어요. 계정 삭제 시 1:1 대화는 기존 정책에 따라 삭제돼요. 교환독서 메시지 본문은 다른 참여자의 대화 맥락을 위해 남고 작성자는 ‘탈퇴한 사용자’로 표시돼요. 메시지 내용과 맥락으로 작성자를 알아볼 가능성은 남아 있어요. 보호된 신고 증거는 안전 운영을 위해 별도로 남을 수 있어요.</p></section>' +
         '<section><h3>외부 서비스</h3><p>Kakao Login과 Kakao Book Search, Supabase, GitHub Pages, Cloudflare Worker를 사용해 로그인, 책 검색, 데이터 저장과 앱 제공 기능을 운영해요.</p></section>' +
         '<section><h3>데이터 삭제 요청</h3><p>데이터 삭제를 원한다면 MY → 의견 보내기를 통해 요청해줘. 확인 후 계정과 연결된 데이터 삭제를 진행할게. 외부 서비스의 로그나 백업까지 즉시 삭제된다는 의미는 아니에요.</p></section>' +
       '</div>';
+  }
+
+  function renderAccountManagement(){
+    var el=document.getElementById("view-account-management");if(!el)return;
+    el.innerHTML=myHeader("계정 관리","my")+
+      '<section class="my-section"><button class="my-menu" type="button" data-nav="account-deletion"><span class="my-menu-copy"><span class="my-menu-label">회원 탈퇴</span><span class="my-menu-note">계정과 개인 기록을 삭제해요</span></span><span class="my-menu-arrow">›</span></button></section>';
+  }
+
+  function renderAccountDeletion(){
+    var el=document.getElementById("view-account-deletion");if(!el)return;
+    el.innerHTML=myHeader("회원 탈퇴","account-management")+
+      '<div class="account-delete-guide">'+
+        '<section><h3>삭제되는 데이터</h3><ul><li>개인 책장, 독서 기록과 비공개 북로그</li><li>친구 관계와 교환독서 참여 정보</li><li>기존 1:1 대화와 개인 연결 데이터</li></ul></section>'+
+        '<section><h3>일부 보존되는 데이터</h3><ul><li>교환독서 그룹 메시지 본문은 남고 작성자는 ‘탈퇴한 사용자’로 표시돼요.</li><li>신고 처리에 필요한 최소 신고 기록과 증거는 정해진 기간 동안 보호돼요.</li></ul><p>메시지 본문이나 대화 맥락만으로 작성자를 알아볼 가능성은 남아 있어요.</p></section>'+
+      '</div>'+
+      (state.accountDeletionMessage?'<p class="my-form-error" role="status">'+esc(state.accountDeletionMessage)+'</p>':'')+
+      '<fieldset class="account-delete-reasons"><legend>탈퇴 이유 <span class="my-form-hint">(선택)</span></legend>'+
+        '<label><input type="radio" name="accountDeletionReason" value="infrequent_use"><span>서비스를 자주 사용하지 않아요</span></label>'+
+        '<label><input type="radio" name="accountDeletionReason" value="missing_features"><span>원하는 기능이 부족해요</span></label>'+
+        '<label><input type="radio" name="accountDeletionReason" value="difficult_to_use"><span>사용하기 불편해요</span></label>'+
+        '<label><input type="radio" name="accountDeletionReason" value="privacy_concern"><span>개인정보가 걱정돼요</span></label>'+
+        '<label><input type="radio" name="accountDeletionReason" value="other"><span>기타</span></label>'+
+      '</fieldset>'+
+      '<label class="account-delete-confirm"><input type="checkbox" data-account-delete-confirm><span>삭제·보존 항목을 확인했고 계정을 영구 삭제하는 데 동의합니다.</span></label><div class="account-delete-actions"><button class="account-delete-danger" type="button" data-account-delete-submit disabled>회원 탈퇴</button></div>';
   }
 
   function loadCoReading(){
@@ -4693,6 +4998,34 @@
     });
   }
 
+  function clearDeletedAccountFromDevice(userId){
+    accountDeletionSubmitting=false;
+    try{
+      var owner=window.BooktokkiCloudBootstrap&&window.BooktokkiCloudBootstrap.readLocalOwner(window.localStorage);
+      if(owner&&owner.userId===userId){
+        window.localStorage.removeItem("booktokki:local-owner:v1");
+        window.indexedDB.deleteDatabase("booktokki");
+      }
+    }catch(_error){}
+    return supabaseClient.auth.signOut({scope:"local"}).catch(function(){}).then(function(){showSignedOut("회원 탈퇴가 완료됐어요.");});
+  }
+
+  function submitAccountDeletion(button){
+    if(accountDeletionSubmitting||!activeAuthUserId)return;
+    var userId=activeAuthUserId,reasonInput=document.querySelector('input[name="accountDeletionReason"]:checked'),reason=reasonInput?reasonInput.value:null;accountDeletionSubmitting=true;if(button)button.disabled=true;
+    state.accountDeletionStatus="deleting";state.accountDeletionMessage="계정을 삭제하고 있어요.";renderAll();
+    supabaseClient.functions.invoke("delete-account",{body:{confirmation:"DELETE",reason:reason}}).then(function(result){
+      if(result.error)throw result.error;return clearDeletedAccountFromDevice(userId);
+    }).catch(function(error){
+      return supabaseClient.auth.getUser().then(function(result){
+        if(!result.data||!result.data.user)return clearDeletedAccountFromDevice(userId);
+        accountDeletionSubmitting=false;
+        var code=error&&error.context&&error.context.status===401?"로그인 세션을 확인할 수 없어요. 다시 로그인해 주세요.":"탈퇴를 완료하지 못했어요. 계정은 유지되고 있으며 안전하게 다시 시도할 수 있어요.";
+        state.accountDeletionStatus="idle";state.accountDeletionMessage=code;if(activeAuthUserId===userId)renderAll();
+      }).catch(function(){accountDeletionSubmitting=false;state.accountDeletionStatus="idle";state.accountDeletionMessage="탈퇴 결과를 확인하지 못했어요. 다시 로그인해 계정 상태를 확인해 주세요.";renderAll();});
+    });
+  }
+
   /* ---------------- event delegation ---------------- */
   function removeFriendFromUi(connectionId,message){
     state.coReadingConnections=state.coReadingConnections.filter(function(c){return c.connectionId!==connectionId;});
@@ -4712,6 +5045,12 @@
     openModal('<div class="modal"><h2>사용자 신고</h2><div class="field"><label for="socialReportCategory">이유</label><select id="socialReportCategory"><option value="spam">스팸</option><option value="harassment">괴롭힘</option><option value="inappropriate_content">부적절한 콘텐츠</option><option value="other">기타</option></select></div><div class="field"><label for="socialReportDetail">추가 설명 (선택)</label><textarea id="socialReportDetail" maxlength="500"></textarea></div><div class="modal-error" id="socialReportError" hidden></div><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>취소</button><button class="btn btn-dark" type="button" data-social-report-submit="'+esc(connectionId)+'">신고</button></div></div>');
   }
   document.addEventListener("pointerdown",function(e){
+    var exchangeTarget=e.target.closest&&e.target.closest("[data-exchange-report-target]");
+    if(exchangeTarget&&state.view==="exchange-room"){
+      var exchangeRow=exchangeTarget.closest("[data-exchange-message-id]");if(!exchangeRow)return;
+      clearTimeout(messageLongPressTimer);messageLongPressStart={x:e.clientX,y:e.clientY,id:exchangeRow.getAttribute("data-exchange-message-id"),exchange:true};
+      messageLongPressTimer=setTimeout(function(){var start=messageLongPressStart;if(start&&start.exchange)openExchangeReport(start.id);},600);return;
+    }
     var target=e.target.closest&&e.target.closest("[data-message-report-target]");
     if(!target||state.view!=="conversation"){if(!e.target.closest||!e.target.closest("#conversationMessageMenu"))closeConversationMessageMenu();return;}
     var row=target.closest("[data-message-id]");if(!row)return;
@@ -4725,10 +5064,12 @@
   document.addEventListener("pointerup",function(){clearTimeout(messageLongPressTimer);messageLongPressTimer=null;messageLongPressStart=null;},{passive:true});
   document.addEventListener("pointercancel",closeConversationMessageMenu,{passive:true});
   document.addEventListener("contextmenu",function(e){
+    var exchangeTarget=e.target.closest&&e.target.closest("[data-exchange-report-target]");if(exchangeTarget){var exchangeRow=exchangeTarget.closest("[data-exchange-message-id]");if(exchangeRow){e.preventDefault();openExchangeReport(exchangeRow.getAttribute("data-exchange-message-id"));}return;}
     var target=e.target.closest&&e.target.closest("[data-message-report-target]");if(!target)return;
     var row=target.closest("[data-message-id]");if(!row)return;e.preventDefault();openConversationMessageMenu(row.getAttribute("data-message-id"),e.clientX,e.clientY);
   });
   document.addEventListener("keydown",function(e){
+    var exchangeTarget=e.target.closest&&e.target.closest("[data-exchange-report-target]");if(exchangeTarget&&(e.key==="Enter"||e.key===" "||(e.shiftKey&&e.key==="F10"))){var exchangeRow=exchangeTarget.closest("[data-exchange-message-id]");if(exchangeRow){e.preventDefault();openExchangeReport(exchangeRow.getAttribute("data-exchange-message-id"));}return;}
     var target=e.target.closest&&e.target.closest("[data-message-report-target]");
     if(target&&(e.key==="Enter"||e.key===" "||(e.shiftKey&&e.key==="F10"))){e.preventDefault();var row=target.closest("[data-message-id]"),rect=target.getBoundingClientRect();openConversationMessageMenu(row.getAttribute("data-message-id"),rect.left,rect.bottom+4);}
     else if(e.key==="Escape")closeConversationMessageMenu();
@@ -4758,6 +5099,7 @@
     t=e.target.closest("[data-message-banner-close]");if(t){dismissMessageBanner();return;}
     t=e.target.closest("[data-message-banner-open]");if(t){var banner=document.getElementById("messageBanner"),bannerConnection=banner&&banner.dataset.connectionId;dismissMessageBanner();if(bannerConnection)openConversation(bannerConnection);return;}
     t=e.target.closest("[data-message-setting]");if(t){updateMessagePreference(t.getAttribute("data-message-setting"));return;}
+    t=e.target.closest("[data-account-delete-submit]");if(t){submitAccountDeletion(t);return;}
     t = e.target.closest("[data-closemodal]");
     if(t){closeModal();return;}
     t = e.target.closest("[data-opencapture]");
@@ -4786,6 +5128,41 @@
     if(t){appBack(t.getAttribute("data-app-back"));return;}
     t = e.target.closest("[data-nav]");
     if (t){ goTo(t.getAttribute("data-nav")); return; }
+    t=e.target.closest("[data-inbox-tab]");
+    if(t){state.inboxTab=t.getAttribute("data-inbox-tab")==="exchange"?"exchange":"dm";if(state.inboxTab==="exchange")loadExchangeInbox();else renderConversations();return;}
+    t=e.target.closest("[data-exchange-open]");if(t){openExchangeRoom(t.getAttribute("data-exchange-open"));return;}
+    t=e.target.closest("[data-exchange-note-compose]");if(t){openExchangeNoteComposer();return;}
+    t=e.target.closest("[data-exchange-note-detail]");if(t){openExchangeNoteDetail(t.getAttribute("data-exchange-note-detail"));return;}
+    t=e.target.closest("[data-exchange-room-detail]");if(t){openExchangeRoomDetail();return;}
+    t=e.target.closest("[data-exchange-notes-retry]");if(t){loadExchangeNotes();return;}
+    t=e.target.closest("[data-exchange-note-share]");if(t){var shareUser=activeAuthUserId,shareRoom=state.selectedExchangeRoomId;t.disabled=true;exchangeReadingRepository.shareNote(shareRoom,t.getAttribute("data-exchange-note-share")).then(function(){if(shareUser===activeAuthUserId){closeModal();return loadExchangeNotes();}}).catch(function(error){if(shareUser===activeAuthUserId){state.exchangeError=conversationErrorMessage(error);renderExchangeRoom();}});return;}
+    t=e.target.closest("[data-exchange-note-revoke]");if(t&&window.confirm("이 북로그의 공유를 철회할까요? 개인 북로그는 그대로 남아요.")){var revokeUser=activeAuthUserId,revokeRoom=state.selectedExchangeRoomId;t.disabled=true;exchangeReadingRepository.revokeNote(revokeRoom,t.getAttribute("data-exchange-note-revoke")).then(function(){if(revokeUser===activeAuthUserId){closeModal();return loadExchangeNotes();}}).catch(function(error){if(revokeUser===activeAuthUserId){state.exchangeError=conversationErrorMessage(error);renderExchangeRoom();}});return;}
+    t=e.target.closest("[data-exchange-note-report]");if(t){openModal('<div class="modal"><h2>공유 북로그 신고</h2><p>이 기록을 운영 검토 대상으로 신고할까요?</p><p class="my-form-hint">본문·작성 시각 snapshot은 최대 90일 보관돼요.</p><div class="field"><label for="exchangeNoteReportCategory">이유</label><select id="exchangeNoteReportCategory"><option value="spam">스팸</option><option value="harassment">괴롭힘</option><option value="inappropriate_content">부적절한 콘텐츠</option><option value="other">기타</option></select></div><div class="modal-error" id="exchangeModalError" hidden></div><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>취소</button><button class="btn btn-dark" type="button" data-exchange-note-report-submit="'+esc(t.getAttribute("data-exchange-note-report"))+'">신고</button></div></div>');return;}
+    t=e.target.closest("[data-exchange-note-report-submit]");if(t){var noteReportUser=activeAuthUserId,noteReportRoom=state.selectedExchangeRoomId,noteReportOut=document.getElementById("exchangeModalError"),noteReportCategory=document.getElementById("exchangeNoteReportCategory");t.disabled=true;exchangeReadingRepository.reportNote(noteReportRoom,t.getAttribute("data-exchange-note-report-submit"),noteReportCategory.value,null).then(function(){if(noteReportUser===activeAuthUserId)openModal('<div class="modal"><h2>신고했어요.</h2><p>접수된 기록은 운영 검토에만 사용돼요.</p><div class="modal-actions"><button class="btn btn-dark" type="button" data-closemodal>확인</button></div></div>');}).catch(function(error){if(noteReportUser===activeAuthUserId&&noteReportOut){noteReportOut.textContent=error&&error.code==="PT409"?"이미 신고한 기록이에요.":"신고하지 못했어요.";noteReportOut.hidden=false;t.disabled=false;}});return;}
+    t=e.target.closest("[data-exchange-older]");if(t){loadOlderExchangeMessages();return;}
+    t=e.target.closest("[data-exchange-retry]");if(t){loadExchangeInbox();return;}
+    t=e.target.closest("[data-exchange-create]");if(t){openExchangeCreate();return;}
+    t=e.target.closest("[data-exchange-create-submit]");if(t){
+      var createBook=document.getElementById("exchangeCreateBook"),createOption=createBook&&createBook.options[createBook.selectedIndex],createPage=document.getElementById("exchangeCreatePage"),createConsent=document.getElementById("exchangeCreateConsent"),selectedFriends=Array.from(document.querySelectorAll("[data-exchange-friend]:checked")).map(function(input){return input.value;}),createUser=activeAuthUserId,out=document.getElementById("exchangeModalError");
+      var createKey='create:'+String(createBook&&createBook.value||'')+':'+selectedFriends.slice().sort().join(','),createProgress=exchangeParticipationProgress(createKey,Number(createOption&&createOption.dataset.revision),Number(createPage&&createPage.value),!!(createConsent&&createConsent.checked));
+      if(!createBook||!createOption||selectedFriends.length<1||!createProgress.consent||createProgress.currentPage<0||createProgress.currentPage>Number(createOption.dataset.total)){if(out){out.textContent=!createProgress.consent?"진도 공개 동의가 필요해요.":"책, 현재 페이지와 친구를 확인해 주세요.";out.hidden=false;}return;}t.disabled=true;
+      exchangeReadingRepository.createRoom(createBook.value,selectedFriends,createProgress).then(function(roomId){delete exchangeParticipationAttempts[createKey];if(createUser!==activeAuthUserId)return;return refreshExchangeBook(createOption.dataset.localId).then(function(){return roomId;});}).then(function(roomId){if(createUser!==activeAuthUserId||!roomId)return;closeModal();state.inboxTab="exchange";loadExchangeInbox();openExchangeRoom(roomId);}).catch(function(error){if(createUser===activeAuthUserId&&out){out.textContent=error&&error.code==="PT409"?"다른 기기에서 진도가 변경됐어요. 다시 불러온 뒤 시도해 주세요.":error.message||"교환독서를 만들지 못했어요.";out.hidden=false;t.disabled=false;}});return;
+    }
+    t=e.target.closest("[data-exchange-accept]");if(t){openExchangeAccept(t.getAttribute("data-exchange-accept"));return;}
+    t=e.target.closest("[data-exchange-new-book-save]");if(t){var newRoom=t.getAttribute("data-exchange-new-book-save"),newOut=document.getElementById("exchangeModalError"),newUser=activeAuthUserId,newClientId=exchangeInvitationBookAttempts[newRoom]||(exchangeInvitationBookAttempts[newRoom]=uid());t.disabled=true;exchangeReadingRepository.addInvitationBook(newRoom,newClientId).then(function(row){if(newUser!==activeAuthUserId||!row)return null;delete exchangeInvitationBookAttempts[newRoom];var localBook=cloudRepository.adoptBookRow(newUser,row);return commitLocalBook(localBook).then(function(){if(row.created_book&&window.BooktokkiAnalyticsRepository)trackAnalyticsEvent(function(){return window.BooktokkiAnalyticsRepository.bookAddedEvent("book_added:"+localBook.id,row.id,row.created_at);});return localBook.id;});}).then(function(localId){if(newUser===activeAuthUserId&&localId)openExchangeAccept(newRoom,localId);}).catch(function(error){if(newUser===activeAuthUserId&&newOut){newOut.textContent=error&&error.code==="PT422"?"초대받은 책 정보가 부족해 자동으로 추가할 수 없어요.":"책을 내 서재에 추가하지 못했어요. 다시 시도해 주세요.";newOut.hidden=false;t.disabled=false;}});return;}
+    t=e.target.closest("[data-exchange-accept-submit]");if(t){var acceptRoom=t.getAttribute("data-exchange-accept-submit"),acceptBook=document.getElementById("exchangeAcceptBook"),acceptOption=acceptBook&&acceptBook.options[acceptBook.selectedIndex],acceptPage=document.getElementById("exchangeAcceptPage"),acceptConsent=document.getElementById("exchangeAcceptConsent"),confirmSame=document.getElementById("exchangeSameWorkConfirm"),confirmWrap=document.querySelector("[data-exchange-same-work-wrap]"),acceptUser=activeAuthUserId,acceptOut=document.getElementById("exchangeModalError"),acceptKey='accept:'+acceptRoom+':'+String(acceptBook&&acceptBook.value||''),acceptProgress=exchangeParticipationProgress(acceptKey,Number(acceptOption&&acceptOption.dataset.revision),Number(acceptPage&&acceptPage.value),!!(acceptConsent&&acceptConsent.checked));if(!acceptOption||!acceptProgress.consent||acceptProgress.currentPage<0||acceptProgress.currentPage>Number(acceptOption.dataset.total)||(confirmWrap&&!confirmWrap.hidden&&!(confirmSame&&confirmSame.checked))){acceptOut.textContent=!acceptProgress.consent?"진도 공개 동의가 필요해요.":confirmWrap&&!confirmWrap.hidden&&!(confirmSame&&confirmSame.checked)?"같은 작품인지 확인해 주세요.":"현재 페이지를 확인해 주세요.";acceptOut.hidden=false;return;}t.disabled=true;exchangeReadingRepository.accept(acceptRoom,acceptBook.value,confirmSame&&confirmSame.checked,acceptProgress).then(function(){delete exchangeParticipationAttempts[acceptKey];if(acceptUser!==activeAuthUserId)return;return refreshExchangeBook(acceptOption.dataset.localId);}).then(function(){if(acceptUser!==activeAuthUserId)return false;closeModal();state.inboxTab="exchange";return loadExchangeInbox();}).then(function(){if(acceptUser!==activeAuthUserId)return;openExchangeRoom(acceptRoom);}).catch(function(error){if(acceptUser===activeAuthUserId&&acceptOut){acceptOut.textContent=error&&error.code==="PT409"?"다른 기기에서 진도가 변경됐어요. 다시 불러온 뒤 시도해 주세요.":error.message||"초대를 수락하지 못했어요.";acceptOut.hidden=false;t.disabled=false;}});return;}
+    t=e.target.closest("[data-exchange-decline-open]");if(t){openExchangeDecline(t.getAttribute("data-exchange-decline-open"));return;}
+    t=e.target.closest("[data-exchange-decline]");if(t){var declineRoom=t.getAttribute("data-exchange-decline"),declineUser=activeAuthUserId,declineOut=document.getElementById("exchangeModalError");t.disabled=true;exchangeReadingRepository.decline(declineRoom).then(function(){if(declineUser===activeAuthUserId){closeModal();loadExchangeInbox();}}).catch(function(error){if(declineUser===activeAuthUserId){if(declineOut){declineOut.textContent=error.message||"초대를 거절하지 못했어요.";declineOut.hidden=false;}t.disabled=false;}});return;}
+    t=e.target.closest("[data-exchange-decline-block]");if(t){var blockedRoom=t.getAttribute("data-exchange-decline-block"),blockedUser=activeAuthUserId,blockedOut=document.getElementById("exchangeModalError");t.disabled=true;exchangeReadingRepository.declineAndBlock(blockedRoom).then(function(){if(blockedUser===activeAuthUserId){closeModal();loadExchangeInbox();}}).catch(function(error){if(blockedUser===activeAuthUserId){if(blockedOut){blockedOut.textContent=error.message||"초대를 차단하지 못했어요.";blockedOut.hidden=false;}t.disabled=false;}});return;}
+    t=e.target.closest("[data-exchange-blocks-open]");if(t){openExchangeInviteBlocks();return;}
+    t=e.target.closest("[data-exchange-unblock-inviter]");if(t){var inviteBlockId=t.getAttribute("data-exchange-unblock-inviter"),inviteBlockUser=activeAuthUserId,inviteBlockOut=document.getElementById("exchangeModalError");t.disabled=true;exchangeReadingRepository.unblockInviter(inviteBlockId).then(function(result){if(inviteBlockUser!==activeAuthUserId)return;if(result===false)throw new Error("차단 항목을 찾지 못했어요.");openExchangeInviteBlocks();}).catch(function(error){if(inviteBlockUser===activeAuthUserId){if(inviteBlockOut){inviteBlockOut.textContent=error.message||"차단을 해제하지 못했어요.";inviteBlockOut.hidden=false;}t.disabled=false;}});return;}
+    t=e.target.closest("[data-exchange-actions]");if(t){openExchangeActions();return;}
+    t=e.target.closest("[data-exchange-leave]");if(t&&state.selectedExchangeRoomId&&window.confirm("이 교환독서에서 나갈까요? 공유 기록은 철회되고 과거 채팅은 남은 멤버에게 유지돼요.")){var leaveRoom=state.selectedExchangeRoomId,leaveUser=activeAuthUserId;t.disabled=true;exchangeReadingRepository.leave(leaveRoom).then(function(){if(leaveUser!==activeAuthUserId)return;closeModal();state.inboxTab="exchange";goTo("conversations");}).catch(function(){if(leaveUser===activeAuthUserId)t.disabled=false;});return;}
+    t=e.target.closest("[data-exchange-invite-open]");if(t){loadExchangeFriendPicker(state.selectedExchangeRoomId,'invite');return;}
+    t=e.target.closest("[data-exchange-friends-retry]");if(t){loadExchangeFriendPicker(t.getAttribute("data-room-id")||null,t.getAttribute("data-exchange-friends-retry"));return;}
+    t=e.target.closest("[data-exchange-invite-submit]");if(t){var inviteRoom=t.getAttribute("data-exchange-invite-submit"),inviteIds=Array.from(document.querySelectorAll("[data-exchange-invite-friend]:checked")).map(function(input){return input.value;}),inviteOut=document.getElementById("exchangeModalError"),inviteUser=activeAuthUserId;if(!inviteIds.length){inviteOut.textContent="친구를 선택해 주세요.";inviteOut.hidden=false;return;}t.disabled=true;exchangeReadingRepository.invite(inviteRoom,inviteIds).then(function(){if(inviteUser===activeAuthUserId){closeModal();loadExchangeInbox();}}).catch(function(error){if(inviteUser===activeAuthUserId){inviteOut.textContent=error.message||"초대하지 못했어요.";inviteOut.hidden=false;t.disabled=false;}});return;}
+    t=e.target.closest("[data-exchange-report-target]");if(t){var reportRow=t.closest("[data-exchange-message-id]");if(reportRow)openExchangeReport(reportRow.getAttribute("data-exchange-message-id"));return;}
+    t=e.target.closest("[data-exchange-report-submit]");if(t){var exchangeReportId=t.getAttribute("data-exchange-report-submit"),exchangeReportUser=activeAuthUserId,exchangeReportRoom=state.selectedExchangeRoomId,exchangeReportOut=document.getElementById("exchangeModalError"),exchangeCategory=document.getElementById("exchangeReportCategory");t.disabled=true;exchangeReadingRepository.report(exchangeReportRoom,exchangeReportId,exchangeCategory.value,null).then(function(){if(exchangeReportUser===activeAuthUserId)openModal('<div class="modal"><h2>신고했어요.</h2><p>접수된 메시지는 운영 검토에만 사용돼요.</p><div class="modal-actions"><button class="btn btn-dark" type="button" data-closemodal>확인</button></div></div>');}).catch(function(error){if(exchangeReportUser===activeAuthUserId&&exchangeReportOut){exchangeReportOut.textContent=error&&error.code==="PT409"?"이미 신고한 메시지예요.":"신고하지 못했어요.";exchangeReportOut.hidden=false;t.disabled=false;}});return;}
 
     t = e.target.closest("[data-edit-nickname]");
     if (t){ modalEditNickname(); return; }
@@ -4986,11 +5363,17 @@
       return;
     }
   });
+  document.body.addEventListener("change",function(e){
+    var confirm=e.target.closest&&e.target.closest("[data-account-delete-confirm]");if(!confirm)return;
+    var submit=document.querySelector("[data-account-delete-submit]");if(submit)submit.disabled=!confirm.checked||accountDeletionSubmitting;
+  });
 
   /* Detail owns direct page-position editing. It uses the same cloud-first
      page mutation as Reading Record, but does not open the optional 북로그
      sheet. Analytics remains fire-and-forget after the core save succeeds. */
   document.body.addEventListener("change", function(e){
+    var exchangeSelect=e.target.closest("[data-exchange-book-select]");
+    if(exchangeSelect){var kind=exchangeSelect.getAttribute("data-exchange-book-select");syncExchangeProgressField(exchangeSelect.id,kind==="accept"?"exchangeAcceptPage":"exchangeCreatePage",exchangeSelect.dataset.roomId||null);return;}
     var t = e.target.closest("[data-pageinput]");
     if(!t){
       t=e.target.closest("[data-stats-year]");
@@ -5046,16 +5429,34 @@
       state.completionReflectionDrafts[t.getAttribute("data-reflectiondraft")] = t.value;
     }
     if(t&&t.id==="conversationInput"){state.conversationMessageDraft=t.value;resizeConversationInput(t);}
+    if(t&&t.id==="exchangeInput"){state.exchangeMessageDraft=t.value;resizeConversationInput(t);}
+    if(t&&t.id==="exchangeNoteInput")state.exchangeNoteDraft=t.value;
+    if(t&&t.id==="exchangeNotePage")state.exchangeNotePage=t.value;
+    if(t&&t.id==="exchangeShareAfterSave")state.exchangeNoteShareAfterSave=!!t.checked;
   });
 
   document.body.addEventListener("keydown",function(e){
-    if(!e.target||e.target.id!=="conversationInput"||e.key!=="Enter"||e.isComposing)return;
+    if(!e.target)return;
+    if(e.target.id==="exchangeInput"&&e.key==="Enter"&&!e.isComposing){e.preventDefault();var exchangeForm=document.getElementById("exchangeForm");if(exchangeForm)exchangeForm.requestSubmit();return;}
+    if(e.target.id!=="conversationInput"||e.key!=="Enter"||e.isComposing)return;
     e.preventDefault();
     var form=document.getElementById("conversationForm");
     if(form)form.requestSubmit();
   });
 
   document.body.addEventListener("submit", function(e){
+    if(e.target.id==="exchangeNoteForm"){
+      e.preventDefault();var noteUser=activeAuthUserId,noteRoom=state.selectedExchangeRoomId,bookId=exchangeLocalBookId(),textValue=state.exchangeNoteDraft.trim(),pageValue=state.exchangeNotePage===""?null:Number(state.exchangeNotePage),shareAfter=state.exchangeNoteShareAfterSave,noteClientId=uid();
+      var linkedBook=bookId&&state.books[bookId];if(!bookId||!textValue||!Number.isFinite(pageValue)&&pageValue!==null||pageValue!==null&&(pageValue<0||linkedBook&&pageValue>linkedBook.totalPages)){state.exchangeError=!bookId?"연결된 내 책을 찾지 못했어요.":!textValue?"북로그를 입력해 주세요.":"페이지를 확인해 주세요.";renderExchangeRoom();return;}
+      addNote(bookId,textValue,pageValue,{id:noteClientId,createdAt:nowIso()}).then(function(saved){if(!saved||noteUser!==activeAuthUserId||noteRoom!==state.selectedExchangeRoomId)return false;return exchangeReadingRepository.myNotes(noteRoom).then(function(notes){var created=notes.find(function(note){return note.noteClientId===noteClientId;});if(shareAfter&&created)return exchangeReadingRepository.shareNote(noteRoom,created.noteId);return true;});}).then(function(){if(noteUser!==activeAuthUserId)return;state.exchangeNoteDraft="";state.exchangeNotePage="";state.exchangeNoteShareAfterSave=false;closeModal();return loadExchangeNotes();}).catch(function(error){if(noteUser===activeAuthUserId){state.exchangeError=conversationErrorMessage(error);renderExchangeRoom();}});return;
+    }
+    if(e.target.id==="exchangeForm"){
+      e.preventDefault();if(state.exchangeSending||!exchangeReadingRepository||!state.selectedExchangeRoomId)return;
+      var exchangeUser=activeAuthUserId,roomId=state.selectedExchangeRoomId,input=document.getElementById("exchangeInput"),attempt;
+      try{attempt=window.BooktokkiExchangeReadingRepository.sendAttempt(state.exchangeSendAttempt,roomId,input?input.value:state.exchangeMessageDraft);}catch(error){state.exchangeError=error.message;renderExchangeRoom();return;}
+      focusConversationInput(input);state.exchangeSendAttempt=attempt;state.exchangeMessageDraft=attempt.body;state.exchangeSending=true;state.exchangeError="";renderExchangeRoom();
+      exchangeReadingRepository.send(roomId,attempt.body,attempt.clientId).then(function(message){if(exchangeUser!==activeAuthUserId||roomId!==state.selectedExchangeRoomId)return;state.exchangeMessages=mergeConversationMessages(state.exchangeMessages,[message]);state.exchangeMessageDraft="";state.exchangeSendAttempt=null;state.exchangeMessagesStatus="ready";}).catch(function(error){if(exchangeUser===activeAuthUserId&&roomId===state.selectedExchangeRoomId){if(error&&error.code==="42501")state.exchangeCanSend=false;state.exchangeError=conversationErrorMessage(error);}}).finally(function(){if(exchangeUser===activeAuthUserId){state.exchangeSending=false;if(state.view==="exchange-room")renderExchangeRoom();}});return;
+    }
     if(e.target.id==="conversationForm"){
       e.preventDefault();
       if(state.conversationSending||!conversationRepository||!state.selectedConversationId)return;
@@ -5071,7 +5472,7 @@
       conversationRepository.send(connectionId,attempt.body,attempt.clientId).then(function(message){
         if(conversationUser!==activeAuthUserId||connectionId!==state.selectedConversationId)return;
         state.conversationMessages=mergeConversationMessages(state.conversationMessages,[message]);state.conversationMessageDraft="";state.conversationSendAttempt=null;state.conversationMessagesStatus="ready";
-        return conversationRepository.list().then(function(list){if(conversationUser===activeAuthUserId){state.conversations=list;state.inboxUnread=list.reduce(function(total,item){return total+(item.unreadCount||0);},0);}});
+        return conversationRepository.list().then(function(list){if(conversationUser===activeAuthUserId){state.conversations=list;state.dmUnread=list.reduce(function(total,item){return total+(item.unreadCount||0);},0);state.inboxUnread=state.dmUnread+state.exchangeUnread;}});
       }).catch(function(error){
         if(conversationUser!==activeAuthUserId||connectionId!==state.selectedConversationId)return;
         if(error&&error.code==="42501"){
@@ -5422,7 +5823,7 @@
      an authenticated session (including re-login without a reload) restores
      them here, without touching bootstrap or IndexedDB. */
   function ensureAccountRepositories(){
-    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository && conversationRepository && p6Repository && friendVisit)) return;
+    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository && conversationRepository && exchangeReadingRepository && p6Repository && friendVisit)) return;
     try {
       profileRepository = window.BooktokkiProfileRepository.create(supabaseClient);
       feedbackRepository = window.BooktokkiFeedbackRepository.create(supabaseClient);
@@ -5431,6 +5832,9 @@
         : null;
       conversationRepository = window.BooktokkiConversationRepository
         ? window.BooktokkiConversationRepository.create(supabaseClient)
+        : null;
+      exchangeReadingRepository = window.BooktokkiExchangeReadingRepository
+        ? window.BooktokkiExchangeReadingRepository.create(supabaseClient)
         : null;
       p6Repository = window.BooktokkiP6Repository
         ? window.BooktokkiP6Repository.create(supabaseClient)
@@ -5454,6 +5858,7 @@
       feedbackRepository = null;
       coReadingRepository = null;
       conversationRepository = null;
+      exchangeReadingRepository = null;
       p6Repository = null;
       friendVisit = null;
       console.error("북토끼 MY 연결 초기화 실패", { code:repositoryError && repositoryError.code ? repositoryError.code : null });
@@ -5464,8 +5869,8 @@
     cleanAuthRedirectUrl();
     var previousUserId=activeAuthUserId;
     if(previousUserId&&session&&session.user&&previousUserId!==session.user.id){
-      stopMessageInboxPolling();messageInboxPolling=null;conversationLoadEpoch+=1;dismissMessageBanner();closeVisitorBubble();
-      state.inboxUnread=0;state.inboxLatest=null;state.messagePreferences={receiveMessages:true,inAppNotifications:true,previewMessage:false};state.messagePreferencesStatus="idle";
+      stopMessageInboxPolling();messageInboxPolling=null;stopExchangePolling();exchangePolling=null;conversationLoadEpoch+=1;exchangeLoadEpoch+=1;dismissMessageBanner();closeVisitorBubble();
+      state.inboxUnread=0;state.dmUnread=0;state.exchangeUnread=0;state.inboxLatest=null;state.messagePreferences={receiveMessages:true,inAppNotifications:true,previewMessage:false};state.messagePreferencesStatus="idle";
       socialHistoryReady=false;
       state.memoryMonth=null;state.memoryFrom="stats";state.towerScrollTop=0;state.recapBookId=null;state.recapReturnView="book-tower";state.recapScrollTop=0;state.recapAnchorEventId=null;
       resetP4Session(null);resetP6Session(null);
@@ -5495,14 +5900,20 @@
     if(homeAmbient)homeAmbient.stop();
     stopConversationPolling();
     conversationPolling=null;
+    stopExchangePolling();
+    exchangePolling=null;
     stopMessageInboxPolling();
     messageInboxPolling=null;
     resetP4Session(null);
     resetP6Session(null);
     coReadingLoadEpoch+=1;
     conversationLoadEpoch+=1;
+    exchangeLoadEpoch+=1;
     activeAuthUserId = null;
+    exchangeInvitationBookAttempts = Object.create(null);
     activeAuthUser = null;
+    accountDeletionSubmitting = false;
+    state.accountDeletionStatus = "idle";
     appStarted = false;
     bootstrappedUserId = null;
     cloudRepository = null;
@@ -5511,6 +5922,7 @@
     feedbackRepository = null;
     coReadingRepository = null;
     conversationRepository = null;
+    exchangeReadingRepository = null;
     p6Repository = null;
     friendVisit = null;
     cloudMutationQueues = {};
@@ -5541,6 +5953,8 @@
     state.messagePreferences = {receiveMessages:true,inAppNotifications:true,previewMessage:false};
     state.messagePreferencesStatus = "idle";
     state.inboxUnread = 0;
+    state.dmUnread = 0;
+    state.exchangeUnread = 0;
     state.inboxLatest = null;
     state.selectedConversationId = null;
     state.inboxReturnView = "home";
@@ -5554,6 +5968,27 @@
     state.conversationSendAttempt = null;
     state.conversationHasMore = false;
     state.conversationLoadingOlder = false;
+    state.inboxTab = "dm";
+    state.exchangeRooms = [];
+    state.exchangeInvitations = [];
+    state.exchangeStatus = "idle";
+    state.selectedExchangeRoomId = null;
+    state.exchangeRoomTab = "chat";
+    state.exchangeSharedNotes = [];
+    state.exchangeMyNotes = [];
+    state.exchangeNotesStatus = "idle";
+    state.exchangeNoteDraft = "";
+    state.exchangeNotePage = "";
+    state.exchangeNoteShareAfterSave = false;
+    state.exchangeMessages = [];
+    state.exchangeMessagesStatus = "idle";
+    state.exchangeCanSend = false;
+    state.exchangeMessageDraft = "";
+    state.exchangeSending = false;
+    state.exchangeError = "";
+    state.exchangeSendAttempt = null;
+    state.exchangeHasMore = false;
+    state.exchangeLoadingOlder = false;
     state.memoryMonth = null;
     state.memoryFrom = "stats";
     state.towerScrollTop = 0;
@@ -5577,7 +6012,11 @@
     document.getElementById("authGate").hidden = false;
     document.getElementById("kakaoLoginBtn").hidden = false;
     document.getElementById("kakaoLoginBtn").disabled = !supabaseClient;
-    document.getElementById("authStatus").textContent = message || "";
+    if(window.BOOKTOKKI_AUTH_CONFIG&&window.BOOKTOKKI_AUTH_CONFIG.syntheticAuth===true){
+      document.getElementById("kakaoLoginBtn").textContent="Synthetic 계정 선택";
+      document.getElementById("authStatus").textContent=message||"Local QA 계정을 선택해 주세요.";
+    }else document.getElementById("kakaoLoginBtn").textContent="카카오로 시작하기";
+    if(!(window.BOOKTOKKI_AUTH_CONFIG&&window.BOOKTOKKI_AUTH_CONFIG.syntheticAuth===true))document.getElementById("authStatus").textContent = message || "";
   }
 
   function initAuth(){
@@ -5618,6 +6057,11 @@
 
   document.getElementById("kakaoLoginBtn").addEventListener("click", function(){
     if (!supabaseClient) return;
+    var authConfig=window.BOOKTOKKI_AUTH_CONFIG||{};
+    if(authConfig.syntheticAuth===true){
+      window.location.assign(authConfig.syntheticAuthUrl||"/qa");
+      return;
+    }
     var button = this;
     button.disabled = true;
     document.getElementById("authStatus").textContent = "카카오로 이동하고 있어요.";

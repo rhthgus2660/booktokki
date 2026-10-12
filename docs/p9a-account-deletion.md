@@ -1,0 +1,13 @@
+# P9-A account deletion contract
+
+This candidate keeps exchange-reading message bodies for the remaining active members. The sender label becomes `탈퇴한 사용자`; the deleted account UUID, profile and membership are no longer returned. Message content and conversation context can still identify a person, so this is pseudonymization rather than complete anonymization.
+
+The `delete-account` Edge Function accepts only an authenticated `POST` with `{ "confirmation": "DELETE", "reason": null | <allowed reason> }`. It resolves the caller from the current Supabase bearer token through GoTrue and sends one Admin DELETE for that exact user ID; callers cannot supply a target account. The database `BEFORE DELETE` trigger performs message pseudonymization and report-party tombstoning in the same PostgreSQL transaction as the Auth deletion. A trigger failure aborts that deletion. Concurrent duplicate Admin DELETE responses with `404` are treated as already complete.
+
+The browser never receives the service-role credential. MY → 계정 관리 → 회원 탈퇴 shows deletion/retention disclosures, offers one optional reason, and requires explicit final confirmation. No Kakao reauthentication or provider token is required. If a reason is selected after a successful delete, the function records only a UTC daily count by allowed reason through a service-role-only RPC. This best-effort aggregate contains no account identifier, free text, or individual deletion event and cannot block an already completed deletion.
+
+P9 report metadata and evidence survive deletion of either party. Browser roles have no direct table access. The existing hourly P5 purge is extended to both P5 and P9 evidence: evidence is eligible at the maximum-90-day boundary, or earlier once a report is resolved/dismissed. An active hold excludes evidence from both paths. Holds record reason, approving operator, start, review date, and release condition through service-role-only RPCs. Releasing a hold returns the evidence to the ordinary purge on its next run. Report metadata remains after evidence deletion.
+
+The hourly purge and existing watchdog provide failure detection. Operations should review overdue hold review dates and the watchdog/cron run history daily. A failed purge is retried by the next hourly run; operators must investigate repeated watchdog failures without directly editing evidence rows.
+
+Privacy notice and account-deletion confirmation copy should disclose that group-message bodies remain visible to the other room members under the label `탈퇴한 사용자`, that context may still identify the author, and that protected report evidence may remain for safety review. Active-database deletion does not imply immediate removal from provider backups or restricted operational logs.

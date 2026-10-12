@@ -47,7 +47,7 @@ RPC는 임의 cutoff를 받지 않는다. `service_role`도 evidence table을 �
 
 ## 계정 삭제와 예외
 
-현재 FK 계약은 유지한다. 신고자 또는 신고 대상 계정이 삭제되어 `social_reports`가 cascade 삭제되면 연결된 evidence도 90일 이전이라도 함께 삭제된다. 이 때문에 미처리 신고가 사라질 수 있다. 법적 보존 의무, 분쟁 대응 또는 긴급 안전 사건의 별도 보존은 V1에서 구현하지 않았으며 법률·운영 검토가 필요한 예외로 기록한다. 가명화 보존도 하지 않는다.
+P9-A 계정 삭제 migration 적용 후에는 신고자 또는 신고 대상 계정이 삭제돼도 `social_reports`의 당사자 UUID만 `NULL` 처리되고 신고 metadata와 evidence는 남는다. P5/P9 evidence는 동일한 최대 90일 정리 함수가 처리하며, `resolved` 또는 `dismissed` 상태에서 보존 필요가 없으면 조기 삭제된다. 법적 의무·분쟁 대응 hold는 `set_report_evidence_hold` RPC로 사유, 승인 주체, 시작일, 재검토일과 종료 조건을 기록하고, `release_report_evidence_hold` 이후 다음 hourly purge에서 다시 일반 정책을 적용한다. 일반 사용자에게 evidence 접근을 허용하지 않는다.
 
 ## 심각한 신고 및 개인정보 수칙
 

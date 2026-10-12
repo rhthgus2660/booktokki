@@ -130,7 +130,8 @@ test("received messages expose a confirmed privacy-aware report flow", () => {
   assert.match(html,/data-message-menu-report/);
   assert.match(html,/data-conversation-report-submit/);
   assert.match(html,/신고한 메시지 본문, 작성 시각과 신고 사유가 증거로 저장되며 접수 후 최대 90일 보관돼요/);
-  assert.match(html,/일반 대화 원본은 계정 삭제 정책을 따르며, 신고 증거는 접수 후 최대 90일 보관한 뒤 자동 삭제돼요/);
+  assert.match(html,/1:1 대화와 교환독서 신고 증거는 기본적으로 접수 후 최대 90일 보관하고/);
+  assert.match(html,/법적 의무나 분쟁 대응을 위한 별도 보존 사유/);
   assert.match(html,/상대방에게는 알리지 않아요/);
   assert.match(html,/conversationRepository\.report\(messageReportConnection,messageReportId/);
 });

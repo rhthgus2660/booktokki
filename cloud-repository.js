@@ -169,6 +169,8 @@
       });
     }
     return {
+      adoptBookRow:function(userId,row){ensureUser(userId);if(!row||row.user_id!==userId)throw new Error("Cloud book ownership mismatch");remember(row);return toBook(row,[],[]);},
+      refreshBook:function(userId,clientId){var ref;try{ref=refFor(userId,clientId);}catch(error){return Promise.reject(error);}return selectBook(userId,ref.cloudId);},
       loadSnapshot: function(userId){
         try { ensureUser(userId); } catch (error) { return Promise.reject(error); }
         return Promise.all([
