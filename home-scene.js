@@ -14,6 +14,11 @@
     {name:"visitor-left",x:20,y:68,facing:"right",layer:28},
     {name:"visitor-back",x:71,y:49,facing:"left",layer:18}
   ];
+  var CUSTOM_FURNITURE_SLOTS={
+    slot_1:{x:17,y:74,zone:"FRONT"},
+    slot_2:{x:53,y:78,zone:"FRONT"},
+    slot_3:{x:84,y:72,zone:"MID"}
+  };
 
   function normalizeVisitors(rows){
     var seen={};
@@ -60,6 +65,21 @@
     return item;
   }
 
+  function placedFurniture(rows){
+    return (Array.isArray(rows)?rows:[]).map(function(row){
+      var slot=CUSTOM_FURNITURE_SLOTS[row&&row.slotId],asset=roomAssets&&roomAssets.furnitureById&&roomAssets.furnitureById(row&&row.assetId);
+      if(!slot||!asset)return null;
+      var layer=asset.id==="F05"?30:(roomDepth?roomDepth.groundLayer(slot.y):slot.y);
+      return {
+        id:"custom-"+row.slotId,type:"furniture",furnitureType:asset.type,asset:asset.asset,
+        x:slot.x,y:slot.y,anchor:asset.anchor,width:asset.width,layer:layer,groundY:slot.y,
+        renderLayer:roomDepth?roomDepth.stackLayer(layer,"custom-"+row.slotId):layer,
+        zone:slot.zone,movable:true,placementSurface:asset.placementSurface,slotId:row.slotId,
+        interactionType:"none",semanticSpotType:null,interactionSpot:null
+      };
+    }).filter(Boolean);
+  }
+
   function build(input){
     input=input||{};
     var ambient=ambientById(input.ambientActors);
@@ -81,6 +101,7 @@
         interactionType:item.interactionType,semanticSpotType:item.semanticSpotType,interactionSpot:item.interactionSpot||null
       };
     }):[];
+    furniture=furniture.concat(placedFurniture(input.placements));
     var core=roomAssets&&roomAssets.CORE?{
       id:roomAssets.CORE.id,type:"fixed-core",furnitureType:roomAssets.CORE.type,asset:roomAssets.CORE.asset,
       x:roomAssets.CORE.x,y:roomAssets.CORE.y,anchor:roomAssets.CORE.anchor,width:roomAssets.CORE.width,
@@ -116,5 +137,5 @@
     return result;
   }
 
-  return {build:build,normalizeVisitors:normalizeVisitors,styleFor:styleFor,projectionAttributes:projectionAttributes,MAX_VISIBLE_VISITORS:MAX_VISIBLE_VISITORS,VISITOR_SLOTS:VISITOR_SLOTS};
+  return {build:build,normalizeVisitors:normalizeVisitors,placedFurniture:placedFurniture,styleFor:styleFor,projectionAttributes:projectionAttributes,MAX_VISIBLE_VISITORS:MAX_VISIBLE_VISITORS,VISITOR_SLOTS:VISITOR_SLOTS,CUSTOM_FURNITURE_SLOTS:CUSTOM_FURNITURE_SLOTS};
 });

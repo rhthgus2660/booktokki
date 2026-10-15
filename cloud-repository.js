@@ -234,14 +234,14 @@
       },
       createNote:function(userId, bookClientId, note){
         var ref = refFor(userId, bookClientId);
-        var row = { user_id:userId, book_id:ref.cloudId, client_id:note.id, text:note.text,
-          page:note.page == null ? null : note.page, created_at:note.createdAt, updated_at:note.createdAt };
-        return client.from("book_notes").insert(row).select("*").single().then(oneOrThrow).catch(function(error){
-          if (!error || error.code !== "23505") throw error;
-          return existingByClient("book_notes", userId, note.id).then(function(existing){
-            if (!existing || existing.book_id !== ref.cloudId || existing.text !== note.text || existing.page !== row.page) throw error;
-            return existing;
-          });
+        return client.rpc("create_book_note_with_reward",{
+          p_book_id:ref.cloudId,p_client_id:note.id,p_text:note.text,
+          p_page:note.page == null ? null : note.page,p_created_at:note.createdAt
+        }).then(function(result){
+          if(result.error)throw result.error;
+          var row=Array.isArray(result.data)?result.data[0]:result.data;
+          if(!row)throw new Error("create_book_note_with_reward returned no result");
+          return row;
         }).then(function(noteRow){
           return touchBook(userId, bookClientId).then(function(book){ return { note:noteRow, book:book }; });
         }).catch(function(error){ throw syncError(error); });

@@ -829,6 +829,16 @@
   #view-home .home-scene-friend-name{
     max-width:72px; margin-top:1px; padding:1px 4px; overflow:hidden; border-radius:3px; background:rgba(255,250,241,.78); color:#584938; font-size:.56rem; text-overflow:ellipsis; white-space:nowrap;
   }
+  .p10-room-button{ display:inline-flex; min-height:44px; align-items:center; margin:8px 0 0 auto; padding:0 2px; border:0; background:transparent; color:#262626; font:inherit; font-size:.72rem; font-weight:700; cursor:pointer; }
+  .p10-room-button:focus-visible{ outline:2px solid #111; outline-offset:2px; }
+  .p10-shop-balance{ display:flex; align-items:baseline; justify-content:space-between; margin:10px 0 18px; padding-bottom:12px; border-bottom:1px solid #e5e5e5; }
+  .p10-shop-list{ display:grid; gap:2px; }
+  .p10-shop-item{ display:grid; grid-template-columns:52px minmax(0,1fr) auto; gap:12px; align-items:center; min-height:68px; padding:8px 0; border-bottom:1px solid #ededed; }
+  .p10-shop-item img{ width:50px; height:50px; object-fit:contain; image-rendering:pixelated; }
+  .p10-shop-copy{ min-width:0; display:grid; gap:3px; }
+  .p10-shop-copy small{ color:#747474; font-size:.68rem; }
+  .p10-shop-item button{ min-width:74px; min-height:44px; padding:0 12px; border:1px solid #202020; border-radius:8px; background:#fff; color:#171717; font:inherit; font-size:.7rem; font-weight:700; }
+  .p10-shop-item button[disabled]{ border-color:#d5d5d5; color:#999; }
   @media (prefers-reduced-motion:reduce){ #view-home .home-scene-rabbit, #view-home .home-scene-rabbit img{ transition:none; } }
   @media (max-height:700px){ #view-home .home-scene{ height:380px; min-height:380px; } }
   @media (max-width:360px){
@@ -1558,6 +1568,7 @@
 <script src="./co-reading-repository.js"></script>
 <script src="./conversation-repository.js"></script>
 <script src="./exchange-reading-repository.js"></script>
+<script src="./p10-repository.js"></script>
 <script src="./conversation-polling.js"></script>
 <script src="./message-inbox-polling.js"></script>
 <script src="./friend-visit.js"></script>
@@ -1677,6 +1688,8 @@
     visitorBubbleBusy: false,
     friendVisit: { userId:null, visitors:[] },
     homeAmbient: { actors:[] },
+    p10Items: [],
+    p10Status: "idle",
     dbMode: null /* 'db' | 'local' */
   };
   var db = null;
@@ -1723,6 +1736,7 @@
   var P4_SPEECH_MS = 4000;
   var p4Session = {userId:null,momentEvaluated:false,dailyShown:false,speech:null,speechTimer:null,tapBusyUntil:0,tapCount:0};
   var p6Repository = null;
+  var p10Repository = null;
   var p6Session = {userId:null,generation:0,homeEntry:0,claiming:false,lastCompletedBookId:null};
   var p6SessionId = "p6-session:" + uid();
   var coReadingLoadEpoch = 0;
@@ -2262,6 +2276,7 @@
         if (result.logCreated && !log){ throw new Error("Unexpected Cloud page log"); }
         return commitLocalBook(candidate);
       }).then(function(){
+        if(typeof loadP10State==="function")loadP10State(true);
         if(p6PositiveSaved&&typeof recordP6Event==="function")recordP6Event("positive_page_saved",null,null);
         if(p6Completed&&typeof p6Session!=="undefined"&&p6Session.userId===activeAuthUserId)p6Session.lastCompletedBookId=bookId;
         if (options.onSaved) options.onSaved(savedAnalytics);
@@ -2367,7 +2382,7 @@
           delete state.noteComposeDrafts[bookId];
           state.noteComposerOpenBookId = null;
         });
-      }).then(function(){ return true; });
+      }).then(function(){if(typeof loadP10State==="function")loadP10State(true);return true;});
     }).catch(function(error){ cloudSaveFailed(error); return false; });
   }
 
@@ -3029,6 +3044,43 @@
     return base;
   }
 
+  function p10Balance(){return state.p10Items.length?state.p10Items[0].balance:0;}
+  function p10Placements(){return state.p10Items.filter(function(item){return item.owned&&item.slotId;}).map(function(item){return {slotId:item.slotId,assetId:item.assetId};});}
+  function loadP10State(quiet){
+    if(!p10Repository||!activeAuthUserId)return Promise.resolve(false);
+    var userId=activeAuthUserId;
+    if(!quiet)state.p10Status="loading";
+    return p10Repository.state().then(function(items){
+      if(userId!==activeAuthUserId)return false;
+      state.p10Items=items;state.p10Status="ready";
+      if(appStarted&&state.view==="home")renderHome();
+      return true;
+    }).catch(function(){if(userId===activeAuthUserId){state.p10Status="error";if(appStarted&&state.view==="home")renderHome();}return false;});
+  }
+  function p10Asset(item){var asset=window.BooktokkiRoomAssets&&window.BooktokkiRoomAssets.furnitureById(item.assetId);return asset?asset.asset:"";}
+  function p10Item(itemId){return state.p10Items.find(function(item){return item.id===itemId;})||null;}
+  function p10EmptySlot(){return ['slot_1','slot_2','slot_3'].find(function(slot){return !state.p10Items.some(function(item){return item.slotId===slot;});})||null;}
+  function p10ErrorMessage(error){
+    var message=String(error&&error.message||"");
+    if(message.indexOf("Not enough carrots")>=0)return "당근이 부족해요 🥕";
+    if(message.indexOf("Furniture is locked")>=0)return "아직 해금되지 않은 가구예요.";
+    if(message.indexOf("Furniture unavailable")>=0)return "가구 정보를 찾지 못했어요.";
+    if(message.indexOf("Furniture is not owned")>=0)return "보유한 가구만 배치할 수 있어요.";
+    if(message.indexOf("Authentication required")>=0)return "로그인이 필요해요.";
+    return "가구 요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.";
+  }
+  function openP10PlacementPrompt(itemId){
+    var item=p10Item(itemId),slot=p10EmptySlot();if(!item){openP10Shop();return;}
+    if(!slot){openModal('<div class="modal"><h2>'+esc(item.name)+'을 구매했어요.</h2><p>배치 공간이 모두 사용 중이에요. 배치 관리에서 가구를 교체하거나 비워 주세요.</p><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>나중에</button><button class="btn btn-dark" type="button" data-p10-manage>배치 관리</button></div></div>');return;}
+    openModal('<div class="modal"><h2>'+esc(item.name)+'을 구매했어요.</h2><p>내 서재에 배치할까요?</p><div class="modal-actions"><button class="btn btn-outline" type="button" data-closemodal>나중에</button><button class="btn btn-dark" type="button" data-p10-place-now="'+esc(item.id)+'" data-p10-empty-slot="'+slot+'">배치하기</button></div><div class="modal-error" id="p10ModalError" hidden></div></div>');
+  }
+  function openP10Shop(){
+    if(state.p10Status!=="ready"){openModal('<div class="modal"><h2>가구 상점</h2><p>가구 정보를 불러오는 중이에요.</p><div class="modal-actions"><button class="btn btn-dark" data-closemodal>닫기</button></div></div>');loadP10State().then(function(){if(state.p10Status==="ready")openP10Shop();});return;}
+    var items=state.p10Items.map(function(item){var locked=item.readingDays<item.requiredDays,label,action,disabled='';if(item.owned&&item.slotId){label='보관';action=' data-p10-store="'+esc(item.id)+'" data-p10-current-slot="'+esc(item.slotId)+'"';}else if(item.owned){label='배치';action=' data-p10-place="'+esc(item.id)+'"';}else{label=locked?item.requiredDays+'일 필요':item.price+'당근';action=' data-p10-buy="'+esc(item.id)+'"';disabled=locked?' disabled':'';}var stateCopy=item.owned?(item.slotId?'내 서재에 배치 중':'보유 중 · 보관함'):(item.requiredDays?('실제 독서 '+item.requiredDays+'일 해금'):'바로 구매 가능');return '<div class="p10-shop-item"><img src="'+esc(p10Asset(item))+'" alt=""><span class="p10-shop-copy"><strong>'+esc(item.name)+'</strong><small>'+esc(stateCopy)+'</small></span><button type="button"'+action+disabled+'>'+esc(label)+'</button></div>';}).join('');
+    openModal('<div class="modal"><h2>가구 상점</h2><div class="p10-shop-balance"><span>내 당근</span><strong>🥕 '+p10Balance()+'</strong></div><div class="p10-shop-list">'+items+'</div><div class="modal-error" id="p10ModalError" hidden></div><div class="modal-actions"><button class="btn btn-dark" data-closemodal>완료</button></div></div>');
+  }
+  function p10Error(message){var node=document.getElementById('p10ModalError');if(node){node.textContent=message;node.hidden=false;}}
+
   /* HomeScene is derived from reading and visitor state. Coordinates are
      scene-local so future observation/direct-control modes can move objects
      without coupling movement to Friend Graph or book data. */
@@ -3045,6 +3097,7 @@
       visitorAsset:"assets/bunny-sleep.png",
       visitors:state.friendVisit&&state.friendVisit.visitors,
       ambientActors:state.homeAmbient&&state.homeAmbient.actors,
+      placements:p10Placements(),
       bookCount:getBooks().length
     });
     var bookshelf = scene.bookshelf;
@@ -3058,7 +3111,7 @@
       '</button>' +
       homeSceneRabbit(scene.owner,true) +
       scene.visitors.map(function(visitor){return homeSceneRabbit(visitor,false);}).join("") +
-    '</section><div class="home-scene-overlay-root" data-home-scene-overlay>'+homeOwnerSpeechBubble()+homeSceneVisitorBubble(scene.visitors.find(function(visitor){return visitor.connectionId===state.visitorBubbleConnectionId;}))+'</div></div>';
+    '</section><div class="home-scene-overlay-root" data-home-scene-overlay>'+homeOwnerSpeechBubble()+homeSceneVisitorBubble(scene.visitors.find(function(visitor){return visitor.connectionId===state.visitorBubbleConnectionId;}))+'</div><button class="p10-room-button" type="button" data-p10-open>🥕 '+p10Balance()+' · 꾸미기</button></div>';
   }
 
   /* This month's distinct books with at least one positive page record. */
@@ -5110,6 +5163,12 @@
     else if(e.key==="Escape")closeConversationMessageMenu();
   });
   document.body.addEventListener("click", function(e){
+    var p10Open=e.target.closest("[data-p10-open]");if(p10Open){openP10Shop();return;}
+    var p10Manage=e.target.closest("[data-p10-manage]");if(p10Manage){openP10Shop();return;}
+    var p10Store=e.target.closest("[data-p10-store]");if(p10Store&&p10Repository){var storeUser=activeAuthUserId;p10Store.disabled=true;p10Repository.place(p10Store.getAttribute("data-p10-current-slot"),null).then(function(){if(storeUser!==activeAuthUserId)return;return loadP10State(true);}).then(function(){if(storeUser===activeAuthUserId)openP10Shop();}).catch(function(error){if(storeUser===activeAuthUserId){p10Store.disabled=false;p10Error(p10ErrorMessage(error));}});return;}
+    var p10Place=e.target.closest("[data-p10-place]");if(p10Place&&p10Repository){var autoUser=activeAuthUserId,autoItem=p10Place.getAttribute("data-p10-place"),autoSlot=p10EmptySlot();if(!autoSlot){p10Error("서재에 자리가 없어요. 다른 가구를 보관한 뒤 배치해 주세요.");return;}p10Place.disabled=true;p10Repository.place(autoSlot,autoItem).then(function(){if(autoUser!==activeAuthUserId)return;return loadP10State(true);}).then(function(){if(autoUser===activeAuthUserId)openP10Shop();}).catch(function(error){if(autoUser===activeAuthUserId){p10Place.disabled=false;p10Error(p10ErrorMessage(error));}});return;}
+    var p10PlaceNow=e.target.closest("[data-p10-place-now]");if(p10PlaceNow&&p10Repository){var placeUser=activeAuthUserId,placeItem=p10PlaceNow.getAttribute("data-p10-place-now"),placeSlot=p10PlaceNow.getAttribute("data-p10-empty-slot");p10PlaceNow.disabled=true;p10Repository.place(placeSlot,placeItem).then(function(){if(placeUser!==activeAuthUserId)return;return loadP10State(true);}).then(function(){if(placeUser===activeAuthUserId){var placed=p10Item(placeItem);openModal('<div class="modal"><h2>내 서재에 배치했어요.</h2><p>'+esc(placed?placed.name:'가구')+'의 위치는 배치 관리에서 언제든 바꿀 수 있어요.</p><div class="modal-actions"><button class="btn btn-dark" data-closemodal>확인</button></div></div>');}}).catch(function(error){if(placeUser===activeAuthUserId){p10PlaceNow.disabled=false;p10Error(p10ErrorMessage(error));}});return;}
+    var p10Buy=e.target.closest("[data-p10-buy]");if(p10Buy&&p10Repository){var buyUser=activeAuthUserId,buyItem=p10Buy.getAttribute("data-p10-buy");p10Buy.disabled=true;p10Repository.purchase(buyItem,uid()).then(function(){if(buyUser!==activeAuthUserId)return;return loadP10State(true);}).then(function(){if(buyUser===activeAuthUserId)openP10PlacementPrompt(buyItem);}).catch(function(error){if(buyUser===activeAuthUserId){p10Buy.disabled=false;p10Error(p10ErrorMessage(error));}});return;}
     var reportMenu=e.target.closest("[data-message-menu-report]");
     if(reportMenu){var reportMessageId=reportMenu.getAttribute("data-message-menu-report");closeConversationMessageMenu();openConversationMessageReport(reportMessageId);return;}
     if(typeof messageLongPressOpenedAt!=="undefined"&&Date.now()-messageLongPressOpenedAt<500&&e.target.closest("[data-message-report-target]")){e.preventDefault();return;}
@@ -5412,6 +5471,7 @@
       return;
     }
   });
+
   document.body.addEventListener("change",function(e){
     var confirm=e.target.closest&&e.target.closest("[data-account-delete-confirm]");if(!confirm)return;
     var submit=document.querySelector("[data-account-delete-submit]");if(submit)submit.disabled=!confirm.checked||accountDeletionSubmitting;
@@ -5789,6 +5849,7 @@
     document.getElementById("app").inert = false;
     syncHomeAmbientActors();
     renderAll();
+    loadP10State(true);
     loadSocialProfile();
     startMessageInboxPolling();
     recordP6Event("app_session_started",null,null);
@@ -5872,7 +5933,7 @@
      an authenticated session (including re-login without a reload) restores
      them here, without touching bootstrap or IndexedDB. */
   function ensureAccountRepositories(){
-    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository && conversationRepository && exchangeReadingRepository && p6Repository && friendVisit)) return;
+    if (!supabaseClient || (profileRepository && feedbackRepository && coReadingRepository && conversationRepository && exchangeReadingRepository && p6Repository && p10Repository && friendVisit)) return;
     try {
       profileRepository = window.BooktokkiProfileRepository.create(supabaseClient);
       feedbackRepository = window.BooktokkiFeedbackRepository.create(supabaseClient);
@@ -5887,6 +5948,9 @@
         : null;
       p6Repository = window.BooktokkiP6Repository
         ? window.BooktokkiP6Repository.create(supabaseClient)
+        : null;
+      p10Repository = window.BooktokkiP10Repository
+        ? window.BooktokkiP10Repository.create(supabaseClient)
         : null;
       friendVisit = window.BooktokkiFriendVisit && coReadingRepository
         ? window.BooktokkiFriendVisit.create({
@@ -5909,6 +5973,7 @@
       conversationRepository = null;
       exchangeReadingRepository = null;
       p6Repository = null;
+      p10Repository = null;
       friendVisit = null;
       console.error("북토끼 MY 연결 초기화 실패", { code:repositoryError && repositoryError.code ? repositoryError.code : null });
     }
@@ -5922,6 +5987,7 @@
       state.inboxUnread=0;state.dmUnread=0;state.exchangeUnread=0;state.inboxLatest=null;state.messagePreferences={receiveMessages:true,inAppNotifications:true,previewMessage:false};state.messagePreferencesStatus="idle";
       socialHistoryReady=false;
       state.memoryMonth=null;state.memoryFrom="stats";state.towerScrollTop=0;state.recapBookId=null;state.recapReturnView="book-tower";state.recapScrollTop=0;state.recapAnchorEventId=null;
+      state.p10Items=[];state.p10Status="idle";
       resetP4Session(null);resetP6Session(null);
     }
     activeAuthUserId = session && session.user ? session.user.id : null;
@@ -5973,6 +6039,7 @@
     conversationRepository = null;
     exchangeReadingRepository = null;
     p6Repository = null;
+    p10Repository = null;
     friendVisit = null;
     cloudMutationQueues = {};
     pendingBookCreates = {};
@@ -6049,6 +6116,8 @@
     closeVisitorBubble();
     state.friendVisit = {userId:null,visitors:[]};
     state.homeAmbient = {actors:[]};
+    state.p10Items=[];
+    state.p10Status="idle";
     if (db) db.close();
     db = null;
     storageReady = null;

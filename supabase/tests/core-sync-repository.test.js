@@ -32,6 +32,14 @@ function mockClient(){
     from:function(t){return new Q(t);},
     rpc:function(name,p){
       if(failRpc)return Promise.resolve({data:null,error:{message:"offline"}});
+      if(name==="create_book_note_with_reward"){
+        var noteBook=db.books.find(function(x){return x.id===p.p_book_id&&x.user_id===user;});
+        if(!noteBook)return Promise.resolve({data:null,error:{code:"42501"}});
+        var existingNote=db.book_notes.find(function(x){return x.user_id===user&&x.client_id===p.p_client_id;});
+        if(existingNote)return Promise.resolve({data:[clone(existingNote)],error:null});
+        var noteRow={id:"uuid-"+(db.book_notes.length+1),user_id:user,book_id:p.p_book_id,client_id:p.p_client_id,text:p.p_text,page:p.p_page,created_at:p.p_created_at,updated_at:p.p_created_at};
+        db.book_notes.push(noteRow);return Promise.resolve({data:[clone(noteRow)],error:null});
+      }
       var b=db.books.find(function(x){return x.id===p.p_book_id&&x.user_id===user;});
       if(!b)return Promise.resolve({data:null,error:{code:"P0002"}});
       var existing=db.reading_logs.find(function(x){return x.user_id===user&&x.client_id===p.p_log_client_id;});
